@@ -43,6 +43,16 @@ const modes = [
     statLabel: 'Einträge',
     color: 'orange',
   },
+  {
+    key: 'trivia',
+    path: '/trivia',
+    emoji: '🎯',
+    title: 'Trivia',
+    desc: 'Allgemeinwissen testen mit tausenden Fragen',
+    table: null,
+    statLabel: null,
+    color: 'red',
+  },
 ]
 
 const colorMap = {
@@ -77,6 +87,14 @@ const colorMap = {
     shadow: 'hover:shadow-orange-500/20',
     stat: 'text-orange-400',
     statBg: 'bg-orange-500/10',
+  },
+  red: {
+    border: 'border-b-red-500',
+    hoverBorder: 'hover:border-red-500/50',
+    hoverText: 'group-hover:text-red-300',
+    shadow: 'hover:shadow-red-500/20',
+    stat: 'text-red-400',
+    statBg: 'bg-red-500/10',
   },
 }
 
@@ -116,7 +134,7 @@ export default function Dashboard() {
           Dein persönliches Gedächtnissystem
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-5xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 w-full max-w-6xl">
           {modes.map((mode) => {
             const c = colorMap[mode.color]
             const count = stats[mode.key]
@@ -136,7 +154,7 @@ export default function Dashboard() {
                   {mode.desc}
                 </p>
                 <div className={`mt-auto px-3 py-1.5 rounded-full text-xs font-medium ${c.stat} ${c.statBg}`}>
-                  {count !== undefined ? `${count} ${mode.statLabel}` : '...'}
+                  {mode.statLabel ? (count !== undefined ? `${count} ${mode.statLabel}` : '...') : 'Spielen'}
                 </div>
               </div>
             )

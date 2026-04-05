@@ -9,6 +9,7 @@ import BMPPractice from './pages/BMPPractice'
 import LernkartenDashboard from './pages/LernkartenDashboard'
 import LernkartenPractice from './pages/LernkartenPractice'
 import PegList from './pages/PegList'
+import Trivia from './pages/Trivia'
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/lernkarten" element={<LernkartenDashboard />} />
         <Route path="/lernkarten/practice" element={<LernkartenPractice />} />
         <Route path="/peglist" element={<PegList />} />
+        <Route path="/trivia" element={<Trivia />} />
       </Routes>
     </div>
   )
