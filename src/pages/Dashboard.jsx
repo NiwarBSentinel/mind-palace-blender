@@ -12,7 +12,7 @@ export default function Dashboard() {
         Wähle deinen Modus
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div
           onClick={() => navigate('/palaces')}
           className="p-8 rounded-xl bg-[#12122a] border border-[#1e1e3a] hover:border-purple-500/50 cursor-pointer transition group flex flex-col items-center text-center"
@@ -36,6 +36,19 @@ export default function Dashboard() {
           </h2>
           <p className="text-slate-400 text-sm">
             10 vordefinierte Personen mit je 50 festen Loci
+          </p>
+        </div>
+
+        <div
+          onClick={() => navigate('/lernkarten')}
+          className="p-8 rounded-xl bg-[#12122a] border border-[#1e1e3a] hover:border-green-500/50 cursor-pointer transition group flex flex-col items-center text-center"
+        >
+          <div className="text-5xl mb-4">📇</div>
+          <h2 className="text-xl font-semibold text-slate-200 group-hover:text-green-300 transition mb-2">
+            Lernkarten
+          </h2>
+          <p className="text-slate-400 text-sm">
+            Fragen & Antworten mit Mnemonik und Major-System Hilfe
           </p>
         </div>
       </div>

@@ -6,6 +6,8 @@ import Practice from './pages/Practice'
 import BMPDashboard from './pages/BMPDashboard'
 import BMPEditor from './pages/BMPEditor'
 import BMPPractice from './pages/BMPPractice'
+import LernkartenDashboard from './pages/LernkartenDashboard'
+import LernkartenPractice from './pages/LernkartenPractice'
 
 export default function App() {
   return (
@@ -18,6 +20,8 @@ export default function App() {
         <Route path="/bmp" element={<BMPDashboard />} />
         <Route path="/bmp/:personId" element={<BMPEditor />} />
         <Route path="/bmp/:personId/practice" element={<BMPPractice />} />
+        <Route path="/lernkarten" element={<LernkartenDashboard />} />
+        <Route path="/lernkarten/practice" element={<LernkartenPractice />} />
       </Routes>
     </div>
   )
