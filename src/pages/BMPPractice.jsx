@@ -10,6 +10,10 @@ export default function BMPPractice() {
   const [currentIdx, setCurrentIdx] = useState(0)
   const [revealed, setRevealed] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [finished, setFinished] = useState(false)
+  const [gewusst, setGewusst] = useState([])
+  const [nichtGewusst, setNichtGewusst] = useState([])
+  const [practiceCards, setPracticeCards] = useState([])
 
   useEffect(() => {
     fetchData()
@@ -55,25 +59,47 @@ export default function BMPPractice() {
       }
     }
     setAllLoci(lociList)
+    setPracticeCards(lociList)
     setLoading(false)
   }
 
-  const current = allLoci[currentIdx]
-  const total = allLoci.length
+  const current = practiceCards[currentIdx]
+  const total = practiceCards.length
   const progress = total > 0 ? ((currentIdx + (revealed ? 1 : 0)) / total) * 100 : 0
 
-  function goNext() {
+  function handleResult(knew) {
+    const locus = practiceCards[currentIdx]
+    if (knew) {
+      setGewusst((prev) => [...prev, locus.id])
+    } else {
+      setNichtGewusst((prev) => [...prev, locus.id])
+    }
+    if (currentIdx >= total - 1) {
+      setFinished(true)
+      return
+    }
     setRevealed(false)
-    if (currentIdx < total - 1) setCurrentIdx(currentIdx + 1)
+    setCurrentIdx(currentIdx + 1)
   }
 
-  function goBack() {
+  function restart() {
+    setPracticeCards(allLoci)
+    setCurrentIdx(0)
     setRevealed(false)
-    if (currentIdx > 0) setCurrentIdx(currentIdx - 1)
+    setFinished(false)
+    setGewusst([])
+    setNichtGewusst([])
   }
 
-  const isFirst = currentIdx === 0
-  const isLast = currentIdx === total - 1
+  function restartWrong() {
+    const wrongCards = practiceCards.filter((l) => nichtGewusst.includes(l.id))
+    setPracticeCards(wrongCards)
+    setCurrentIdx(0)
+    setRevealed(false)
+    setFinished(false)
+    setGewusst([])
+    setNichtGewusst([])
+  }
 
   if (loading) {
     return <div className="max-w-2xl mx-auto px-4 py-8 text-center text-slate-400">Lade Übung...</div>
@@ -89,6 +115,65 @@ export default function BMPPractice() {
         >
           Zurück zum Editor
         </button>
+      </div>
+    )
+  }
+
+  if (finished) {
+    const nichtGewusstLoci = practiceCards.filter((l) => nichtGewusst.includes(l.id))
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <div className="p-12 rounded-xl bg-[#12122a] border border-[#1e1e3a] text-center">
+          <h2 className="text-3xl font-bold text-slate-200 mb-8">🎉 Fertig!</h2>
+
+          <div className="flex gap-4 justify-center mb-8">
+            <div className="flex-1 p-4 rounded-lg bg-green-600/20 border border-green-500/30">
+              <div className="text-green-300 font-bold text-xl">Gewusst</div>
+              <div className="text-green-400 text-2xl mt-1">{gewusst.length} / {total}</div>
+            </div>
+            <div className="flex-1 p-4 rounded-lg bg-red-600/20 border border-red-500/30">
+              <div className="text-red-300 font-bold text-xl">Nicht gewusst</div>
+              <div className="text-red-400 text-2xl mt-1">{nichtGewusst.length} / {total}</div>
+            </div>
+          </div>
+
+          {nichtGewusstLoci.length > 0 && (
+            <div className="text-left mb-8">
+              <h3 className="text-slate-400 text-sm font-medium mb-3">Zum Wiederholen:</h3>
+              <ul className="space-y-2">
+                {nichtGewusstLoci.map((locus) => (
+                  <li key={locus.id} className="text-slate-300 text-sm p-2 rounded-lg bg-red-600/10 border border-red-500/20">
+                    <span className="font-mono text-red-400 mr-2">{locus.position}.</span>
+                    {locus.objekt}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={restart}
+              className="px-6 py-2.5 rounded-lg bg-green-600 hover:bg-green-500 text-white font-medium transition cursor-pointer"
+            >
+              Nochmal alle
+            </button>
+            {nichtGewusstLoci.length > 0 && (
+              <button
+                onClick={restartWrong}
+                className="px-6 py-2.5 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium transition cursor-pointer"
+              >
+                Nur falsche üben
+              </button>
+            )}
+            <button
+              onClick={() => navigate(`/bmp/${personId}`)}
+              className="px-6 py-2.5 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] transition cursor-pointer"
+            >
+              Zurück
+            </button>
+          </div>
+        </div>
       </div>
     )
   }
@@ -154,22 +239,37 @@ export default function BMPPractice() {
         )}
       </div>
 
-      <div className="flex justify-between">
-        <button
-          onClick={goBack}
-          disabled={isFirst}
-          className="px-6 py-2.5 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] disabled:opacity-30 transition cursor-pointer"
-        >
-          ← Zurück
-        </button>
-        <button
-          onClick={isLast && revealed ? () => navigate(`/bmp/${personId}`) : goNext}
-          disabled={isLast && !revealed}
-          className="px-6 py-2.5 rounded-lg bg-purple-600 text-white hover:bg-purple-500 disabled:opacity-30 transition cursor-pointer"
-        >
-          {isLast && revealed ? 'Fertig' : 'Weiter →'}
-        </button>
-      </div>
+      {revealed ? (
+        <div className="flex gap-4 justify-center">
+          <button
+            onClick={() => handleResult(true)}
+            className="flex-1 px-6 py-3 rounded-lg bg-green-600 hover:bg-green-500 text-white font-medium text-lg transition cursor-pointer"
+          >
+            ✅ Gewusst
+          </button>
+          <button
+            onClick={() => handleResult(false)}
+            className="flex-1 px-6 py-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium text-lg transition cursor-pointer"
+          >
+            ❌ Nicht gewusst
+          </button>
+        </div>
+      ) : !current.information ? (
+        <div className="flex gap-4 justify-center">
+          <button
+            onClick={() => handleResult(true)}
+            className="flex-1 px-6 py-3 rounded-lg bg-green-600 hover:bg-green-500 text-white font-medium text-lg transition cursor-pointer"
+          >
+            ✅ Gewusst
+          </button>
+          <button
+            onClick={() => handleResult(false)}
+            className="flex-1 px-6 py-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium text-lg transition cursor-pointer"
+          >
+            ❌ Nicht gewusst
+          </button>
+        </div>
+      ) : null}
     </div>
   )
 }
