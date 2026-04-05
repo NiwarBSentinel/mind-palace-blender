@@ -2,6 +2,9 @@ import { Routes, Route } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import Editor from './pages/Editor'
 import Practice from './pages/Practice'
+import BMPDashboard from './pages/BMPDashboard'
+import BMPEditor from './pages/BMPEditor'
+import BMPPractice from './pages/BMPPractice'
 
 export default function App() {
   return (
@@ -10,6 +13,9 @@ export default function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/palace/:id" element={<Editor />} />
         <Route path="/practice/:id" element={<Practice />} />
+        <Route path="/bmp" element={<BMPDashboard />} />
+        <Route path="/bmp/:personId" element={<BMPEditor />} />
+        <Route path="/bmp/:personId/practice" element={<BMPPractice />} />
       </Routes>
     </div>
   )

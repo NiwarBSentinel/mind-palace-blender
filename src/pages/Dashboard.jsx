@@ -83,6 +83,23 @@ export default function Dashboard() {
         </div>
       </form>
 
+      <div
+        onClick={() => navigate('/bmp')}
+        className="mb-10 p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] hover:border-blue-500/50 cursor-pointer transition group"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-200 group-hover:text-blue-300 transition">
+              BMP Modus
+            </h2>
+            <p className="text-slate-400 text-sm mt-1">
+              Body Memory Palace — 10 Personen mit je 50 festen Loci
+            </p>
+          </div>
+          <span className="text-blue-400 text-2xl">→</span>
+        </div>
+      </div>
+
       {loading ? (
         <p className="text-center text-slate-400">Lade Paläste...</p>
       ) : palaces.length === 0 ? (
