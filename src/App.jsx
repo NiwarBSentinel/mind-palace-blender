@@ -8,6 +8,7 @@ import BMPEditor from './pages/BMPEditor'
 import BMPPractice from './pages/BMPPractice'
 import LernkartenDashboard from './pages/LernkartenDashboard'
 import LernkartenPractice from './pages/LernkartenPractice'
+import PegList from './pages/PegList'
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="/bmp/:personId/practice" element={<BMPPractice />} />
         <Route path="/lernkarten" element={<LernkartenDashboard />} />
         <Route path="/lernkarten/practice" element={<LernkartenPractice />} />
+        <Route path="/peglist" element={<PegList />} />
       </Routes>
     </div>
   )

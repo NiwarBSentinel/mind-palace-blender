@@ -33,6 +33,16 @@ const modes = [
     statLabel: 'Karten',
     color: 'green',
   },
+  {
+    key: 'peglist',
+    path: '/peglist',
+    emoji: '🔢',
+    title: 'Peg List',
+    desc: 'Major System Nachschlagewerk 00-100',
+    table: null,
+    statLabel: 'Einträge',
+    color: 'orange',
+  },
 ]
 
 const colorMap = {
@@ -60,6 +70,14 @@ const colorMap = {
     stat: 'text-green-400',
     statBg: 'bg-green-500/10',
   },
+  orange: {
+    border: 'border-b-orange-500',
+    hoverBorder: 'hover:border-orange-500/50',
+    hoverText: 'group-hover:text-orange-300',
+    shadow: 'hover:shadow-orange-500/20',
+    stat: 'text-orange-400',
+    statBg: 'bg-orange-500/10',
+  },
 }
 
 export default function Dashboard() {
@@ -70,6 +88,7 @@ export default function Dashboard() {
     async function fetchStats() {
       const results = await Promise.all(
         modes.map(async (m) => {
+          if (!m.table) return [m.key, 101]
           const { count } = await supabase
             .from(m.table)
             .select('*', { count: 'exact', head: true })
@@ -97,7 +116,7 @@ export default function Dashboard() {
           Dein persönliches Gedächtnissystem
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-4xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-5xl">
           {modes.map((mode) => {
             const c = colorMap[mode.color]
             const count = stats[mode.key]
