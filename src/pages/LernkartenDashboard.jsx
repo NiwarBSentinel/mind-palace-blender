@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { isDue, getDueCount } from '../lib/srs'
 
 const MAJOR_MAP = {
   '00':'Sauce','01':'Seed','02':'Sun','03':'Sumo','04':'Sir','05':'Soul','06':'Sushi','07':'Ski','08':'Sofa','09':'Soap',
@@ -139,6 +140,20 @@ export default function LernkartenDashboard() {
         )}
       </div>
 
+      {!loading && cards.length > 0 && (
+        <div className="flex gap-3 mb-6 flex-wrap">
+          <button
+            onClick={() => navigate('/lernkarten/practice?mode=due')}
+            className="px-4 py-2 rounded-lg bg-green-600/20 border border-green-500/30 text-green-300 hover:bg-green-600/30 transition cursor-pointer text-sm font-medium"
+          >
+            📅 Heute fällig: {getDueCount(cards)} Karten
+          </button>
+          <div className="px-4 py-2 rounded-lg bg-[#12122a] border border-[#1e1e3a] text-slate-400 text-sm">
+            📚 Gesamt: {cards.length} Karten
+          </div>
+        </div>
+      )}
+
       {showForm && (
         <form onSubmit={saveCard} className="mb-8 p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] space-y-4">
           <p className="text-slate-400 text-sm">
@@ -252,9 +267,21 @@ export default function LernkartenDashboard() {
                       <div className="text-slate-500 text-sm italic mb-2">{card.mnemonik}</div>
                     )}
                     <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-[#1e1e3a] text-slate-400">
-                        {card.kategorie || 'Allgemein'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-[#1e1e3a] text-slate-400">
+                          {card.kategorie || 'Allgemein'}
+                        </span>
+                        {(() => {
+                          if (!card.repetitions && card.repetitions !== 0) {
+                            return <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">Neu</span>
+                          }
+                          if (isDue(card.next_review)) {
+                            return <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">Heute fällig</span>
+                          }
+                          const days = Math.ceil((new Date(card.next_review) - new Date()) / (1000 * 60 * 60 * 24))
+                          return <span className="text-xs px-2 py-0.5 rounded-full bg-[#1e1e3a] text-slate-500">Fällig in {days} {days === 1 ? 'Tag' : 'Tagen'}</span>
+                        })()}
+                      </div>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
                         <button
                           onClick={() => openEdit(card)}

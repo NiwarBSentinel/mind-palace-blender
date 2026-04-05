@@ -102,6 +102,8 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const [stats, setStats] = useState({})
 
+  const [dueCount, setDueCount] = useState(0)
+
   useEffect(() => {
     async function fetchStats() {
       const results = await Promise.all(
@@ -114,6 +116,14 @@ export default function Dashboard() {
         })
       )
       setStats(Object.fromEntries(results))
+
+      // Fetch due lernkarten count
+      const { data } = await supabase
+        .from('lernkarten')
+        .select('next_review')
+      const now = new Date()
+      const due = (data || []).filter((c) => new Date(c.next_review) <= now).length
+      setDueCount(due)
     }
     fetchStats()
   }, [])
@@ -154,7 +164,12 @@ export default function Dashboard() {
                   {mode.desc}
                 </p>
                 <div className={`mt-auto px-3 py-1.5 rounded-full text-xs font-medium ${c.stat} ${c.statBg}`}>
-                  {mode.statLabel ? (count !== undefined ? `${count} ${mode.statLabel}` : '...') : 'Spielen'}
+                  {mode.key === 'lernkarten' && dueCount > 0
+                    ? `${dueCount} heute fällig`
+                    : mode.statLabel
+                      ? (count !== undefined ? `${count} ${mode.statLabel}` : '...')
+                      : 'Spielen'
+                  }
                 </div>
               </div>
             )
