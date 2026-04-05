@@ -11,6 +11,8 @@ export default function LernkartenPractice() {
   const [revealed, setRevealed] = useState(false)
   const [loading, setLoading] = useState(true)
   const [finished, setFinished] = useState(false)
+  const [gewusst, setGewusst] = useState([])
+  const [nichtGewusst, setNichtGewusst] = useState([])
   const navigate = useNavigate()
 
   useEffect(() => { fetchCards() }, [])
@@ -34,6 +36,8 @@ export default function LernkartenPractice() {
     setCurrentIdx(0)
     setRevealed(false)
     setFinished(false)
+    setGewusst([])
+    setNichtGewusst([])
     if (cat === 'Alle') {
       setFilteredCards(allCards)
     } else {
@@ -45,7 +49,13 @@ export default function LernkartenPractice() {
   const total = filteredCards.length
   const progress = total > 0 ? ((currentIdx + (revealed ? 1 : 0)) / total) * 100 : 0
 
-  function goNext() {
+  function handleResult(knew) {
+    const card = filteredCards[currentIdx]
+    if (knew) {
+      setGewusst((prev) => [...prev, card.id])
+    } else {
+      setNichtGewusst((prev) => [...prev, card.id])
+    }
     if (currentIdx >= total - 1) {
       setFinished(true)
       return
@@ -54,16 +64,22 @@ export default function LernkartenPractice() {
     setCurrentIdx(currentIdx + 1)
   }
 
-  function goBack() {
-    setRevealed(false)
-    setFinished(false)
-    if (currentIdx > 0) setCurrentIdx(currentIdx - 1)
-  }
-
   function restart() {
     setCurrentIdx(0)
     setRevealed(false)
     setFinished(false)
+    setGewusst([])
+    setNichtGewusst([])
+  }
+
+  function restartWrong() {
+    const wrongCards = filteredCards.filter((c) => nichtGewusst.includes(c.id))
+    setFilteredCards(wrongCards)
+    setCurrentIdx(0)
+    setRevealed(false)
+    setFinished(false)
+    setGewusst([])
+    setNichtGewusst([])
   }
 
   if (loading) {
@@ -85,19 +101,51 @@ export default function LernkartenPractice() {
   }
 
   if (finished) {
+    const nichtGewusstCards = filteredCards.filter((c) => nichtGewusst.includes(c.id))
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8 text-center">
-        <div className="p-12 rounded-xl bg-[#12122a] border border-[#1e1e3a]">
-          <div className="text-6xl mb-6">🎉</div>
-          <h2 className="text-2xl font-bold text-slate-200 mb-2">Alle Karten durch!</h2>
-          <p className="text-slate-400 mb-8">{total} Karten bearbeitet</p>
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <div className="p-12 rounded-xl bg-[#12122a] border border-[#1e1e3a] text-center">
+          <h2 className="text-3xl font-bold text-slate-200 mb-8">🎉 Fertig!</h2>
+
+          <div className="flex gap-4 justify-center mb-8">
+            <div className="flex-1 p-4 rounded-lg bg-green-600/20 border border-green-500/30">
+              <div className="text-green-300 font-bold text-xl">Gewusst</div>
+              <div className="text-green-400 text-2xl mt-1">{gewusst.length} / {total}</div>
+            </div>
+            <div className="flex-1 p-4 rounded-lg bg-red-600/20 border border-red-500/30">
+              <div className="text-red-300 font-bold text-xl">Nicht gewusst</div>
+              <div className="text-red-400 text-2xl mt-1">{nichtGewusst.length} / {total}</div>
+            </div>
+          </div>
+
+          {nichtGewusstCards.length > 0 && (
+            <div className="text-left mb-8">
+              <h3 className="text-slate-400 text-sm font-medium mb-3">Zum Wiederholen:</h3>
+              <ul className="space-y-2">
+                {nichtGewusstCards.map((card) => (
+                  <li key={card.id} className="text-slate-300 text-sm p-2 rounded-lg bg-red-600/10 border border-red-500/20">
+                    {card.frage}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <div className="flex gap-3 justify-center">
             <button
               onClick={restart}
               className="px-6 py-2.5 rounded-lg bg-green-600 hover:bg-green-500 text-white font-medium transition cursor-pointer"
             >
-              Nochmal
+              Nochmal alle
             </button>
+            {nichtGewusstCards.length > 0 && (
+              <button
+                onClick={restartWrong}
+                className="px-6 py-2.5 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium transition cursor-pointer"
+              >
+                Nur falsche üben
+              </button>
+            )}
             <button
               onClick={() => navigate('/lernkarten')}
               className="px-6 py-2.5 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] transition cursor-pointer"
@@ -173,21 +221,22 @@ export default function LernkartenPractice() {
         )}
       </div>
 
-      <div className="flex justify-between">
-        <button
-          onClick={goBack}
-          disabled={currentIdx === 0}
-          className="px-6 py-2.5 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] disabled:opacity-30 transition cursor-pointer"
-        >
-          ← Zurück
-        </button>
-        <button
-          onClick={goNext}
-          className="px-6 py-2.5 rounded-lg bg-green-600 text-white hover:bg-green-500 transition cursor-pointer"
-        >
-          {currentIdx === total - 1 ? 'Fertig' : 'Weiter →'}
-        </button>
-      </div>
+      {revealed && (
+        <div className="flex gap-4 justify-center">
+          <button
+            onClick={() => handleResult(true)}
+            className="flex-1 px-6 py-3 rounded-lg bg-green-600 hover:bg-green-500 text-white font-medium text-lg transition cursor-pointer"
+          >
+            ✅ Gewusst
+          </button>
+          <button
+            onClick={() => handleResult(false)}
+            className="flex-1 px-6 py-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium text-lg transition cursor-pointer"
+          >
+            ❌ Nicht gewusst
+          </button>
+        </div>
+      )}
     </div>
   )
 }

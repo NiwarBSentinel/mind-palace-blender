@@ -7,6 +7,7 @@ export default function BMPDashboard() {
   const [persons, setPersons] = useState([])
   const [loading, setLoading] = useState(true)
   const [seeding, setSeeding] = useState(false)
+  const [seeded, setSeeded] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -25,9 +26,13 @@ export default function BMPDashboard() {
 
   async function handleSeed() {
     setSeeding(true)
-    await seedBMPPersons()
-    await fetchPersons()
-    setSeeding(false)
+    try {
+      await seedBMPPersons()
+      setSeeded(true)
+      await fetchPersons()
+    } finally {
+      setSeeding(false)
+    }
   }
 
   return (
@@ -48,7 +53,7 @@ export default function BMPDashboard() {
 
       {loading ? (
         <p className="text-center text-slate-400">Lade Personen...</p>
-      ) : persons.length === 0 ? (
+      ) : persons.length === 0 && !seeded ? (
         <div className="text-center py-12">
           <p className="text-slate-400 mb-6">Noch keine BMP-Daten vorhanden.</p>
           <button
@@ -56,9 +61,11 @@ export default function BMPDashboard() {
             disabled={seeding}
             className="px-8 py-3 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-medium text-lg transition cursor-pointer"
           >
-            {seeding ? 'Lade Seed-Daten...' : 'Seed-Daten laden'}
+            {seeding ? 'Wird geladen...' : 'Seed-Daten laden'}
           </button>
         </div>
+      ) : persons.length === 0 ? (
+        <p className="text-center text-slate-400">Keine Personen gefunden.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {persons.map((person) => (
