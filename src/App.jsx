@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
+import PalaceDashboard from './pages/PalaceDashboard'
 import Editor from './pages/Editor'
 import Practice from './pages/Practice'
 import BMPDashboard from './pages/BMPDashboard'
@@ -11,6 +12,7 @@ export default function App() {
     <div className="min-h-screen bg-[#0a0a1a]">
       <Routes>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/palaces" element={<PalaceDashboard />} />
         <Route path="/palace/:id" element={<Editor />} />
         <Route path="/practice/:id" element={<Practice />} />
         <Route path="/bmp" element={<BMPDashboard />} />

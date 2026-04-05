@@ -142,7 +142,7 @@ export default function Editor() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/palaces')}
             className="text-slate-400 hover:text-slate-200 transition text-sm mb-2 cursor-pointer"
           >
             ← Alle Paläste
