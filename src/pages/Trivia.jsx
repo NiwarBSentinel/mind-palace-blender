@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 
 const CATEGORIES = [
   { label: 'Alle Kategorien', value: '' },
@@ -45,11 +46,62 @@ export default function Trivia() {
   const [wrong, setWrong] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [saveModal, setSaveModal] = useState(null)
+  const [saveKategorie, setSaveKategorie] = useState('')
+  const [saveMnemonik, setSaveMnemonik] = useState('')
+  const [toast, setToast] = useState(null)
   const timerRef = useRef(null)
 
   useEffect(() => {
     return () => { if (timerRef.current) clearTimeout(timerRef.current) }
   }, [])
+
+  function openSaveModal(question, correct, category) {
+    if (timerRef.current) clearTimeout(timerRef.current)
+    setSaveModal({ question, correct, category })
+    setSaveKategorie(category)
+    setSaveMnemonik('')
+  }
+
+  function closeSaveModal() {
+    setSaveModal(null)
+    // Resume auto-advance if in game screen
+    if (screen === 'game' && selected !== null) {
+      timerRef.current = setTimeout(() => {
+        if (currentIdx >= questions.length - 1) {
+          setScreen('results')
+        } else {
+          setCurrentIdx((i) => i + 1)
+          setSelected(null)
+        }
+      }, 500)
+    }
+  }
+
+  async function handleSaveCard() {
+    if (!saveModal) return
+    const { error: err } = await supabase.from('lernkarten').insert({
+      frage: saveModal.question,
+      antwort: saveModal.correct,
+      kategorie: saveKategorie.trim() || 'Trivia',
+      mnemonik: saveMnemonik.trim() || null,
+    })
+    if (err) console.error('save lernkarte error:', err)
+    setSaveModal(null)
+    setToast('Lernkarte gespeichert!')
+    setTimeout(() => setToast(null), 2500)
+    // Resume auto-advance if in game screen
+    if (screen === 'game' && selected !== null) {
+      timerRef.current = setTimeout(() => {
+        if (currentIdx >= questions.length - 1) {
+          setScreen('results')
+        } else {
+          setCurrentIdx((i) => i + 1)
+          setSelected(null)
+        }
+      }, 500)
+    }
+  }
 
   async function startGame() {
     setLoading(true)
@@ -258,6 +310,74 @@ export default function Trivia() {
             )
           })}
         </div>
+
+        {selected !== null && (
+          <div className="text-center mt-4">
+            <button
+              onClick={() => openSaveModal(current.question, current.correct, current.category)}
+              className="text-sm px-3 py-1.5 rounded-lg bg-purple-600/20 border border-purple-500/30 text-purple-300 hover:bg-purple-600/30 transition cursor-pointer"
+            >
+              💾 Als Lernkarte speichern
+            </button>
+          </div>
+        )}
+
+        {/* Save Modal */}
+        {saveModal && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4" onClick={closeSaveModal}>
+            <div className="w-full max-w-md p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] space-y-4" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-lg font-semibold text-slate-200">Als Lernkarte speichern</h3>
+              <div>
+                <label className="text-slate-400 text-xs block mb-1">Frage</label>
+                <div className="px-3 py-2 rounded-lg bg-[#0a0a1a] border border-[#2a2a4a] text-slate-300 text-sm">{saveModal.question}</div>
+              </div>
+              <div>
+                <label className="text-slate-400 text-xs block mb-1">Antwort</label>
+                <div className="px-3 py-2 rounded-lg bg-[#0a0a1a] border border-[#2a2a4a] text-green-300 text-sm">{saveModal.correct}</div>
+              </div>
+              <div>
+                <label className="text-slate-400 text-xs block mb-1">Kategorie</label>
+                <input
+                  type="text"
+                  value={saveKategorie}
+                  onChange={(e) => setSaveKategorie(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-[#0a0a1a] border border-[#2a2a4a] text-slate-200 text-sm focus:outline-none focus:border-purple-500 transition"
+                />
+              </div>
+              <div>
+                <label className="text-slate-400 text-xs block mb-1">Mnemonik (optional)</label>
+                <textarea
+                  value={saveMnemonik}
+                  onChange={(e) => setSaveMnemonik(e.target.value)}
+                  placeholder="Eselsbrücke oder Merkhilfe..."
+                  rows={2}
+                  className="w-full px-3 py-2 rounded-lg bg-[#0a0a1a] border border-[#2a2a4a] text-slate-200 placeholder-slate-600 text-sm focus:outline-none focus:border-purple-500 transition resize-none"
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={closeSaveModal}
+                  className="px-4 py-2 rounded-lg text-slate-400 hover:bg-[#1e1e3a] transition cursor-pointer"
+                >
+                  Abbrechen
+                </button>
+                <button
+                  onClick={handleSaveCard}
+                  className="px-5 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-medium transition cursor-pointer"
+                >
+                  Speichern
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Toast */}
+        {toast && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 px-5 py-3 rounded-lg bg-green-600 text-white font-medium shadow-lg z-50">
+            ✅ {toast}
+          </div>
+        )}
       </div>
     )
   }
@@ -283,8 +403,18 @@ export default function Trivia() {
             <ul className="space-y-2">
               {wrong.map((w, i) => (
                 <li key={i} className="p-3 rounded-lg bg-red-600/10 border border-red-500/20">
-                  <div className="text-slate-300 text-sm">{w.question}</div>
-                  <div className="text-green-400 text-sm mt-1">→ {w.correct}</div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <div className="text-slate-300 text-sm">{w.question}</div>
+                      <div className="text-green-400 text-sm mt-1">→ {w.correct}</div>
+                    </div>
+                    <button
+                      onClick={() => openSaveModal(w.question, w.correct, 'Trivia')}
+                      className="text-xs px-2 py-1 rounded text-purple-400 hover:bg-purple-500/10 transition cursor-pointer shrink-0"
+                    >
+                      💾 Speichern
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -312,6 +442,63 @@ export default function Trivia() {
           </button>
         </div>
       </div>
+
+      {/* Save Modal */}
+      {saveModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4" onClick={closeSaveModal}>
+          <div className="w-full max-w-md p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] space-y-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-slate-200">Als Lernkarte speichern</h3>
+            <div>
+              <label className="text-slate-400 text-xs block mb-1">Frage</label>
+              <div className="px-3 py-2 rounded-lg bg-[#0a0a1a] border border-[#2a2a4a] text-slate-300 text-sm">{saveModal.question}</div>
+            </div>
+            <div>
+              <label className="text-slate-400 text-xs block mb-1">Antwort</label>
+              <div className="px-3 py-2 rounded-lg bg-[#0a0a1a] border border-[#2a2a4a] text-green-300 text-sm">{saveModal.correct}</div>
+            </div>
+            <div>
+              <label className="text-slate-400 text-xs block mb-1">Kategorie</label>
+              <input
+                type="text"
+                value={saveKategorie}
+                onChange={(e) => setSaveKategorie(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg bg-[#0a0a1a] border border-[#2a2a4a] text-slate-200 text-sm focus:outline-none focus:border-purple-500 transition"
+              />
+            </div>
+            <div>
+              <label className="text-slate-400 text-xs block mb-1">Mnemonik (optional)</label>
+              <textarea
+                value={saveMnemonik}
+                onChange={(e) => setSaveMnemonik(e.target.value)}
+                placeholder="Eselsbrücke oder Merkhilfe..."
+                rows={2}
+                className="w-full px-3 py-2 rounded-lg bg-[#0a0a1a] border border-[#2a2a4a] text-slate-200 placeholder-slate-600 text-sm focus:outline-none focus:border-purple-500 transition resize-none"
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={closeSaveModal}
+                className="px-4 py-2 rounded-lg text-slate-400 hover:bg-[#1e1e3a] transition cursor-pointer"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={handleSaveCard}
+                className="px-5 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-medium transition cursor-pointer"
+              >
+                Speichern
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 px-5 py-3 rounded-lg bg-green-600 text-white font-medium shadow-lg z-50">
+          ✅ {toast}
+        </div>
+      )}
     </div>
   )
 }
