@@ -3,16 +3,16 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 const BODY_DOTS = [
-  { koerperteil: 'Kopf',       x: 150, y: 40,  labelX: 178, labelY: 44,  anchor: 'start' },
-  { koerperteil: 'Ohr',        x: 130, y: 65,  labelX: 102, labelY: 69,  anchor: 'end' },
-  { koerperteil: 'Auge',       x: 150, y: 60,  labelX: 178, labelY: 64,  anchor: 'start' },
-  { koerperteil: 'Nase',       x: 150, y: 75,  labelX: 178, labelY: 79,  anchor: 'start' },
-  { koerperteil: 'Mund',       x: 150, y: 88,  labelX: 178, labelY: 92,  anchor: 'start' },
-  { koerperteil: 'Kinn',       x: 150, y: 100, labelX: 178, labelY: 104, anchor: 'start' },
-  { koerperteil: 'Achseln',    x: 108, y: 145, labelX: 80,  labelY: 149, anchor: 'end' },
-  { koerperteil: 'Bauchnabel', x: 150, y: 210, labelX: 178, labelY: 214, anchor: 'start' },
-  { koerperteil: 'Beine',      x: 150, y: 310, labelX: 178, labelY: 314, anchor: 'start' },
-  { koerperteil: 'Fuss',       x: 150, y: 410, labelX: 178, labelY: 414, anchor: 'start' },
+  { koerperteil: 'Kopf',       x: 150, y: 30,  labelX: 165, labelY: 34  },
+  { koerperteil: 'Ohr',        x: 100, y: 65,  labelX: 75,  labelY: 69, anchor: 'end' },
+  { koerperteil: 'Auge',       x: 150, y: 50,  labelX: 165, labelY: 54  },
+  { koerperteil: 'Nase',       x: 150, y: 75,  labelX: 165, labelY: 79  },
+  { koerperteil: 'Mund',       x: 150, y: 95,  labelX: 165, labelY: 99  },
+  { koerperteil: 'Kinn',       x: 150, y: 115, labelX: 165, labelY: 119 },
+  { koerperteil: 'Achseln',    x: 150, y: 160, labelX: 165, labelY: 164 },
+  { koerperteil: 'Bauchnabel', x: 150, y: 270, labelX: 165, labelY: 274 },
+  { koerperteil: 'Beine',      x: 150, y: 450, labelX: 165, labelY: 454 },
+  { koerperteil: 'Fuss',       x: 150, y: 590, labelX: 165, labelY: 594 },
 ]
 
 function BodySilhouette({ rooms, expandedRoom, fillStats, onDotClick }) {
@@ -35,21 +35,71 @@ function BodySilhouette({ rooms, expandedRoom, fillStats, onDotClick }) {
   return (
     <div className="sticky top-8">
       <div className="rounded-2xl bg-[#0d0d20] border border-[#1e1e3a] p-4">
-        <svg viewBox="0 0 300 440" className="w-full">
+        <svg viewBox="0 0 300 700" className="w-full">
           {/* Head */}
-          <circle cx="150" cy="65" r="35" fill="#1a1a2e" stroke="#2a2a4a" strokeWidth="1" />
+          <ellipse cx="150" cy="60" rx="45" ry="55" fill="#1e2a4a" stroke="#3a4a7a" strokeWidth="2" />
           {/* Neck */}
-          <rect x="140" y="100" width="20" height="18" rx="4" fill="#1a1a2e" />
-          {/* Torso */}
-          <path d="M108 118 L108 250 Q108 260 118 260 L182 260 Q192 260 192 250 L192 118 Q192 112 182 112 L118 112 Q108 112 108 118Z" fill="#1a1a2e" stroke="#2a2a4a" strokeWidth="1" />
+          <rect x="135" y="112" width="30" height="28" rx="6" fill="#1e2a4a" stroke="#3a4a7a" strokeWidth="2" />
+          {/* Torso — shoulders wide, tapers at waist, widens at hips */}
+          <path d="
+            M80 155
+            C80 145, 100 140, 135 140
+            L165 140
+            C200 140, 220 145, 220 155
+            L220 220
+            C220 250, 205 260, 195 270
+            L195 300
+            C195 320, 200 340, 205 360
+            L95 360
+            C100 340, 105 320, 105 300
+            L105 270
+            C95 260, 80 250, 80 220
+            Z
+          " fill="#1e2a4a" stroke="#3a4a7a" strokeWidth="2" />
           {/* Left arm */}
-          <path d="M108 125 L80 145 L65 210 L72 250 L80 250 L88 215 L95 170 L108 155" fill="#1a1a2e" stroke="#2a2a4a" strokeWidth="1" />
+          <path d="
+            M80 155
+            C70 170, 60 210, 55 270
+            C52 310, 55 330, 60 350
+            L85 350
+            C82 330, 78 310, 80 270
+            C85 220, 92 180, 100 165
+          " fill="#1e2a4a" stroke="#3a4a7a" strokeWidth="2" />
           {/* Right arm */}
-          <path d="M192 125 L220 145 L235 210 L228 250 L220 250 L212 215 L205 170 L192 155" fill="#1a1a2e" stroke="#2a2a4a" strokeWidth="1" />
+          <path d="
+            M220 155
+            C230 170, 240 210, 245 270
+            C248 310, 245 330, 240 350
+            L215 350
+            C218 330, 222 310, 220 270
+            C215 220, 208 180, 200 165
+          " fill="#1e2a4a" stroke="#3a4a7a" strokeWidth="2" />
           {/* Left leg */}
-          <path d="M118 260 L115 320 L112 370 L108 410 L100 425 L120 425 L125 410 L130 370 L135 320 L140 260" fill="#1a1a2e" stroke="#2a2a4a" strokeWidth="1" />
+          <path d="
+            M95 360
+            C98 400, 100 440, 105 480
+            C108 520, 108 560, 100 600
+            L100 620
+            L80 625
+            L78 615
+            C85 610, 85 605, 80 600
+            L80 595
+            C90 560, 90 520, 88 480
+            C85 440, 82 400, 110 360
+          " fill="#1e2a4a" stroke="#3a4a7a" strokeWidth="2" />
           {/* Right leg */}
-          <path d="M160 260 L165 320 L170 370 L175 410 L180 425 L200 425 L192 410 L188 370 L185 320 L182 260" fill="#1a1a2e" stroke="#2a2a4a" strokeWidth="1" />
+          <path d="
+            M205 360
+            C202 400, 200 440, 195 480
+            C192 520, 192 560, 200 600
+            L200 620
+            L220 625
+            L222 615
+            C215 610, 215 605, 220 600
+            L220 595
+            C210 560, 210 520, 212 480
+            C215 440, 218 400, 190 360
+          " fill="#1e2a4a" stroke="#3a4a7a" strokeWidth="2" />
 
           {/* Dots and labels */}
           {BODY_DOTS.map((dot) => {
@@ -69,17 +119,17 @@ function BodySilhouette({ rooms, expandedRoom, fillStats, onDotClick }) {
               >
                 {/* Active ring */}
                 {isActive && (
-                  <circle cx={dot.x} cy={dot.y} r="11" fill="none" stroke="white" strokeWidth="2" opacity="0.8" />
+                  <circle cx={dot.x} cy={dot.y} r="14" fill="none" stroke="white" strokeWidth="2.5" opacity="0.8" />
                 )}
                 {/* Hover ring */}
                 {isHovered && !isActive && (
-                  <circle cx={dot.x} cy={dot.y} r="11" fill="none" stroke={color} strokeWidth="1.5" opacity="0.5" />
+                  <circle cx={dot.x} cy={dot.y} r="14" fill="none" stroke={color} strokeWidth="1.5" opacity="0.5" />
                 )}
                 {/* Dot */}
                 <circle
                   cx={dot.x}
                   cy={dot.y}
-                  r={isHovered ? 8 : 7}
+                  r={isHovered ? 11 : 10}
                   fill={color}
                   className="transition-all duration-150"
                 />
@@ -87,8 +137,8 @@ function BodySilhouette({ rooms, expandedRoom, fillStats, onDotClick }) {
                 <text
                   x={dot.labelX}
                   y={dot.labelY}
-                  textAnchor={dot.anchor}
-                  className="text-[9px] fill-slate-500 select-none"
+                  textAnchor={dot.anchor || 'start'}
+                  className="text-[11px] fill-slate-400 select-none font-medium"
                 >
                   {dot.koerperteil}
                 </text>
@@ -96,20 +146,20 @@ function BodySilhouette({ rooms, expandedRoom, fillStats, onDotClick }) {
                 {isHovered && room && (
                   <g>
                     <rect
-                      x={dot.x - 55}
-                      y={dot.y - 32}
-                      width="110"
-                      height="20"
-                      rx="4"
+                      x={dot.x - 60}
+                      y={dot.y - 36}
+                      width="120"
+                      height="22"
+                      rx="5"
                       fill="#0a0a18"
-                      stroke="#2a2a4a"
-                      strokeWidth="0.5"
+                      stroke="#3a4a7a"
+                      strokeWidth="1"
                     />
                     <text
                       x={dot.x}
-                      y={dot.y - 19}
+                      y={dot.y - 21}
                       textAnchor="middle"
-                      className="text-[8px] fill-slate-300 select-none"
+                      className="text-[9px] fill-slate-300 select-none"
                     >
                       {room.name} · {filled}/5 befüllt
                     </text>
