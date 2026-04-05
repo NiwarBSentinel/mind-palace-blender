@@ -1,57 +1,133 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
+
+const modes = [
+  {
+    key: 'palaces',
+    path: '/palaces',
+    emoji: '🏛️',
+    title: 'Gedächtnispalast',
+    desc: 'Erstelle eigene Paläste mit eigenen Räumen und Loci',
+    table: 'palaces',
+    statLabel: 'Paläste',
+    color: 'purple',
+  },
+  {
+    key: 'bmp',
+    path: '/bmp',
+    emoji: '🧠',
+    title: 'Body Memory Palace',
+    desc: '10 vordefinierte Personen mit je 50 festen Loci',
+    table: 'bmp_persons',
+    statLabel: 'Personen',
+    color: 'blue',
+  },
+  {
+    key: 'lernkarten',
+    path: '/lernkarten',
+    emoji: '🃏',
+    title: 'Lernkarten',
+    desc: 'Fragen & Antworten mit Mnemonik und Major-System Hilfe',
+    table: 'lernkarten',
+    statLabel: 'Karten',
+    color: 'green',
+  },
+]
+
+const colorMap = {
+  purple: {
+    border: 'border-b-purple-500',
+    hoverBorder: 'hover:border-purple-500/50',
+    hoverText: 'group-hover:text-purple-300',
+    shadow: 'hover:shadow-purple-500/20',
+    stat: 'text-purple-400',
+    statBg: 'bg-purple-500/10',
+  },
+  blue: {
+    border: 'border-b-blue-500',
+    hoverBorder: 'hover:border-blue-500/50',
+    hoverText: 'group-hover:text-blue-300',
+    shadow: 'hover:shadow-blue-500/20',
+    stat: 'text-blue-400',
+    statBg: 'bg-blue-500/10',
+  },
+  green: {
+    border: 'border-b-green-500',
+    hoverBorder: 'hover:border-green-500/50',
+    hoverText: 'group-hover:text-green-300',
+    shadow: 'hover:shadow-green-500/20',
+    stat: 'text-green-400',
+    statBg: 'bg-green-500/10',
+  },
+}
 
 export default function Dashboard() {
   const navigate = useNavigate()
+  const [stats, setStats] = useState({})
+
+  useEffect(() => {
+    async function fetchStats() {
+      const results = await Promise.all(
+        modes.map(async (m) => {
+          const { count } = await supabase
+            .from(m.table)
+            .select('*', { count: 'exact', head: true })
+          return [m.key, count ?? 0]
+        })
+      )
+      setStats(Object.fromEntries(results))
+    }
+    fetchStats()
+  }, [])
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold text-center mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-        Mind Palace
-      </h1>
-      <p className="text-center text-slate-400 mb-12">
-        Wähle deinen Modus
-      </p>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div
-          onClick={() => navigate('/palaces')}
-          className="p-8 rounded-xl bg-[#12122a] border border-[#1e1e3a] hover:border-purple-500/50 cursor-pointer transition group flex flex-col items-center text-center"
-        >
-          <div className="text-5xl mb-4">🏛️</div>
-          <h2 className="text-xl font-semibold text-slate-200 group-hover:text-purple-300 transition mb-2">
-            Gedächtnispalast
-          </h2>
-          <p className="text-slate-400 text-sm">
-            Erstelle eigene Paläste mit eigenen Räumen und Loci
-          </p>
+    <div className="min-h-screen bg-gradient-to-b from-[#0a0a1a] via-[#0d0d24] to-[#050510] flex flex-col">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-16">
+        <div className="mb-4">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center mx-auto mb-6 shadow-lg shadow-purple-500/25">
+            <span className="text-3xl">🧩</span>
+          </div>
         </div>
 
-        <div
-          onClick={() => navigate('/bmp')}
-          className="p-8 rounded-xl bg-[#12122a] border border-[#1e1e3a] hover:border-blue-500/50 cursor-pointer transition group flex flex-col items-center text-center"
-        >
-          <div className="text-5xl mb-4">🧠</div>
-          <h2 className="text-xl font-semibold text-slate-200 group-hover:text-blue-300 transition mb-2">
-            Body Memory Palace
-          </h2>
-          <p className="text-slate-400 text-sm">
-            10 vordefinierte Personen mit je 50 festen Loci
-          </p>
-        </div>
+        <h1 className="text-5xl sm:text-6xl font-extrabold text-center mb-3 bg-gradient-to-r from-purple-400 via-blue-400 to-purple-400 bg-clip-text text-transparent tracking-tight">
+          Mind Palace Blender
+        </h1>
+        <p className="text-center text-slate-400 text-lg mb-16 tracking-wide">
+          Dein persönliches Gedächtnissystem
+        </p>
 
-        <div
-          onClick={() => navigate('/lernkarten')}
-          className="p-8 rounded-xl bg-[#12122a] border border-[#1e1e3a] hover:border-green-500/50 cursor-pointer transition group flex flex-col items-center text-center"
-        >
-          <div className="text-5xl mb-4">📇</div>
-          <h2 className="text-xl font-semibold text-slate-200 group-hover:text-green-300 transition mb-2">
-            Lernkarten
-          </h2>
-          <p className="text-slate-400 text-sm">
-            Fragen & Antworten mit Mnemonik und Major-System Hilfe
-          </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 w-full max-w-4xl">
+          {modes.map((mode) => {
+            const c = colorMap[mode.color]
+            const count = stats[mode.key]
+            return (
+              <div
+                key={mode.key}
+                onClick={() => navigate(mode.path)}
+                className={`relative p-8 rounded-2xl bg-[#0f0f25]/80 backdrop-blur border border-[#1e1e3a] border-b-2 ${c.border} ${c.hoverBorder} cursor-pointer transition-all duration-300 group flex flex-col items-center text-center hover:scale-[1.03] hover:shadow-xl ${c.shadow} hover:bg-[#13132e]`}
+              >
+                <div className="text-5xl mb-5 transition-transform duration-300 group-hover:scale-110">
+                  {mode.emoji}
+                </div>
+                <h2 className={`text-xl font-bold text-slate-200 ${c.hoverText} transition mb-2`}>
+                  {mode.title}
+                </h2>
+                <p className="text-slate-400 text-sm leading-relaxed mb-5">
+                  {mode.desc}
+                </p>
+                <div className={`mt-auto px-3 py-1.5 rounded-full text-xs font-medium ${c.stat} ${c.statBg}`}>
+                  {count !== undefined ? `${count} ${mode.statLabel}` : '...'}
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
+
+      <footer className="text-center pb-6 text-slate-600 text-xs tracking-wider">
+        mind-palace-blender.vercel.app
+      </footer>
     </div>
   )
 }
