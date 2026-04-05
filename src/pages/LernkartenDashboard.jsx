@@ -35,6 +35,7 @@ export default function LernkartenDashboard() {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState({ frage: '', antwort: '', mnemonik: '', kategorie: '' })
+  const [search, setSearch] = useState('')
   const navigate = useNavigate()
 
   useEffect(() => { fetchCards() }, [])
@@ -93,8 +94,18 @@ export default function LernkartenDashboard() {
     await fetchCards()
   }
 
+  const searchLower = search.toLowerCase()
+  const filteredCards = search
+    ? cards.filter((c) =>
+        (c.frage || '').toLowerCase().includes(searchLower) ||
+        (c.antwort || '').toLowerCase().includes(searchLower) ||
+        (c.mnemonik || '').toLowerCase().includes(searchLower) ||
+        (c.kategorie || '').toLowerCase().includes(searchLower)
+      )
+    : cards
+
   const grouped = {}
-  for (const card of cards) {
+  for (const card of filteredCards) {
     const cat = card.kategorie || 'Allgemein'
     if (!grouped[cat]) grouped[cat] = []
     grouped[cat].push(card)
@@ -187,10 +198,41 @@ export default function LernkartenDashboard() {
         </form>
       )}
 
+      {!loading && cards.length > 0 && (
+        <div className="relative mb-6">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Suche nach Frage, Antwort oder Mnemonik..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-10 py-2.5 rounded-lg bg-[#0a0a1a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 focus:outline-none focus:border-green-500 transition"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition cursor-pointer text-lg leading-none"
+            >
+              ×
+            </button>
+          )}
+        </div>
+      )}
+
+      {search && !loading && (
+        <p className="text-sm text-slate-400 mb-4">
+          {filteredCards.length} Karten gefunden
+        </p>
+      )}
+
       {loading ? (
         <p className="text-center text-slate-400">Lade Karten...</p>
       ) : cards.length === 0 ? (
         <p className="text-center text-slate-500 py-8">Noch keine Karten. Erstelle deine erste Lernkarte!</p>
+      ) : filteredCards.length === 0 ? (
+        <p className="text-center text-slate-500 py-8">Keine Karten gefunden für &lsquo;{search}&rsquo;</p>
       ) : (
         <div className="space-y-8">
           {categories.map((cat) => (
