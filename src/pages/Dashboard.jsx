@@ -40,7 +40,7 @@ const modes = [
     title: 'Peg List',
     desc: 'Major System Nachschlagewerk 00-100',
     table: null,
-    statLabel: 'Einträge',
+    statLabel: null,
     color: 'orange',
   },
   {
@@ -52,6 +52,16 @@ const modes = [
     table: null,
     statLabel: null,
     color: 'red',
+  },
+  {
+    key: 'deutschc1',
+    path: '/deutsch-c1',
+    emoji: '🇩🇪',
+    title: 'Deutsch C1',
+    desc: 'C1 Wortschatz mit Spaced Repetition',
+    table: null,
+    statLabel: null,
+    color: 'cyan',
   },
 ]
 
@@ -96,6 +106,14 @@ const colorMap = {
     stat: 'text-red-400',
     statBg: 'bg-red-500/10',
   },
+  cyan: {
+    border: 'border-b-cyan-500',
+    hoverBorder: 'hover:border-cyan-500/50',
+    hoverText: 'group-hover:text-cyan-300',
+    shadow: 'hover:shadow-cyan-500/20',
+    stat: 'text-cyan-400',
+    statBg: 'bg-cyan-500/10',
+  },
 }
 
 export default function Dashboard() {
@@ -108,7 +126,8 @@ export default function Dashboard() {
     async function fetchStats() {
       const results = await Promise.all(
         modes.map(async (m) => {
-          if (!m.table) return [m.key, 101]
+          if (m.key === 'deutschc1') return [m.key, 51]
+          if (!m.table) return [m.key, null]
           const { count } = await supabase
             .from(m.table)
             .select('*', { count: 'exact', head: true })
@@ -144,7 +163,7 @@ export default function Dashboard() {
           Dein persönliches Gedächtnissystem
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 w-full max-w-6xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
           {modes.map((mode) => {
             const c = colorMap[mode.color]
             const count = stats[mode.key]
@@ -166,9 +185,13 @@ export default function Dashboard() {
                 <div className={`mt-auto px-3 py-1.5 rounded-full text-xs font-medium ${c.stat} ${c.statBg}`}>
                   {mode.key === 'lernkarten' && dueCount > 0
                     ? `${dueCount} heute fällig`
-                    : mode.statLabel
-                      ? (count !== undefined ? `${count} ${mode.statLabel}` : '...')
-                      : 'Spielen'
+                    : mode.key === 'deutschc1'
+                      ? '51 Wörter'
+                      : mode.key === 'peglist'
+                        ? '101 Einträge'
+                        : mode.statLabel
+                          ? (count !== undefined ? `${count} ${mode.statLabel}` : '...')
+                          : 'Spielen'
                   }
                 </div>
               </div>
