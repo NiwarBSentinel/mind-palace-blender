@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getAllWords } from '../data/wordLoader'
+import { getAllWords, getWordsForLevel } from '../data/wordLoader'
 
-function getAllNouns() {
-  const allWords = getAllWords()
+const LEVELS = ['Alle', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+
+function extractNouns(words) {
   const nouns = []
   const seen = new Set()
-  for (const w of allWords) {
+  for (const w of words) {
     const match = w.wort.match(/^(der|die|das)\s+(.+)/)
     if (match && !seen.has(w.wort.toLowerCase())) {
       seen.add(w.wort.toLowerCase())
@@ -16,15 +17,19 @@ function getAllNouns() {
   return nouns
 }
 
-const ALL_NOUNS = getAllNouns()
+function getNounsForLevel(level) {
+  return extractNouns(level === 'Alle' ? getAllWords() : getWordsForLevel(level))
+}
 
-function pickNoun() {
-  return ALL_NOUNS[Math.floor(Math.random() * ALL_NOUNS.length)]
+function pickNoun(nouns) {
+  return nouns[Math.floor(Math.random() * nouns.length)]
 }
 
 export default function ArtikelTrainer() {
   const navigate = useNavigate()
-  const [noun, setNoun] = useState(() => pickNoun())
+  const [level, setLevel] = useState(() => localStorage.getItem('artikel_level') || 'Alle')
+  const [nouns, setNouns] = useState(() => getNounsForLevel(localStorage.getItem('artikel_level') || 'Alle'))
+  const [noun, setNoun] = useState(() => pickNoun(getNounsForLevel(localStorage.getItem('artikel_level') || 'Alle')))
   const [selected, setSelected] = useState(null)
   const [correct, setCorrect] = useState(null)
   const [score, setScore] = useState(0)
@@ -36,6 +41,20 @@ export default function ArtikelTrainer() {
   useEffect(() => {
     return () => { if (timerRef.current) clearTimeout(timerRef.current) }
   }, [])
+
+  function changeLevel(lv) {
+    setLevel(lv)
+    localStorage.setItem('artikel_level', lv)
+    const newNouns = getNounsForLevel(lv)
+    setNouns(newNouns)
+    setNoun(pickNoun(newNouns))
+    setSelected(null)
+    setCorrect(null)
+    setScore(0)
+    setTotal(0)
+    setStreak(0)
+    setBestStreak(0)
+  }
 
   function handleGuess(artikel) {
     if (selected) return
@@ -54,7 +73,7 @@ export default function ArtikelTrainer() {
       setStreak(0)
     }
     timerRef.current = setTimeout(() => {
-      setNoun(pickNoun())
+      setNoun(pickNoun(nouns))
       setSelected(null)
       setCorrect(null)
     }, isCorrect ? 600 : 1500)
@@ -62,7 +81,7 @@ export default function ArtikelTrainer() {
 
   function restart() {
     if (timerRef.current) clearTimeout(timerRef.current)
-    setNoun(pickNoun())
+    setNoun(pickNoun(nouns))
     setSelected(null)
     setCorrect(null)
     setScore(0)
@@ -92,6 +111,23 @@ export default function ArtikelTrainer() {
       <p className="text-center text-slate-400 mb-8">
         der, die oder das?
       </p>
+
+      <div className="flex flex-wrap justify-center gap-1.5 mb-6">
+        {LEVELS.map((lv) => (
+          <button
+            key={lv}
+            onClick={() => changeLevel(lv)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+              level === lv
+                ? 'bg-blue-600 text-white'
+                : 'bg-[#12122a] border border-[#2a2a4a] text-slate-400 hover:border-blue-500/50'
+            }`}
+          >
+            {lv}
+          </button>
+        ))}
+        <span className="text-xs text-slate-600 self-center ml-2">{nouns.length} Nomen</span>
+      </div>
 
       <div className="flex justify-center gap-4 text-sm text-slate-500 mb-6">
         <span>{score} / {total} richtig</span>
