@@ -63,6 +63,16 @@ const modes = [
     statLabel: null,
     color: 'teal',
   },
+  {
+    key: 'hangman',
+    path: '/hangman',
+    emoji: '💀',
+    title: 'Hangman',
+    desc: 'C1 Wörter erraten',
+    table: null,
+    statLabel: null,
+    color: 'rose',
+  },
 ]
 
 const colorMap = {
@@ -113,6 +123,14 @@ const colorMap = {
     shadow: 'hover:shadow-teal-500/20',
     stat: 'text-teal-400',
     statBg: 'bg-teal-500/10',
+  },
+  rose: {
+    border: 'border-b-rose-500',
+    hoverBorder: 'hover:border-rose-500/50',
+    hoverText: 'group-hover:text-rose-300',
+    shadow: 'hover:shadow-rose-500/20',
+    stat: 'text-rose-400',
+    statBg: 'bg-rose-500/10',
   },
 }
 

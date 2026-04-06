@@ -17,6 +17,7 @@ import DeutschLernkarten from './pages/DeutschLernkarten'
 import DeutschLernkartenPractice from './pages/DeutschLernkartenPractice'
 import DeutschC1Quiz from './pages/DeutschC1Quiz'
 import GoetheLevel from './pages/GoetheLevel'
+import HangmanGame from './pages/HangmanGame'
 
 export default function App() {
   return (
@@ -40,6 +41,7 @@ export default function App() {
         <Route path="/deutsch-c1" element={<DeutschC1 />} />
         <Route path="/sprachen/deutsch/c1/quiz" element={<DeutschC1Quiz />} />
         <Route path="/sprachen/deutsch/:level" element={<GoetheLevel />} />
+        <Route path="/hangman" element={<HangmanGame />} />
       </Routes>
     </div>
   )
