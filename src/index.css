@@ -11,3 +11,16 @@ body {
 #root {
   min-height: 100vh;
 }
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.slide-right { animation: slideInRight 0.2s ease-out; }
+.slide-left { animation: slideInLeft 0.2s ease-out; }

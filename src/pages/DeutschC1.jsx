@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { C1_WOERTER } from '../data/c1WordsFull'
@@ -78,6 +78,7 @@ export default function DeutschC1() {
   const [detailLoading, setDetailLoading] = useState(false)
   const [grammarLoading, setGrammarLoading] = useState(false)
   const [slideDir, setSlideDir] = useState('right')
+  const stackRef = useRef({ stack: [], idx: -1 })
 
   // Practice state
   const [practiceCards, setPracticeCards] = useState([])
@@ -230,14 +231,18 @@ export default function DeutschC1() {
     return result
   }
 
+  function updateStack(newStack, newIdx) {
+    stackRef.current = { stack: newStack, idx: newIdx }
+    setWordStack(newStack)
+    setStackIdx(newIdx)
+  }
+
   async function openDetail(w) {
     const wordObj = typeof w === 'string'
       ? C1_WOERTER.find((c) => c.wort === w) || { wort: w, definition: '', beispiel: '' }
       : w
     setSlideDir('right')
-    const newStack = [wordObj]
-    setWordStack(newStack)
-    setStackIdx(0)
+    updateStack([wordObj], 0)
     setDetailLoading(true)
     setGrammarLoading(true)
     const data = await fetchWordData(wordObj.wort)
@@ -249,9 +254,10 @@ export default function DeutschC1() {
   async function navigateToWord(word) {
     const wordObj = C1_WOERTER.find((c) => c.wort === word) || { wort: word, definition: '', beispiel: '' }
     setSlideDir('right')
-    const newStack = [...wordStack.slice(0, stackIdx + 1), wordObj]
-    setWordStack(newStack)
-    setStackIdx(newStack.length - 1)
+    const { stack, idx } = stackRef.current
+    const newStack = [...stack.slice(0, idx + 1), wordObj]
+    const newIdx = newStack.length - 1
+    updateStack(newStack, newIdx)
     if (!stackData[word]) {
       setDetailLoading(true)
       setGrammarLoading(true)
@@ -263,27 +269,29 @@ export default function DeutschC1() {
   }
 
   function goBack() {
-    if (stackIdx > 0) {
+    const { idx } = stackRef.current
+    if (idx > 0) {
       setSlideDir('left')
-      setStackIdx(stackIdx - 1)
+      updateStack(stackRef.current.stack, idx - 1)
     }
   }
 
   function goForward() {
-    if (stackIdx < wordStack.length - 1) {
+    const { stack, idx } = stackRef.current
+    if (idx < stack.length - 1) {
       setSlideDir('right')
-      setStackIdx(stackIdx + 1)
+      updateStack(stack, idx + 1)
     }
   }
 
-  function jumpTo(idx) {
-    setSlideDir(idx > stackIdx ? 'right' : 'left')
-    setStackIdx(idx)
+  function jumpTo(i) {
+    const { idx } = stackRef.current
+    setSlideDir(i > idx ? 'right' : 'left')
+    updateStack(stackRef.current.stack, i)
   }
 
   function closeDetail() {
-    setWordStack([])
-    setStackIdx(-1)
+    updateStack([], -1)
     setStackData({})
   }
 
@@ -615,8 +623,11 @@ export default function DeutschC1() {
               )}
             </div>
 
-            {/* Content area */}
-            <div className="overflow-y-auto p-6 space-y-5" key={detailWord.wort}>
+            {/* Content area with slide animation */}
+            <div
+              className={`overflow-y-auto p-6 space-y-5 ${slideDir === 'right' ? 'slide-right' : 'slide-left'}`}
+              key={`${detailWord.wort}-${stackIdx}`}
+            >
               <div className="flex items-start justify-between gap-2">
                 <div className="text-2xl font-bold text-blue-300">{detailWord.wort}</div>
                 {!isInC1List && (
