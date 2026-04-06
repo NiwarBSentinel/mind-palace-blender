@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom'
 
 const levels = [
-  { level: 'A1', name: 'Anfänger', color: 'green', active: false },
-  { level: 'A2', name: 'Grundlegende Kenntnisse', color: 'teal', active: false },
-  { level: 'B1', name: 'Mittelstufe', color: 'blue', active: false },
+  { level: 'A1', name: 'Anfänger', color: 'green', active: true, vocPath: '/sprachen/deutsch/a1' },
+  { level: 'A2', name: 'Grundlegende Kenntnisse', color: 'teal', active: true, vocPath: '/sprachen/deutsch/a2' },
+  { level: 'B1', name: 'Mittelstufe', color: 'blue', active: true, vocPath: '/sprachen/deutsch/b1' },
   { level: 'B2', name: 'Obere Mittelstufe', color: 'indigo', active: false },
   { level: 'C1', name: 'Fortgeschritten', color: 'purple', active: true, vocPath: '/deutsch-c1', cardPath: '/sprachen/deutsch/lernkarten', quizPath: '/sprachen/deutsch/c1/quiz' },
   { level: 'C2', name: 'Experte', color: 'red', active: false },
@@ -56,38 +56,27 @@ export default function DeutschDashboard() {
                 <div className="flex gap-2">
                   {l.active ? (
                     <>
-                      <button
-                        onClick={() => navigate(l.vocPath)}
-                        className={`flex-1 px-3 py-2 rounded-lg ${c.btn} text-white text-xs font-medium transition cursor-pointer`}
-                      >
-                        📖 Vokabeln
-                      </button>
-                      <button
-                        onClick={() => navigate(l.cardPath)}
-                        className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] text-xs font-medium transition cursor-pointer"
-                      >
-                        🃏 Lernkarten
-                      </button>
-                      {l.quizPath && (
-                        <button
-                          onClick={() => navigate(l.quizPath)}
-                          className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] text-xs font-medium transition cursor-pointer"
-                        >
-                          🎯 Quiz
-                        </button>
+                      {l.vocPath ? (
+                        <button onClick={() => navigate(l.vocPath)} className={`flex-1 px-3 py-2 rounded-lg ${c.btn} text-white text-xs font-medium transition cursor-pointer`}>📖 Vokabeln</button>
+                      ) : (
+                        <div className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">📖 Vokabeln</div>
+                      )}
+                      {l.cardPath ? (
+                        <button onClick={() => navigate(l.cardPath)} className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] text-xs font-medium transition cursor-pointer">🃏 Lernkarten</button>
+                      ) : (
+                        <div className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🃏 Lernkarten</div>
+                      )}
+                      {l.quizPath ? (
+                        <button onClick={() => navigate(l.quizPath)} className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] text-xs font-medium transition cursor-pointer">🎯 Quiz</button>
+                      ) : (
+                        <div className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🎯 Quiz</div>
                       )}
                     </>
                   ) : (
                     <>
-                      <div className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">
-                        📖 Vokabeln
-                      </div>
-                      <div className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">
-                        🃏 Lernkarten
-                      </div>
-                      <div className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">
-                        🎯 Quiz
-                      </div>
+                      <div className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">📖 Vokabeln</div>
+                      <div className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🃏 Lernkarten</div>
+                      <div className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🎯 Quiz</div>
                     </>
                   )}
                 </div>
