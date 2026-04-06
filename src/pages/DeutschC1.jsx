@@ -147,26 +147,17 @@ export default function DeutschC1() {
       .slice(0, 8)
   }
 
-  function parseWikiGrammar(wikitext, wordType) {
+  function parseWikiGrammar(wikitext, wordType, word) {
     try {
-      // Detect type from wikitext if not provided by DWDS
-      let type = wordType
-      if (!type) {
-        if (wikitext.match(/\{\{Wortart\|Adjektiv\|/)) type = 'Adjektiv'
-        else if (wikitext.match(/\{\{Wortart\|Verb\|/)) type = 'Verb'
-        else if (wikitext.match(/\{\{Wortart\|Substantiv\|/)) type = 'Substantiv'
-      }
+      const cleanWord = (word || '').replace(/^(die|der|das)\s+/, '')
 
-      if (type === 'Adjektiv') {
-        let komparativ = null, superlativ = null
-        const kompMatch = wikitext.match(/\|Komparativ=([^\n|]+)/)
-        if (kompMatch) komparativ = kompMatch[1].trim()
-        const supMatch = wikitext.match(/\|Superlativ=([^\n|]+)/)
-        if (supMatch) superlativ = supMatch[1].trim()
-        return { type: 'Adjektiv', komparativ, superlativ }
-      }
-
-      if (type === 'Verb') {
+      // 1. Verb detection — highest priority
+      const isVerb = wordType === 'Verb'
+        || /Wortart\|Verb/.test(wikitext)
+        || /Konjugation/.test(wikitext)
+        || cleanWord.endsWith('en')
+        || cleanWord.endsWith('ieren')
+      if (isVerb && wordType !== 'Substantiv' && wordType !== 'Adjektiv') {
         let praesIch = null, praeteritum = null, partizipII = null
         const praesMatch = wikitext.match(/\|Präsens_ich=([^\n|]+)/)
         if (praesMatch) praesIch = praesMatch[1].trim()
@@ -177,7 +168,18 @@ export default function DeutschC1() {
         return { type: 'Verb', praesIch, praeteritum, partizipII }
       }
 
-      if (type === 'Substantiv' || !type) {
+      // 2. Adjektiv detection
+      if (wordType === 'Adjektiv' || /Wortart\|Adjektiv/.test(wikitext)) {
+        let komparativ = null, superlativ = null
+        const kompMatch = wikitext.match(/\|Komparativ=([^\n|]+)/)
+        if (kompMatch) komparativ = kompMatch[1].trim()
+        const supMatch = wikitext.match(/\|Superlativ=([^\n|]+)/)
+        if (supMatch) superlativ = supMatch[1].trim()
+        return { type: 'Adjektiv', komparativ, superlativ }
+      }
+
+      // 3. Substantiv detection
+      if (wordType === 'Substantiv' || /Wortart\|Substantiv/.test(wikitext) || /\|Genus=/.test(wikitext)) {
         let genus = null, genSg = null, nomPl = null
         const genusMatch = wikitext.match(/\|Genus=([mfn])/i)
         if (genusMatch) {
@@ -227,7 +229,7 @@ export default function DeutschC1() {
 
     if (wikiRes.status === 'fulfilled' && wikiRes.value?.parse?.wikitext?.['*']) {
       const wikitext = wikiRes.value.parse.wikitext['*']
-      result.grammar = parseWikiGrammar(wikitext, result.wortart)
+      result.grammar = parseWikiGrammar(wikitext, result.wortart, word)
     }
 
     return result
@@ -664,7 +666,7 @@ export default function DeutschC1() {
                   <div className="p-3 rounded-lg bg-[#0a0a1a] text-sm space-y-1">
                     {currentData.grammar.type === 'Substantiv' && (
                       <div className="text-slate-200">
-                        <span className="text-blue-400 mr-1">🔵</span>
+                        <span className="mr-1">{currentData.grammar.genus === 'der' ? '🟢' : currentData.grammar.genus === 'die' ? '🔵' : currentData.grammar.genus === 'das' ? '🟡' : '⚪'}</span>
                         {currentData.grammar.genus && <span className="font-medium">{currentData.grammar.genus} </span>}
                         {detailWord.wort.replace(/^(die|der|das)\s+/, '')}
                         {currentData.grammar.genSg && <><span className="text-slate-400 mx-2">|</span>Gen: <span className="text-slate-300">{currentData.grammar.genSg}</span></>}
