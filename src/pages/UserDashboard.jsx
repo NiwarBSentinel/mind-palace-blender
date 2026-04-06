@@ -41,14 +41,24 @@ export default function UserDashboard() {
     }
     setProgress(byLevel)
 
-    // Fetch lernkarten
+    // Fetch lernkarten grouped by kategorie
     const { data: kartenData } = await supabase
       .from('lernkarten')
-      .select('next_review')
+      .select('kategorie, next_review')
       .eq('user_id', user.id)
-    const kartenTotal = (kartenData || []).length
-    const kartenDue = (kartenData || []).filter((c) => new Date(c.next_review) <= now).length
-    setLernkarten({ total: kartenTotal, due: kartenDue })
+    const grouped = {}
+    let kartenTotal = 0, kartenDue = 0
+    for (const card of kartenData || []) {
+      const cat = card.kategorie || 'Allgemein'
+      if (!grouped[cat]) grouped[cat] = { total: 0, due: 0 }
+      grouped[cat].total++
+      kartenTotal++
+      if (new Date(card.next_review) <= now) {
+        grouped[cat].due++
+        kartenDue++
+      }
+    }
+    setLernkarten({ total: kartenTotal, due: kartenDue, grouped })
 
     // Activity: last 7 days from user_progress updated_at
     const days = []
@@ -162,17 +172,42 @@ export default function UserDashboard() {
       {/* Lernkarten */}
       <div className="mb-8">
         <h2 className="text-lg font-semibold text-slate-300 mb-4">Lernkarten</h2>
-        <div className="p-4 rounded-xl bg-[#12122a] border border-[#1e1e3a] flex items-center justify-between">
-          <div>
-            <span className="text-slate-200 font-medium">{lernkarten.total} Karten</span>
-            {lernkarten.due > 0 && <span className="text-green-400 text-sm ml-3">{lernkarten.due} heute fällig</span>}
+        <div className="space-y-2">
+          {Object.entries(lernkarten.grouped || {}).sort(([a], [b]) => a.localeCompare(b)).map(([cat, data]) => {
+            const isDeutsch = cat.toLowerCase().includes('deutsch')
+            const link = isDeutsch ? '/sprachen/deutsch/lernkarten' : '/lernkarten/practice?mode=due'
+            return (
+              <div key={cat} className="p-3 rounded-xl bg-[#12122a] border border-[#1e1e3a] flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#1e1e3a] text-slate-400">{cat}</span>
+                  <span className="text-slate-300 text-sm">{data.total} Karten</span>
+                  {data.due > 0 && <span className="text-green-400 text-xs">{data.due} fällig</span>}
+                </div>
+                {data.due > 0 && (
+                  <button
+                    onClick={() => navigate(link)}
+                    className="px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-500 text-white text-xs font-medium transition cursor-pointer"
+                  >
+                    Üben
+                  </button>
+                )}
+              </div>
+            )
+          })}
+          {/* Total row */}
+          <div className="p-3 rounded-xl bg-[#12122a] border border-purple-500/30 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium">Gesamt</span>
+              <span className="text-slate-200 text-sm font-medium">{lernkarten.total} Karten</span>
+              {lernkarten.due > 0 && <span className="text-green-400 text-xs">{lernkarten.due} fällig</span>}
+            </div>
+            <button
+              onClick={() => navigate('/lernkarten/practice?mode=due')}
+              className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium transition cursor-pointer"
+            >
+              Alle üben
+            </button>
           </div>
-          <button
-            onClick={() => navigate('/sprachen/deutsch/lernkarten')}
-            className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white text-sm font-medium transition cursor-pointer"
-          >
-            Jetzt üben
-          </button>
         </div>
       </div>
 
