@@ -15,6 +15,10 @@ export default function DeutschLernkarten() {
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState({ frage: '', antwort: '', mnemonik: '', kategorie: 'Deutsch C1' })
   const [search, setSearch] = useState('')
+  const [detailCard, setDetailCard] = useState(null)
+  const [detailNotiz, setDetailNotiz] = useState('')
+  const [detailSaving, setDetailSaving] = useState(false)
+  const [toast, setToast] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => { fetchCards() }, [])
@@ -70,6 +74,23 @@ export default function DeutschLernkarten() {
   async function deleteCard(id) {
     if (!confirm('Karte wirklich löschen?')) return
     await supabase.from('lernkarten').delete().eq('id', id)
+    await fetchCards()
+  }
+
+  function openDetailCard(card) {
+    setDetailCard(card)
+    setDetailNotiz(card.mnemonik || '')
+  }
+
+  async function saveNotiz() {
+    if (!detailCard) return
+    setDetailSaving(true)
+    const { error } = await supabase.from('lernkarten').update({ mnemonik: detailNotiz.trim() || null }).eq('id', detailCard.id)
+    if (error) console.error('save notiz error:', error)
+    setDetailCard({ ...detailCard, mnemonik: detailNotiz.trim() || null })
+    setDetailSaving(false)
+    setToast('Notiz gespeichert!')
+    setTimeout(() => setToast(null), 2500)
     await fetchCards()
   }
 
@@ -207,7 +228,7 @@ export default function DeutschLernkarten() {
               </div>
               <div className="space-y-2">
                 {grouped[cat].map((card) => (
-                  <div key={card.id} className="p-4 rounded-xl bg-[#12122a] border border-[#1e1e3a] group">
+                  <div key={card.id} onClick={() => openDetailCard(card)} className="p-4 rounded-xl bg-[#12122a] border border-[#1e1e3a] group cursor-pointer hover:border-green-500/30 transition">
                     <div className="text-slate-200 font-medium mb-1">{card.frage}</div>
                     <div className="text-green-300 mb-1">{card.antwort}</div>
                     {card.mnemonik && <div className="text-slate-500 text-sm italic mb-2">{card.mnemonik}</div>}
@@ -222,8 +243,8 @@ export default function DeutschLernkarten() {
                         })()}
                       </div>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                        <button onClick={() => openEdit(card)} className="text-xs px-2 py-1 rounded text-blue-400 hover:bg-blue-500/10 transition cursor-pointer">Bearbeiten</button>
-                        <button onClick={() => deleteCard(card.id)} className="text-xs px-2 py-1 rounded text-red-400 hover:bg-red-500/10 transition cursor-pointer">Löschen</button>
+                        <button onClick={(e) => { e.stopPropagation(); openEdit(card) }} className="text-xs px-2 py-1 rounded text-blue-400 hover:bg-blue-500/10 transition cursor-pointer">Bearbeiten</button>
+                        <button onClick={(e) => { e.stopPropagation(); deleteCard(card.id) }} className="text-xs px-2 py-1 rounded text-red-400 hover:bg-red-500/10 transition cursor-pointer">Löschen</button>
                       </div>
                     </div>
                   </div>
@@ -240,6 +261,67 @@ export default function DeutschLernkarten() {
               Karten üben →
             </button>
           </div>
+        </div>
+      )}
+      {/* Detail Modal */}
+      {detailCard && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4" onClick={() => setDetailCard(null)}>
+          <div className="w-full max-w-lg max-h-[85vh] overflow-y-auto p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] space-y-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between">
+              <div className="text-2xl font-bold text-green-300">{detailCard.frage}</div>
+              <button onClick={() => setDetailCard(null)} className="text-slate-500 hover:text-slate-300 transition cursor-pointer text-xl leading-none ml-4">×</button>
+            </div>
+
+            <div className="text-slate-200">{detailCard.antwort}</div>
+
+            {detailCard.beispiel && (
+              <div className="text-slate-500 text-sm italic">{detailCard.beispiel}</div>
+            )}
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs px-2 py-0.5 rounded-full bg-[#1e1e3a] text-slate-400">{detailCard.kategorie || 'Deutsch C1'}</span>
+              {(() => {
+                if (!detailCard.repetitions && detailCard.repetitions !== 0) return <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">Neu</span>
+                if (isDue(detailCard.next_review)) return <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">Heute fällig</span>
+                const days = Math.ceil((new Date(detailCard.next_review) - new Date()) / (1000 * 60 * 60 * 24))
+                return <span className="text-xs px-2 py-0.5 rounded-full bg-[#1e1e3a] text-slate-500">Fällig in {days} {days === 1 ? 'Tag' : 'Tagen'}</span>
+              })()}
+            </div>
+
+            <div>
+              <label className="text-slate-400 text-sm font-medium block mb-2">Notizen / Mnemonik</label>
+              <textarea
+                value={detailNotiz}
+                onChange={(e) => setDetailNotiz(e.target.value)}
+                placeholder="Eselsbrücke, Beispielsatz oder eigene Notizen..."
+                rows={3}
+                className="w-full px-3 py-2 rounded-lg bg-[#0a0a1a] border border-[#2a2a4a] text-slate-200 placeholder-slate-600 text-sm focus:outline-none focus:border-green-500 transition resize-none"
+              />
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setDetailCard(null)}
+                className="px-4 py-2 rounded-lg text-slate-400 hover:bg-[#1e1e3a] transition cursor-pointer"
+              >
+                Schließen
+              </button>
+              <button
+                onClick={saveNotiz}
+                disabled={detailSaving}
+                className="px-5 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-medium transition cursor-pointer"
+              >
+                {detailSaving ? 'Speichert...' : 'Speichern'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 px-5 py-3 rounded-lg bg-green-600 text-white font-medium shadow-lg z-50">
+          ✅ {toast}
         </div>
       )}
     </div>
