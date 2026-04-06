@@ -15,6 +15,7 @@ import SprachenDashboard from './pages/SprachenDashboard'
 import DeutschDashboard from './pages/DeutschDashboard'
 import DeutschLernkarten from './pages/DeutschLernkarten'
 import DeutschLernkartenPractice from './pages/DeutschLernkartenPractice'
+import DeutschC1Quiz from './pages/DeutschC1Quiz'
 
 export default function App() {
   return (
@@ -36,6 +37,7 @@ export default function App() {
         <Route path="/sprachen/deutsch/lernkarten" element={<DeutschLernkarten />} />
         <Route path="/sprachen/deutsch/lernkarten/practice" element={<DeutschLernkartenPractice />} />
         <Route path="/deutsch-c1" element={<DeutschC1 />} />
+        <Route path="/sprachen/deutsch/c1/quiz" element={<DeutschC1Quiz />} />
       </Routes>
     </div>
   )
