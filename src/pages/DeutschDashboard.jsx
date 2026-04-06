@@ -5,7 +5,7 @@ const levels = [
   { level: 'A2', name: 'Grundlegende Kenntnisse', color: 'teal', active: true, vocPath: '/sprachen/deutsch/a2' },
   { level: 'B1', name: 'Mittelstufe', color: 'blue', active: true, vocPath: '/sprachen/deutsch/b1' },
   { level: 'B2', name: 'Obere Mittelstufe', color: 'indigo', active: false },
-  { level: 'C1', name: 'Fortgeschritten', color: 'purple', active: true, vocPath: '/deutsch-c1', cardPath: '/sprachen/deutsch/lernkarten', quizPath: '/sprachen/deutsch/c1/quiz', hangmanPath: '/sprachen/deutsch/hangman' },
+  { level: 'C1', name: 'Fortgeschritten', color: 'purple', active: true, vocPath: '/deutsch-c1', cardPath: '/sprachen/deutsch/lernkarten', quizPath: '/sprachen/deutsch/c1/quiz', spielePath: '/sprachen/deutsch/c1/spiele' },
   { level: 'C2', name: 'Experte', color: 'red', active: false },
 ]
 
@@ -71,10 +71,10 @@ export default function DeutschDashboard() {
                       ) : (
                         <div className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🎯 Quiz</div>
                       )}
-                      {l.hangmanPath ? (
-                        <button onClick={() => navigate(l.hangmanPath)} className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] text-xs font-medium transition cursor-pointer">🎮 Hangman</button>
+                      {l.spielePath ? (
+                        <button onClick={() => navigate(l.spielePath)} className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] text-xs font-medium transition cursor-pointer">🎮 Spiele</button>
                       ) : (
-                        <div className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🎮 Hangman</div>
+                        <div className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🎮 Spiele</div>
                       )}
                     </>
                   ) : (
@@ -82,7 +82,7 @@ export default function DeutschDashboard() {
                       <div className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">📖 Vokabeln</div>
                       <div className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🃏 Lernkarten</div>
                       <div className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🎯 Quiz</div>
-                      <div className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🎮 Hangman</div>
+                      <div className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🎮 Spiele</div>
                     </>
                   )}
                 </div>

@@ -597,6 +597,14 @@ export default function DeutschC1() {
             <div className="text-slate-500 text-sm mt-1">C1 Wörter erraten — 6 Versuche</div>
           </div>
           <div
+            onClick={() => navigate('/sprachen/deutsch/lueckentext')}
+            className="p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] border-b-2 border-b-amber-500 cursor-pointer transition-all duration-300 group hover:border-amber-500/50 hover:scale-[1.02] hover:shadow-xl hover:shadow-amber-500/10 hover:bg-[#13132e]"
+          >
+            <div className="text-4xl mb-3 transition-transform duration-300 group-hover:scale-110">📝</div>
+            <div className="text-lg font-bold text-slate-200 group-hover:text-amber-300 transition">Lückentext</div>
+            <div className="text-slate-500 text-sm mt-1">Fehlende Wörter im Satz ergänzen</div>
+          </div>
+          <div
             onClick={() => navigate('/sprachen/deutsch/c1/quiz')}
             className="p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] border-b-2 border-b-purple-500 cursor-pointer transition-all duration-300 group hover:border-purple-500/50 hover:scale-[1.02] hover:shadow-xl hover:shadow-purple-500/10 hover:bg-[#13132e]"
           >
