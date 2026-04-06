@@ -20,6 +20,7 @@ import GoetheLevel from './pages/GoetheLevel'
 import HangmanGame from './pages/HangmanGame'
 import DeutschC1Spiele from './pages/DeutschC1Spiele'
 import LueckentextGame from './pages/LueckentextGame'
+import MemoryGame from './pages/MemoryGame'
 
 export default function App() {
   return (
@@ -46,6 +47,7 @@ export default function App() {
         <Route path="/sprachen/deutsch/c1/spiele" element={<DeutschC1Spiele />} />
         <Route path="/sprachen/deutsch/hangman" element={<HangmanGame />} />
         <Route path="/sprachen/deutsch/lueckentext" element={<LueckentextGame />} />
+        <Route path="/sprachen/deutsch/memory" element={<MemoryGame />} />
       </Routes>
     </div>
   )

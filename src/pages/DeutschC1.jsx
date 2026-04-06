@@ -612,6 +612,14 @@ export default function DeutschC1() {
             <div className="text-lg font-bold text-slate-200 group-hover:text-purple-300 transition">C1 Quiz</div>
             <div className="text-slate-500 text-sm mt-1">Definitionen, Wörter und Synonyme zuordnen</div>
           </div>
+          <div
+            onClick={() => navigate('/sprachen/deutsch/memory')}
+            className="p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] border-b-2 border-b-cyan-500 cursor-pointer transition-all duration-300 group hover:border-cyan-500/50 hover:scale-[1.02] hover:shadow-xl hover:shadow-cyan-500/10 hover:bg-[#13132e]"
+          >
+            <div className="text-4xl mb-3 transition-transform duration-300 group-hover:scale-110">🧠</div>
+            <div className="text-lg font-bold text-slate-200 group-hover:text-cyan-300 transition">Memory</div>
+            <div className="text-slate-500 text-sm mt-1">Wort-Definition-Paare finden</div>
+          </div>
         </div>
       )}
 
