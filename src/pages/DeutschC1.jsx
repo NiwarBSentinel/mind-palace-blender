@@ -72,14 +72,12 @@ export default function DeutschC1() {
   const [search, setSearch] = useState('')
   const [srsData, setSrsData] = useState(loadSRS)
   const [toast, setToast] = useState(null)
-  const [detailWord, setDetailWord] = useState(null)
-  const [synonyms, setSynonyms] = useState(null)
-  const [similarTerms, setSimilarTerms] = useState(null)
+  const [wordStack, setWordStack] = useState([])
+  const [stackIdx, setStackIdx] = useState(-1)
+  const [stackData, setStackData] = useState({})
   const [detailLoading, setDetailLoading] = useState(false)
-  const [wortart, setWortart] = useState(null)
-  const [frequency, setFrequency] = useState(null)
-  const [grammar, setGrammar] = useState(null)
   const [grammarLoading, setGrammarLoading] = useState(false)
+  const [slideDir, setSlideDir] = useState('right')
 
   // Practice state
   const [practiceCards, setPracticeCards] = useState([])
@@ -194,19 +192,10 @@ export default function DeutschC1() {
     return null
   }
 
-  async function openDetail(w) {
-    setDetailWord(w)
-    setSynonyms(null)
-    setSimilarTerms(null)
-    setWortart(null)
-    setFrequency(null)
-    setGrammar(null)
-    setDetailLoading(true)
-    setGrammarLoading(true)
-    const clean = w.wort.replace(/^(die|der|das)\s+/, '')
+  async function fetchWordData(word) {
+    const clean = word.replace(/^(die|der|das)\s+/, '')
     const encoded = encodeURIComponent(clean)
 
-    // Fetch all APIs in parallel
     const [thesaurusRes, snippetRes, freqRes, wikiRes] = await Promise.allSettled([
       fetch(`https://www.openthesaurus.de/synonyme/search?q=${encoded}&format=application/json&similar=true`).then((r) => r.json()),
       fetch(`https://www.dwds.de/api/wb/snippet?q=${encoded}`).then((r) => r.json()),
@@ -214,47 +203,93 @@ export default function DeutschC1() {
       fetch(`https://de.wiktionary.org/w/api.php?action=parse&page=${encoded}&prop=wikitext&format=json&origin=*`).then((r) => r.json()),
     ])
 
-    // OpenThesaurus
+    const result = { synonyms: [], similarTerms: [], wortart: null, frequency: null, grammar: null }
+
     if (thesaurusRes.status === 'fulfilled') {
       const data = thesaurusRes.value
-      setSynonyms(
-        (data.synsets || [])
-          .flatMap((s) => s.terms.map((t) => t.term))
-          .filter((t, i, arr) => arr.indexOf(t) === i)
-          .slice(0, 10)
-      )
-      setSimilarTerms((data.similarterms || []).map((t) => t.term).slice(0, 5))
-    } else {
-      setSynonyms([])
-      setSimilarTerms([])
+      result.synonyms = (data.synsets || [])
+        .flatMap((s) => s.terms.map((t) => t.term))
+        .filter((t, i, arr) => arr.indexOf(t) === i)
+        .slice(0, 10)
+      result.similarTerms = (data.similarterms || []).map((t) => t.term).slice(0, 5)
     }
 
-    // DWDS Wortart
     if (snippetRes.status === 'fulfilled' && Array.isArray(snippetRes.value) && snippetRes.value.length > 0) {
-      setWortart(snippetRes.value[0].pos || null)
+      result.wortart = snippetRes.value[0].pos || null
     }
 
-    // DWDS Frequency
     if (freqRes.status === 'fulfilled' && freqRes.value?.frequency !== undefined) {
-      setFrequency(freqRes.value.frequency)
+      result.frequency = freqRes.value.frequency
     }
 
-    // Wiktionary Grammar
     if (wikiRes.status === 'fulfilled' && wikiRes.value?.parse?.wikitext?.['*']) {
       const wikitext = wikiRes.value.parse.wikitext['*']
-      const detectedType = snippetRes.status === 'fulfilled' && Array.isArray(snippetRes.value) && snippetRes.value[0]?.pos
-        ? snippetRes.value[0].pos
-        : null
-      setGrammar(parseWikiGrammar(wikitext, detectedType))
+      result.grammar = parseWikiGrammar(wikitext, result.wortart)
     }
-    setGrammarLoading(false)
 
+    return result
+  }
+
+  async function openDetail(w) {
+    const wordObj = typeof w === 'string'
+      ? C1_WOERTER.find((c) => c.wort === w) || { wort: w, definition: '', beispiel: '' }
+      : w
+    setSlideDir('right')
+    const newStack = [wordObj]
+    setWordStack(newStack)
+    setStackIdx(0)
+    setDetailLoading(true)
+    setGrammarLoading(true)
+    const data = await fetchWordData(wordObj.wort)
+    setStackData({ [wordObj.wort]: data })
     setDetailLoading(false)
+    setGrammarLoading(false)
+  }
+
+  async function navigateToWord(word) {
+    const wordObj = C1_WOERTER.find((c) => c.wort === word) || { wort: word, definition: '', beispiel: '' }
+    setSlideDir('right')
+    const newStack = [...wordStack.slice(0, stackIdx + 1), wordObj]
+    setWordStack(newStack)
+    setStackIdx(newStack.length - 1)
+    if (!stackData[word]) {
+      setDetailLoading(true)
+      setGrammarLoading(true)
+      const data = await fetchWordData(word)
+      setStackData((prev) => ({ ...prev, [word]: data }))
+      setDetailLoading(false)
+      setGrammarLoading(false)
+    }
+  }
+
+  function goBack() {
+    if (stackIdx > 0) {
+      setSlideDir('left')
+      setStackIdx(stackIdx - 1)
+    }
+  }
+
+  function goForward() {
+    if (stackIdx < wordStack.length - 1) {
+      setSlideDir('right')
+      setStackIdx(stackIdx + 1)
+    }
+  }
+
+  function jumpTo(idx) {
+    setSlideDir(idx > stackIdx ? 'right' : 'left')
+    setStackIdx(idx)
   }
 
   function closeDetail() {
-    setDetailWord(null)
+    setWordStack([])
+    setStackIdx(-1)
+    setStackData({})
   }
+
+  const detailWord = wordStack[stackIdx] || null
+  const currentData = detailWord ? stackData[detailWord.wort] : null
+  const isInC1List = detailWord ? C1_WOERTER.some((c) => c.wort === detailWord.wort) : false
 
   // Filter for browse mode
   const searchLower = search.toLowerCase()
@@ -531,148 +566,206 @@ export default function DeutschC1() {
       {/* Detail Modal */}
       {detailWord && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4" onClick={closeDetail}>
-          <div className="w-full max-w-lg max-h-[85vh] overflow-y-auto p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] space-y-5" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-start justify-between">
-              <div className="text-2xl font-bold text-blue-300">{detailWord.wort}</div>
-              <button
-                onClick={closeDetail}
-                className="text-slate-500 hover:text-slate-300 transition cursor-pointer text-xl leading-none ml-4"
-              >
-                ×
-              </button>
+          <div className="w-full max-w-lg max-h-[85vh] flex flex-col rounded-xl bg-[#12122a] border border-[#1e1e3a]" onClick={(e) => e.stopPropagation()}>
+            {/* Navigation bar */}
+            <div className="p-4 border-b border-[#1e1e3a] shrink-0">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={goBack}
+                    disabled={stackIdx <= 0}
+                    className="text-xs px-2 py-1 rounded text-slate-400 hover:bg-[#1e1e3a] disabled:opacity-30 disabled:cursor-default transition cursor-pointer"
+                  >
+                    ← Zurück
+                  </button>
+                  <button
+                    onClick={goForward}
+                    disabled={stackIdx >= wordStack.length - 1}
+                    className="text-xs px-2 py-1 rounded text-slate-400 hover:bg-[#1e1e3a] disabled:opacity-30 disabled:cursor-default transition cursor-pointer"
+                  >
+                    Weiter →
+                  </button>
+                  <span className="text-xs text-slate-600 ml-1">{stackIdx + 1} / {wordStack.length}</span>
+                </div>
+                <button
+                  onClick={closeDetail}
+                  className="text-slate-500 hover:text-slate-300 transition cursor-pointer text-xl leading-none"
+                >
+                  ×
+                </button>
+              </div>
+              {wordStack.length > 1 && (
+                <div className="flex items-center gap-1 flex-wrap text-xs">
+                  {wordStack.map((w, i) => (
+                    <span key={i} className="flex items-center">
+                      {i > 0 && <span className="text-slate-600 mx-1">→</span>}
+                      <button
+                        onClick={() => jumpTo(i)}
+                        className={`px-1.5 py-0.5 rounded transition cursor-pointer ${
+                          i === stackIdx
+                            ? 'text-blue-300 bg-blue-500/20'
+                            : 'text-slate-500 hover:text-slate-300'
+                        }`}
+                      >
+                        {w.wort.replace(/^(die|der|das)\s+/, '')}
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {!detailLoading && (wortart || frequency !== null) && (
-              <div className="flex flex-wrap items-center gap-2">
-                {wortart && (
-                  <span className="text-xs px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300">
-                    {wortart === 'Substantiv' ? '📚' : wortart === 'Verb' ? '🔤' : wortart === 'Adjektiv' ? '🎨' : '📝'} {wortart}
-                  </span>
-                )}
-                {frequency !== null && (
-                  <span className="text-xs px-2.5 py-1 rounded-full bg-[#1e1e3a] text-slate-300 flex items-center gap-1.5">
-                    Häufigkeit: <span className="font-mono tracking-tight">{('█').repeat(Math.max(1, frequency))}{'░'.repeat(Math.max(0, 6 - frequency))}</span>
-                    <span className="text-slate-500">({frequency}/6 · {frequency <= 1 ? 'sehr selten' : frequency <= 2 ? 'selten' : frequency <= 3 ? 'mittel' : frequency <= 4 ? 'häufig' : 'sehr häufig'})</span>
-                  </span>
+            {/* Content area */}
+            <div className="overflow-y-auto p-6 space-y-5" key={detailWord.wort}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="text-2xl font-bold text-blue-300">{detailWord.wort}</div>
+                {!isInC1List && (
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-slate-500/20 text-slate-400 shrink-0">nicht in C1 Liste</span>
                 )}
               </div>
-            )}
 
-            <div className="text-slate-200">{detailWord.definition}</div>
-            <div className="text-slate-500 text-sm italic">{detailWord.beispiel}</div>
+              {!detailLoading && currentData && (currentData.wortart || currentData.frequency !== null) && (
+                <div className="flex flex-wrap items-center gap-2">
+                  {currentData.wortart && (
+                    <span className="text-xs px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300">
+                      {currentData.wortart === 'Substantiv' ? '📚' : currentData.wortart === 'Verb' ? '🔤' : currentData.wortart === 'Adjektiv' ? '🎨' : '📝'} {currentData.wortart}
+                    </span>
+                  )}
+                  {currentData.frequency !== null && (
+                    <span className="text-xs px-2.5 py-1 rounded-full bg-[#1e1e3a] text-slate-300 flex items-center gap-1.5">
+                      Häufigkeit: <span className="font-mono tracking-tight">{('█').repeat(Math.max(1, currentData.frequency))}{'░'.repeat(Math.max(0, 6 - currentData.frequency))}</span>
+                      <span className="text-slate-500">({currentData.frequency}/6 · {currentData.frequency <= 1 ? 'sehr selten' : currentData.frequency <= 2 ? 'selten' : currentData.frequency <= 3 ? 'mittel' : currentData.frequency <= 4 ? 'häufig' : 'sehr häufig'})</span>
+                    </span>
+                  )}
+                </div>
+              )}
 
-            <div>
-              <h3 className="text-slate-400 text-sm font-medium mb-2">Grammatik</h3>
-              {grammarLoading ? (
-                <div className="text-slate-500 text-sm">Lade...</div>
-              ) : grammar ? (
-                <div className="p-3 rounded-lg bg-[#0a0a1a] text-sm space-y-1">
-                  {grammar.type === 'Substantiv' && (
-                    <>
+              {detailWord.definition && <div className="text-slate-200">{detailWord.definition}</div>}
+              {detailWord.beispiel && <div className="text-slate-500 text-sm italic">{detailWord.beispiel}</div>}
+
+              <div>
+                <h3 className="text-slate-400 text-sm font-medium mb-2">Grammatik</h3>
+                {grammarLoading ? (
+                  <div className="text-slate-500 text-sm">Lade...</div>
+                ) : currentData?.grammar ? (
+                  <div className="p-3 rounded-lg bg-[#0a0a1a] text-sm space-y-1">
+                    {currentData.grammar.type === 'Substantiv' && (
                       <div className="text-slate-200">
                         <span className="text-blue-400 mr-1">🔵</span>
-                        {grammar.genus && <span className="font-medium">{grammar.genus} </span>}
+                        {currentData.grammar.genus && <span className="font-medium">{currentData.grammar.genus} </span>}
                         {detailWord.wort.replace(/^(die|der|das)\s+/, '')}
-                        {grammar.genSg && <span className="text-slate-400 mx-2">|</span>}
-                        {grammar.genSg && <span>Gen: <span className="text-slate-300">{grammar.genSg}</span></span>}
-                        {grammar.nomPl && <span className="text-slate-400 mx-2">|</span>}
-                        {grammar.nomPl && <span>Pl: <span className="text-slate-300">{grammar.nomPl}</span></span>}
+                        {currentData.grammar.genSg && <><span className="text-slate-400 mx-2">|</span>Gen: <span className="text-slate-300">{currentData.grammar.genSg}</span></>}
+                        {currentData.grammar.nomPl && <><span className="text-slate-400 mx-2">|</span>Pl: <span className="text-slate-300">{currentData.grammar.nomPl}</span></>}
                       </div>
-                    </>
-                  )}
-                  {grammar.type === 'Verb' && (
-                    <div className="text-slate-200">
-                      <span className="text-green-400 mr-1">🟢</span>
-                      <span className="font-medium">{detailWord.wort.replace(/^(die|der|das)\s+/, '')}</span>
-                      {grammar.praesIch && <><span className="text-slate-400 mx-2">|</span>ich {grammar.praesIch}</>}
-                      {grammar.praeteritum && <><span className="text-slate-400 mx-2">|</span>Prät: {grammar.praeteritum}</>}
-                      {grammar.partizipII && <><span className="text-slate-400 mx-2">|</span>Part. II: <span className="text-slate-300">{grammar.partizipII}</span></>}
-                    </div>
-                  )}
-                  {grammar.type === 'Adjektiv' && (
-                    <div className="text-slate-200">
-                      <span className="text-yellow-400 mr-1">🟡</span>
-                      <span className="font-medium">{detailWord.wort.replace(/^(die|der|das)\s+/, '')}</span>
-                      {grammar.komparativ && <><span className="text-slate-400 mx-2">|</span><span className="text-slate-300">{grammar.komparativ}</span></>}
-                      {grammar.superlativ && <><span className="text-slate-400 mx-2">|</span>am <span className="text-slate-300">{grammar.superlativ}en</span></>}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <a
-                  href={`https://de.wiktionary.org/wiki/${encodeURIComponent(detailWord.wort.replace(/^(die|der|das)\s+/, ''))}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-400 text-sm hover:underline"
-                >
-                  Im Wiktionary nachschlagen →
-                </a>
-              )}
-            </div>
-
-            <div>
-              <h3 className="text-slate-400 text-sm font-medium mb-2">Synonyme</h3>
-              {detailLoading ? (
-                <div className="text-slate-500 text-sm">Lade...</div>
-              ) : synonyms && synonyms.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {synonyms.map((s) => (
-                    <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300">{s}</span>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-slate-600 text-sm">Keine Synonyme gefunden</div>
-              )}
-            </div>
-
-            {!detailLoading && similarTerms && similarTerms.length > 0 && (
-              <div>
-                <h3 className="text-slate-400 text-sm font-medium mb-2">Ähnliche Begriffe (OpenThesaurus)</h3>
-                <div className="flex flex-wrap gap-2">
-                  {similarTerms.map((s) => (
-                    <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-[#1e1e3a] text-slate-400">{s}</span>
-                  ))}
-                </div>
+                    )}
+                    {currentData.grammar.type === 'Verb' && (
+                      <div className="text-slate-200">
+                        <span className="text-green-400 mr-1">🟢</span>
+                        <span className="font-medium">{detailWord.wort.replace(/^(die|der|das)\s+/, '')}</span>
+                        {currentData.grammar.praesIch && <><span className="text-slate-400 mx-2">|</span>ich {currentData.grammar.praesIch}</>}
+                        {currentData.grammar.praeteritum && <><span className="text-slate-400 mx-2">|</span>Prät: {currentData.grammar.praeteritum}</>}
+                        {currentData.grammar.partizipII && <><span className="text-slate-400 mx-2">|</span>Part. II: <span className="text-slate-300">{currentData.grammar.partizipII}</span></>}
+                      </div>
+                    )}
+                    {currentData.grammar.type === 'Adjektiv' && (
+                      <div className="text-slate-200">
+                        <span className="text-yellow-400 mr-1">🟡</span>
+                        <span className="font-medium">{detailWord.wort.replace(/^(die|der|das)\s+/, '')}</span>
+                        {currentData.grammar.komparativ && <><span className="text-slate-400 mx-2">|</span><span className="text-slate-300">{currentData.grammar.komparativ}</span></>}
+                        {currentData.grammar.superlativ && <><span className="text-slate-400 mx-2">|</span>am <span className="text-slate-300">{currentData.grammar.superlativ}en</span></>}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <a
+                    href={`https://de.wiktionary.org/wiki/${encodeURIComponent(detailWord.wort.replace(/^(die|der|das)\s+/, ''))}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-400 text-sm hover:underline"
+                  >
+                    Im Wiktionary nachschlagen →
+                  </a>
+                )}
               </div>
-            )}
 
-            <div>
-              <h3 className="text-slate-400 text-sm font-medium mb-2">Ähnlich klingende Wörter</h3>
-              {(() => {
-                const similar = findSimilarWords(detailWord.wort)
-                return similar.length > 0 ? (
+              <div>
+                <h3 className="text-slate-400 text-sm font-medium mb-2">Synonyme</h3>
+                {detailLoading ? (
+                  <div className="text-slate-500 text-sm">Lade...</div>
+                ) : currentData?.synonyms?.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
-                    {similar.map((w) => (
+                    {currentData.synonyms.map((s) => (
                       <button
-                        key={w.wort}
-                        onClick={() => openDetail(w)}
-                        className="text-xs px-2.5 py-1 rounded-full bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] transition cursor-pointer"
+                        key={s}
+                        onClick={() => navigateToWord(s)}
+                        className="text-xs px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition cursor-pointer"
                       >
-                        {w.wort}
+                        {s}
                       </button>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-slate-600 text-sm">Keine ähnlichen Wörter gefunden</div>
-                )
-              })()}
-            </div>
+                  <div className="text-slate-600 text-sm">Keine Synonyme gefunden</div>
+                )}
+              </div>
 
-            <div className="pt-2 flex items-center gap-3">
-              <button
-                onClick={(e) => { e.stopPropagation(); saveToLernkarten(detailWord) }}
-                className="text-xs px-3 py-1.5 rounded-lg bg-purple-600/20 border border-purple-500/30 text-purple-300 hover:bg-purple-600/30 transition cursor-pointer"
-              >
-                💾 Als Lernkarte speichern
-              </button>
-              <a
-                href={`https://www.dwds.de/wb/${encodeURIComponent(detailWord.wort.replace(/^(die|der|das)\s+/, ''))}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs px-3 py-1.5 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-300 hover:bg-blue-600/30 transition"
-              >
-                Im DWDS nachschlagen →
-              </a>
+              {!detailLoading && currentData?.similarTerms?.length > 0 && (
+                <div>
+                  <h3 className="text-slate-400 text-sm font-medium mb-2">Ähnliche Begriffe (OpenThesaurus)</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {currentData.similarTerms.map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => navigateToWord(s)}
+                        className="text-xs px-2.5 py-1 rounded-full bg-[#1e1e3a] text-slate-400 hover:bg-[#2a2a4a] hover:text-slate-200 transition cursor-pointer"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <h3 className="text-slate-400 text-sm font-medium mb-2">Ähnlich klingende Wörter</h3>
+                {(() => {
+                  const similar = findSimilarWords(detailWord.wort)
+                  return similar.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {similar.map((w) => (
+                        <button
+                          key={w.wort}
+                          onClick={() => navigateToWord(w.wort)}
+                          className="text-xs px-2.5 py-1 rounded-full bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] transition cursor-pointer"
+                        >
+                          {w.wort}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-slate-600 text-sm">Keine ähnlichen Wörter gefunden</div>
+                  )
+                })()}
+              </div>
+
+              <div className="pt-2 flex items-center gap-3">
+                {isInC1List && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); saveToLernkarten(detailWord) }}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-purple-600/20 border border-purple-500/30 text-purple-300 hover:bg-purple-600/30 transition cursor-pointer"
+                  >
+                    💾 Als Lernkarte speichern
+                  </button>
+                )}
+                <a
+                  href={`https://www.dwds.de/wb/${encodeURIComponent(detailWord.wort.replace(/^(die|der|das)\s+/, ''))}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs px-3 py-1.5 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-300 hover:bg-blue-600/30 transition"
+                >
+                  Im DWDS nachschlagen →
+                </a>
+              </div>
             </div>
           </div>
         </div>
