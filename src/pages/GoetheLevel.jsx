@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { fetchGoetheWords } from '../data/goetheWordLists'
 import { supabase } from '../lib/supabase'
 
-const LEVEL_NAMES = { A1: 'Anfänger', A2: 'Grundlegende Kenntnisse', B1: 'Mittelstufe' }
+const LEVEL_NAMES = { A1: 'Anfänger', A2: 'Grundlegende Kenntnisse', B1: 'Mittelstufe', B2: 'Obere Mittelstufe', C2: 'Experte' }
 
 function loadSRS(level) {
   try { return JSON.parse(localStorage.getItem(`srs_${level}`)) || {} } catch { return {} }
