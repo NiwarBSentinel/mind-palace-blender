@@ -371,16 +371,6 @@ export default function DeutschC1() {
         >
           🎮 Spiele
         </button>
-        <button
-          onClick={() => setTab('grammatik')}
-          className={`px-5 py-2.5 rounded-lg font-medium transition cursor-pointer ${
-            tab === 'grammatik'
-              ? 'bg-blue-600 text-white'
-              : 'bg-[#12122a] border border-[#2a2a4a] text-slate-400 hover:border-blue-500/50'
-          }`}
-        >
-          🧩 Grammatik
-        </button>
       </div>
 
       {/* LERNEN TAB */}
@@ -633,26 +623,6 @@ export default function DeutschC1() {
         </div>
       )}
 
-      {/* GRAMMATIK TAB */}
-      {tab === 'grammatik' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div
-            onClick={() => navigate('/sprachen/deutsch/artikel')}
-            className="p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] border-b-2 border-b-green-500 cursor-pointer transition-all duration-300 group hover:border-green-500/50 hover:scale-[1.02] hover:shadow-xl hover:shadow-green-500/10 hover:bg-[#13132e]"
-          >
-            <div className="text-4xl mb-3 transition-transform duration-300 group-hover:scale-110">🧩</div>
-            <div className="text-lg font-bold text-slate-200 group-hover:text-green-300 transition">Artikel-Trainer</div>
-            <div className="text-slate-500 text-sm mt-1">der, die oder das?</div>
-          </div>
-          <div
-            className="p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] border-b-2 border-b-slate-600 opacity-50"
-          >
-            <div className="text-4xl mb-3">📐</div>
-            <div className="text-lg font-bold text-slate-400">Plural-Formen</div>
-            <div className="text-slate-600 text-sm mt-1">Kommt bald</div>
-          </div>
-        </div>
-      )}
 
       {/* Detail Modal */}
       {detailWord && (
