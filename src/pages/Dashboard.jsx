@@ -126,7 +126,7 @@ export default function Dashboard() {
     async function fetchStats() {
       const results = await Promise.all(
         modes.map(async (m) => {
-          if (m.key === 'deutschc1') return [m.key, 51]
+          if (m.key === 'deutschc1') return [m.key, 204]
           if (!m.table) return [m.key, null]
           const { count } = await supabase
             .from(m.table)
