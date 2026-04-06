@@ -361,6 +361,16 @@ export default function DeutschC1() {
         >
           🎯 Üben {dueCount > 0 && `(${dueCount})`}
         </button>
+        <button
+          onClick={() => setTab('spiele')}
+          className={`px-5 py-2.5 rounded-lg font-medium transition cursor-pointer ${
+            tab === 'spiele'
+              ? 'bg-blue-600 text-white'
+              : 'bg-[#12122a] border border-[#2a2a4a] text-slate-400 hover:border-blue-500/50'
+          }`}
+        >
+          🎮 Spiele
+        </button>
       </div>
 
       {/* LERNEN TAB */}
@@ -573,6 +583,28 @@ export default function DeutschC1() {
             </>
           )}
         </>
+      )}
+
+      {/* SPIELE TAB */}
+      {tab === 'spiele' && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div
+            onClick={() => navigate('/sprachen/deutsch/hangman')}
+            className="p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] border-b-2 border-b-rose-500 cursor-pointer transition-all duration-300 group hover:border-rose-500/50 hover:scale-[1.02] hover:shadow-xl hover:shadow-rose-500/10 hover:bg-[#13132e]"
+          >
+            <div className="text-4xl mb-3 transition-transform duration-300 group-hover:scale-110">💀</div>
+            <div className="text-lg font-bold text-slate-200 group-hover:text-rose-300 transition">Hangman</div>
+            <div className="text-slate-500 text-sm mt-1">C1 Wörter erraten — 6 Versuche</div>
+          </div>
+          <div
+            onClick={() => navigate('/sprachen/deutsch/c1/quiz')}
+            className="p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] border-b-2 border-b-purple-500 cursor-pointer transition-all duration-300 group hover:border-purple-500/50 hover:scale-[1.02] hover:shadow-xl hover:shadow-purple-500/10 hover:bg-[#13132e]"
+          >
+            <div className="text-4xl mb-3 transition-transform duration-300 group-hover:scale-110">🎯</div>
+            <div className="text-lg font-bold text-slate-200 group-hover:text-purple-300 transition">C1 Quiz</div>
+            <div className="text-slate-500 text-sm mt-1">Definitionen, Wörter und Synonyme zuordnen</div>
+          </div>
+        </div>
       )}
 
       {/* Detail Modal */}
