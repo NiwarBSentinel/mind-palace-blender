@@ -697,6 +697,13 @@ export default function DeutschC1() {
                     Im Wiktionary nachschlagen →
                   </a>
                 )}
+                <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-[10px] text-slate-600">
+                  <span>🔵 Fem. (die)</span>
+                  <span>🟢 Mask. (der)</span>
+                  <span>🟡 Neutr. (das)</span>
+                  <span>⚫ Verb</span>
+                  <span>🟠 Adjektiv</span>
+                </div>
               </div>
 
               <div>
