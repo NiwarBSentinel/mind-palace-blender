@@ -2,17 +2,21 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { seedBMPPersons } from '../lib/seedBMP'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function BMPDashboard() {
   const [persons, setPersons] = useState([])
+  const [customPalaces, setCustomPalaces] = useState([])
   const [loading, setLoading] = useState(true)
   const [seeding, setSeeding] = useState(false)
   const [seeded, setSeeded] = useState(false)
   const navigate = useNavigate()
+  const { user } = useAuth()
 
   useEffect(() => {
     fetchPersons()
-  }, [])
+    if (user) fetchCustomPalaces()
+  }, [user])
 
   async function fetchPersons() {
     const { data, error } = await supabase
@@ -22,6 +26,16 @@ export default function BMPDashboard() {
     if (error) console.error('fetchPersons error:', error)
     setPersons(data || [])
     setLoading(false)
+  }
+
+  async function fetchCustomPalaces() {
+    const { data, error } = await supabase
+      .from('custom_palaces')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+    if (error) console.error('fetchCustomPalaces error:', error)
+    setCustomPalaces(data || [])
   }
 
   async function handleSeed() {
@@ -67,6 +81,7 @@ export default function BMPDashboard() {
       ) : persons.length === 0 ? (
         <p className="text-center text-slate-400">Keine Personen gefunden.</p>
       ) : (
+        <>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {persons.map((person) => (
             <div
@@ -91,6 +106,51 @@ export default function BMPDashboard() {
             </div>
           ))}
         </div>
+
+        {/* Custom Palaces */}
+        {(customPalaces.length > 0 || user) && (
+          <div className="mt-10">
+            <h2 className="text-xl font-bold text-slate-300 mb-4">Eigene Paläste</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {customPalaces.map((p) => {
+                const totalLoci = (p.raeume || []).reduce((sum, r) => sum + (r.loci?.length || 0), 0)
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => navigate(`/bmp/custom/${p.id}`)}
+                    className="p-5 rounded-xl bg-[#12122a] border border-[#1e1e3a] cursor-pointer hover:bg-[#16163a] hover:border-purple-500/30 transition group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{p.emoji || '🏛️'}</span>
+                        <div>
+                          <h3 className="text-lg font-semibold text-slate-200 group-hover:text-purple-300 transition">{p.name}</h3>
+                          {p.beschreibung && <p className="text-slate-400 text-sm mt-0.5">{p.beschreibung}</p>}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-300">{totalLoci} Loci</span>
+                        <div className="text-xs text-slate-500 mt-1">{(p.raeume || []).length} Räume</div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+
+              {/* Create tile */}
+              {user && (
+                <div
+                  onClick={() => navigate('/bmp/create')}
+                  className="p-5 rounded-xl bg-[#12122a] border-2 border-dashed border-[#2a2a4a] cursor-pointer hover:border-purple-500/50 hover:bg-[#16163a] transition flex flex-col items-center justify-center min-h-[100px]"
+                >
+                  <span className="text-3xl mb-2">➕</span>
+                  <span className="text-slate-400 text-sm font-medium">Neuen Palast erstellen</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        </>
       )}
     </div>
   )

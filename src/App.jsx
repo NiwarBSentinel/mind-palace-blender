@@ -28,6 +28,8 @@ import ArtikelTrainer from './pages/ArtikelTrainer'
 import Login from './pages/Login'
 import AuthCallback from './pages/AuthCallback'
 import UserDashboard from './pages/UserDashboard'
+import CreatePalace from './pages/CreatePalace'
+import CustomPalaceView from './pages/CustomPalaceView'
 
 export default function App() {
   return (
@@ -43,6 +45,8 @@ export default function App() {
           <Route path="/palace/:id" element={<Editor />} />
           <Route path="/practice/:id" element={<Practice />} />
           <Route path="/bmp" element={<BMPDashboard />} />
+          <Route path="/bmp/create" element={<CreatePalace />} />
+          <Route path="/bmp/custom/:id" element={<CustomPalaceView />} />
           <Route path="/bmp/:personId" element={<BMPEditor />} />
           <Route path="/bmp/:personId/practice" element={<BMPPractice />} />
           <Route path="/lernkarten" element={<LernkartenDashboard />} />
