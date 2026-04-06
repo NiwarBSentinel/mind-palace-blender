@@ -163,9 +163,7 @@ export default function DeutschC1() {
         if (kompMatch) komparativ = kompMatch[1].trim()
         const supMatch = wikitext.match(/\|Superlativ=([^\n|]+)/)
         if (supMatch) superlativ = supMatch[1].trim()
-        if (komparativ || superlativ) {
-          return { type: 'Adjektiv', komparativ, superlativ }
-        }
+        return { type: 'Adjektiv', komparativ, superlativ }
       }
 
       if (type === 'Verb') {
@@ -176,9 +174,7 @@ export default function DeutschC1() {
         if (praetMatch) praeteritum = praetMatch[1].trim()
         const partMatch = wikitext.match(/\|Partizip II=([^\n|]+)/)
         if (partMatch) partizipII = partMatch[1].trim()
-        if (praesIch || praeteritum || partizipII) {
-          return { type: 'Verb', praesIch, praeteritum, partizipII }
-        }
+        return { type: 'Verb', praesIch, praeteritum, partizipII }
       }
 
       if (type === 'Substantiv' || !type) {
@@ -677,7 +673,7 @@ export default function DeutschC1() {
                     )}
                     {currentData.grammar.type === 'Verb' && (
                       <div className="text-slate-200">
-                        <span className="text-green-400 mr-1">🟢</span>
+                        <span className="text-slate-400 mr-1">⚫</span>
                         <span className="font-medium">{detailWord.wort.replace(/^(die|der|das)\s+/, '')}</span>
                         {currentData.grammar.praesIch && <><span className="text-slate-400 mx-2">|</span>ich {currentData.grammar.praesIch}</>}
                         {currentData.grammar.praeteritum && <><span className="text-slate-400 mx-2">|</span>Prät: {currentData.grammar.praeteritum}</>}
@@ -704,11 +700,11 @@ export default function DeutschC1() {
                   </a>
                 )}
                 <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-[10px] text-slate-600">
-                  <span>🔵 Fem. (die)</span>
-                  <span>🟢 Mask. (der)</span>
-                  <span>🟡 Neutr. (das)</span>
+                  <span>🔵 die (Fem.)</span>
+                  <span>🟢 der (Mask.)</span>
+                  <span>🟡 das (Neutr.)</span>
                   <span>⚫ Verb</span>
-                  <span>🟠 Adjektiv</span>
+                  <span>🟡 Adjektiv</span>
                 </div>
               </div>
 
