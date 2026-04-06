@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { TRIVIA_DE } from '../data/triviaDE'
 
-const CATEGORIES = [
+const EN_CATEGORIES = [
   { label: 'Alle Kategorien', value: '' },
   { label: 'Allgemeinwissen', value: '9' },
   { label: 'Bücher', value: '10' },
@@ -19,11 +20,23 @@ const CATEGORIES = [
   { label: 'Politik', value: '24' },
 ]
 
+const DE_CATEGORIES = [
+  { label: 'Alle Kategorien', value: '' },
+  { label: 'Geografie', value: 'Geografie' },
+  { label: 'Geschichte', value: 'Geschichte' },
+  { label: 'Wissenschaft', value: 'Wissenschaft' },
+  { label: 'Kultur & Kunst', value: 'Kultur & Kunst' },
+  { label: 'Sport', value: 'Sport' },
+  { label: 'Schweiz', value: 'Schweiz' },
+]
+
 const DIFFICULTIES = [
   { label: 'Einfach', value: 'easy' },
   { label: 'Mittel', value: 'medium' },
   { label: 'Schwer', value: 'hard' },
 ]
+
+const DIFF_MAP_DE = { easy: 'einfach', medium: 'mittel', hard: 'schwer' }
 
 function shuffle(arr) {
   const a = [...arr]
@@ -37,6 +50,7 @@ function shuffle(arr) {
 export default function Trivia() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const [lang, setLang] = useState(() => localStorage.getItem('trivia_lang') || 'de')
   const [screen, setScreen] = useState('start')
   const [category, setCategory] = useState('')
   const [difficulty, setDifficulty] = useState('medium')
@@ -108,9 +122,45 @@ export default function Trivia() {
     }
   }
 
+  function switchLang(l) {
+    setLang(l)
+    localStorage.setItem('trivia_lang', l)
+    setCategory('')
+  }
+
   async function startGame() {
     setLoading(true)
     setError(null)
+
+    if (lang === 'de') {
+      const deDiff = DIFF_MAP_DE[difficulty]
+      let pool = TRIVIA_DE.filter((q) => q.schwierigkeit === deDiff)
+      if (category) pool = pool.filter((q) => q.kategorie === category)
+      if (pool.length < amount) pool = category ? TRIVIA_DE.filter((q) => q.kategorie === category) : [...TRIVIA_DE]
+      const picked = shuffle(pool).slice(0, amount)
+      if (picked.length === 0) {
+        setError('Nicht genug Fragen verfügbar.')
+        setLoading(false)
+        return
+      }
+      const parsed = picked.map((q) => ({
+        question: q.frage,
+        correct: q.richtig,
+        answers: shuffle([q.richtig, ...q.falsch]),
+        category: q.kategorie,
+        difficulty: q.schwierigkeit,
+      }))
+      setQuestions(parsed)
+      setCurrentIdx(0)
+      setSelected(null)
+      setScore(0)
+      setWrong([])
+      setScreen('game')
+      setLoading(false)
+      return
+    }
+
+    // English: use opentdb API
     const catParam = category ? `&category=${category}` : ''
     const url = `https://opentdb.com/api.php?amount=${amount}${catParam}&difficulty=${difficulty}&type=multiple&encode=url3986`
     try {
@@ -185,13 +235,21 @@ export default function Trivia() {
 
         <div className="p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] space-y-5">
           <div>
+            <label className="text-slate-400 text-sm block mb-2">Sprache</label>
+            <div className="flex gap-2">
+              <button onClick={() => switchLang('de')} className={`flex-1 py-2.5 rounded-lg font-medium transition cursor-pointer ${lang === 'de' ? 'bg-red-600 text-white' : 'bg-[#0a0a1a] border border-[#2a2a4a] text-slate-400 hover:border-red-500/50'}`}>🇩🇪 Deutsch</button>
+              <button onClick={() => switchLang('en')} className={`flex-1 py-2.5 rounded-lg font-medium transition cursor-pointer ${lang === 'en' ? 'bg-red-600 text-white' : 'bg-[#0a0a1a] border border-[#2a2a4a] text-slate-400 hover:border-red-500/50'}`}>🇬🇧 English</button>
+            </div>
+          </div>
+
+          <div>
             <label className="text-slate-400 text-sm block mb-2">Kategorie</label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               className="w-full px-4 py-2.5 rounded-lg bg-[#0a0a1a] border border-[#2a2a4a] text-slate-200 focus:outline-none focus:border-red-500 transition cursor-pointer"
             >
-              {CATEGORIES.map((c) => (
+              {(lang === 'de' ? DE_CATEGORIES : EN_CATEGORIES).map((c) => (
                 <option key={c.value} value={c.value}>{c.label}</option>
               ))}
             </select>
