@@ -22,6 +22,7 @@ import DeutschC1Spiele from './pages/DeutschC1Spiele'
 import LueckentextGame from './pages/LueckentextGame'
 import MemoryGame from './pages/MemoryGame'
 import ZeitdruckQuiz from './pages/ZeitdruckQuiz'
+import ArtikelTrainer from './pages/ArtikelTrainer'
 
 export default function App() {
   return (
@@ -50,6 +51,7 @@ export default function App() {
         <Route path="/sprachen/deutsch/lueckentext" element={<LueckentextGame />} />
         <Route path="/sprachen/deutsch/memory" element={<MemoryGame />} />
         <Route path="/sprachen/deutsch/zeitdruck" element={<ZeitdruckQuiz />} />
+        <Route path="/sprachen/deutsch/artikel" element={<ArtikelTrainer />} />
       </Routes>
     </div>
   )
