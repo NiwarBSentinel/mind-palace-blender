@@ -148,26 +148,27 @@ export default function DeutschC1() {
   }
 
   function parseWikiGrammar(wikitext, wordType) {
-    const lines = wikitext.split('\n')
     try {
-      if (wordType === 'Substantiv' || !wordType) {
-        // Try to find genus and declension
-        let genus = null
-        let genSg = null
-        let nomPl = null
-        const genusMatch = wikitext.match(/\|Genus=([mfn])/i)
-        if (genusMatch) {
-          genus = genusMatch[1] === 'm' ? 'der' : genusMatch[1] === 'f' ? 'die' : 'das'
-        }
-        const genSgMatch = wikitext.match(/\|Genitiv Singular=([^\n|]+)/)
-        if (genSgMatch) genSg = genSgMatch[1].trim()
-        const nomPlMatch = wikitext.match(/\|Nominativ Plural=([^\n|]+)/)
-        if (nomPlMatch) nomPl = nomPlMatch[1].trim()
-        if (genus || genSg || nomPl) {
-          return { type: 'Substantiv', genus, genSg, nomPl }
+      // Detect type from wikitext if not provided by DWDS
+      let type = wordType
+      if (!type) {
+        if (wikitext.match(/\{\{Wortart\|Adjektiv\|/)) type = 'Adjektiv'
+        else if (wikitext.match(/\{\{Wortart\|Verb\|/)) type = 'Verb'
+        else if (wikitext.match(/\{\{Wortart\|Substantiv\|/)) type = 'Substantiv'
+      }
+
+      if (type === 'Adjektiv') {
+        let komparativ = null, superlativ = null
+        const kompMatch = wikitext.match(/\|Komparativ=([^\n|]+)/)
+        if (kompMatch) komparativ = kompMatch[1].trim()
+        const supMatch = wikitext.match(/\|Superlativ=([^\n|]+)/)
+        if (supMatch) superlativ = supMatch[1].trim()
+        if (komparativ || superlativ) {
+          return { type: 'Adjektiv', komparativ, superlativ }
         }
       }
-      if (wordType === 'Verb' || !wordType) {
+
+      if (type === 'Verb') {
         let praesIch = null, praeteritum = null, partizipII = null
         const praesMatch = wikitext.match(/\|Präsens_ich=([^\n|]+)/)
         if (praesMatch) praesIch = praesMatch[1].trim()
@@ -179,14 +180,19 @@ export default function DeutschC1() {
           return { type: 'Verb', praesIch, praeteritum, partizipII }
         }
       }
-      if (wordType === 'Adjektiv' || !wordType) {
-        let komparativ = null, superlativ = null
-        const kompMatch = wikitext.match(/\|Komparativ=([^\n|]+)/)
-        if (kompMatch) komparativ = kompMatch[1].trim()
-        const supMatch = wikitext.match(/\|Superlativ=([^\n|]+)/)
-        if (supMatch) superlativ = supMatch[1].trim()
-        if (komparativ || superlativ) {
-          return { type: 'Adjektiv', komparativ, superlativ }
+
+      if (type === 'Substantiv' || !type) {
+        let genus = null, genSg = null, nomPl = null
+        const genusMatch = wikitext.match(/\|Genus=([mfn])/i)
+        if (genusMatch) {
+          genus = genusMatch[1] === 'm' ? 'der' : genusMatch[1] === 'f' ? 'die' : 'das'
+        }
+        const genSgMatch = wikitext.match(/\|Genitiv Singular=([^\n|]+)/)
+        if (genSgMatch) genSg = genSgMatch[1].trim()
+        const nomPlMatch = wikitext.match(/\|Nominativ Plural=([^\n|]+)/)
+        if (nomPlMatch) nomPl = nomPlMatch[1].trim()
+        if (genus || genSg || nomPl) {
+          return { type: 'Substantiv', genus, genSg, nomPl }
         }
       }
     } catch {}
