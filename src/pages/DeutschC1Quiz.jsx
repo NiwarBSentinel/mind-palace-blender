@@ -37,15 +37,18 @@ function buildQuestions(mode) {
 }
 
 function buildSynChips(word) {
-  const defWords = word.definition.toLowerCase().split(/[\s,]+/).filter((w) => w.length > 4)
-  const correctWords = C1_WOERTER
-    .filter((w) => w.wort !== word.wort && defWords.some((d) => w.definition.toLowerCase().includes(d) || w.wort.toLowerCase().includes(d)))
-  const correct = shuffle(correctWords).slice(0, Math.min(3, Math.max(2, correctWords.length)))
-  const correctSet = new Set([word.wort, ...correct.map((c) => c.wort)])
-  const wrong = shuffle(C1_WOERTER.filter((w) => !correctSet.has(w.wort))).slice(0, 8 - correct.length)
+  const correctSyns = shuffle(word.synonyme || []).slice(0, 3)
+  // Pick wrong synonyms from other words' synonyme arrays
+  const correctSet = new Set([word.wort, ...correctSyns])
+  const allOtherSyns = C1_WOERTER
+    .filter((w) => w.wort !== word.wort)
+    .flatMap((w) => w.synonyme || [])
+    .filter((s) => !correctSet.has(s))
+  const uniqueWrong = [...new Set(allOtherSyns)]
+  const wrong = shuffle(uniqueWrong).slice(0, 8 - correctSyns.length)
   return shuffle([
-    ...correct.map((w) => ({ text: w.wort, correct: true })),
-    ...wrong.map((w) => ({ text: w.wort, correct: false })),
+    ...correctSyns.map((s) => ({ text: s, correct: true })),
+    ...wrong.map((s) => ({ text: s, correct: false })),
   ])
 }
 
