@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { isDue, getDueCount } from '../lib/srs'
+import { useAuth } from '../contexts/AuthContext'
 
 const MAJOR_MAP = {
   '00':'Sauce','01':'Seed','02':'Sun','03':'Sumo','04':'Sir','05':'Soul','06':'Sushi','07':'Ski','08':'Sofa','09':'Soap',
@@ -38,8 +39,9 @@ export default function LernkartenDashboard() {
   const [form, setForm] = useState({ frage: '', antwort: '', mnemonik: '', kategorie: '' })
   const [search, setSearch] = useState('')
   const navigate = useNavigate()
+  const { user } = useAuth()
 
-  useEffect(() => { fetchCards() }, [])
+  useEffect(() => { fetchCards() }, [user])
 
   async function fetchCards() {
     const { data, error } = await supabase
@@ -81,8 +83,10 @@ export default function LernkartenDashboard() {
       const { error } = await supabase.from('lernkarten').update(payload).eq('id', editingId)
       if (error) console.error('update error:', error)
     } else {
+      if (user) payload.user_id = user.id
+      console.log('saveToLernkarten', { user_id: user?.id, frage: form.frage })
       const { error } = await supabase.from('lernkarten').insert(payload)
-      if (error) console.error('insert error:', error)
+      if (error) console.error('saveToLernkarten error:', error)
     }
     setShowForm(false)
     setEditingId(null)

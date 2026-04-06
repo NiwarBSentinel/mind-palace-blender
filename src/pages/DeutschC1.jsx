@@ -127,13 +127,16 @@ export default function DeutschC1() {
   }
 
   async function saveToLernkarten(w) {
-    const { error } = await supabase.from('lernkarten').insert({
+    const payload = {
       frage: w.wort,
       antwort: w.definition,
       kategorie: 'Deutsch C1',
       mnemonik: w.beispiel,
-    })
-    if (error) console.error('save error:', error)
+    }
+    if (user) payload.user_id = user.id
+    console.log('saveToLernkarten', { user_id: user?.id, wort: w.wort })
+    const { error } = await supabase.from('lernkarten').insert(payload)
+    if (error) console.error('saveToLernkarten error:', error)
     setToast('Lernkarte gespeichert!')
     setTimeout(() => setToast(null), 2500)
   }

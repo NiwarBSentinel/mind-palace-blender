@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
 
 const CATEGORIES = [
   { label: 'Alle Kategorien', value: '' },
@@ -35,6 +36,7 @@ function shuffle(arr) {
 
 export default function Trivia() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [screen, setScreen] = useState('start')
   const [category, setCategory] = useState('')
   const [difficulty, setDifficulty] = useState('medium')
@@ -80,13 +82,16 @@ export default function Trivia() {
 
   async function handleSaveCard() {
     if (!saveModal) return
-    const { error: err } = await supabase.from('lernkarten').insert({
+    const payload = {
       frage: saveModal.question,
       antwort: saveModal.correct,
       kategorie: saveKategorie.trim() || 'Trivia',
       mnemonik: saveMnemonik.trim() || null,
-    })
-    if (err) console.error('save lernkarte error:', err)
+    }
+    if (user) payload.user_id = user.id
+    console.log('saveToLernkarten', { user_id: user?.id, frage: saveModal.question })
+    const { error: err } = await supabase.from('lernkarten').insert(payload)
+    if (err) console.error('saveToLernkarten error:', err)
     setSaveModal(null)
     setToast('Lernkarte gespeichert!')
     setTimeout(() => setToast(null), 2500)
