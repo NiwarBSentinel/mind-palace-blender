@@ -27,7 +27,12 @@ export function AuthProvider({ children }) {
   }
 
   async function signUp(email, password) {
-    const { data, error } = await supabase.auth.signUp({ email, password })
+    const siteUrl = import.meta.env.VITE_SITE_URL || 'https://mind-palace-blender.vercel.app'
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: `${siteUrl}/auth/callback` },
+    })
     if (error) throw error
     return data
   }
