@@ -86,48 +86,19 @@ export default function DeutschC1() {
   const [revealed, setRevealed] = useState(false)
   const [finished, setFinished] = useState(false)
   const [direction, setDirection] = useState('forward')
-  const [practiceMode, setPracticeMode] = useState('flashcard')
   const [results, setResults] = useState({ schwer: [], ok: [], einfach: [] })
-  const [selectedChips, setSelectedChips] = useState([])
-  const [synRevealed, setSynRevealed] = useState(false)
-  const [synChips, setSynChips] = useState([])
 
   const dueCount = C1_WOERTER.filter((w) => isDue(srsData[w.wort])).length
   const learnedCount = C1_WOERTER.filter((w) => srsData[w.wort]?.repetitions > 0).length
 
-  function buildSynChips(word) {
-    // Extract key words from definition as "correct synonyms"
-    const defWords = word.definition.toLowerCase().split(/[\s,]+/).filter((w) => w.length > 4)
-    const correctWords = C1_WOERTER
-      .filter((w) => w.wort !== word.wort && defWords.some((d) => w.definition.toLowerCase().includes(d) || w.wort.toLowerCase().includes(d)))
-    const correct = shuffle(correctWords).slice(0, Math.min(3, Math.max(2, correctWords.length)))
-    // Pick random wrong words
-    const correctSet = new Set([word.wort, ...correct.map((c) => c.wort)])
-    const wrong = shuffle(C1_WOERTER.filter((w) => !correctSet.has(w.wort))).slice(0, 8 - correct.length)
-    return shuffle([
-      ...correct.map((w) => ({ text: w.wort, correct: true })),
-      ...wrong.map((w) => ({ text: w.wort, correct: false })),
-    ])
-  }
-
-  function startPractice(mode) {
-    const m = mode || 'flashcard'
+  function startPractice() {
     const due = C1_WOERTER.filter((w) => isDue(srsData[w.wort]))
     if (due.length === 0) return
-    const cards = shuffle(due)
-    setPracticeCards(cards)
+    setPracticeCards(shuffle(due))
     setCurrentIdx(0)
     setRevealed(false)
     setFinished(false)
-    setPracticeMode(m)
-    setSelectedChips([])
-    setSynRevealed(false)
-    if (m === 'flashcard') {
-      setDirection(Math.random() > 0.5 ? 'forward' : 'backward')
-    }
-    if (m === 'synonym') {
-      setSynChips(buildSynChips(cards[0]))
-    }
+    setDirection(Math.random() > 0.5 ? 'forward' : 'backward')
     setResults({ schwer: [], ok: [], einfach: [] })
     setTab('ueben')
   }
@@ -147,16 +118,8 @@ export default function DeutschC1() {
       return
     }
     setRevealed(false)
-    setSynRevealed(false)
-    setSelectedChips([])
-    const nextIdx = currentIdx + 1
-    setCurrentIdx(nextIdx)
-    if (practiceMode === 'flashcard') {
-      setDirection(Math.random() > 0.5 ? 'forward' : 'backward')
-    }
-    if (practiceMode === 'synonym') {
-      setSynChips(buildSynChips(practiceCards[nextIdx]))
-    }
+    setCurrentIdx(currentIdx + 1)
+    setDirection(Math.random() > 0.5 ? 'forward' : 'backward')
   }
 
   async function saveToLernkarten(w) {
@@ -387,9 +350,9 @@ export default function DeutschC1() {
           📖 Lernen
         </button>
         <button
-          onClick={() => dueCount > 0 ? startPractice('flashcard') : null}
+          onClick={() => dueCount > 0 ? startPractice() : null}
           className={`px-5 py-2.5 rounded-lg font-medium transition cursor-pointer ${
-            tab === 'ueben' && practiceMode === 'flashcard'
+            tab === 'ueben'
               ? 'bg-blue-600 text-white'
               : dueCount > 0
                 ? 'bg-[#12122a] border border-[#2a2a4a] text-slate-400 hover:border-blue-500/50'
@@ -397,18 +360,6 @@ export default function DeutschC1() {
           }`}
         >
           🎯 Üben {dueCount > 0 && `(${dueCount})`}
-        </button>
-        <button
-          onClick={() => dueCount > 0 ? startPractice('synonym') : null}
-          className={`px-5 py-2.5 rounded-lg font-medium transition cursor-pointer ${
-            tab === 'ueben' && practiceMode === 'synonym'
-              ? 'bg-blue-600 text-white'
-              : dueCount > 0
-                ? 'bg-[#12122a] border border-[#2a2a4a] text-slate-400 hover:border-blue-500/50'
-                : 'bg-[#12122a] border border-[#2a2a4a] text-slate-600 cursor-not-allowed'
-          }`}
-        >
-          🔗 Synonyme
         </button>
       </div>
 
@@ -545,7 +496,7 @@ export default function DeutschC1() {
                   {currentIdx + 1} / {total}
                 </span>
                 <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-300">
-                  {practiceMode === 'synonym' ? '🔗 Synonyme' : direction === 'forward' ? 'Wort → Definition' : 'Definition → Wort'}
+                  {direction === 'forward' ? 'Wort → Definition' : 'Definition → Wort'}
                 </span>
               </div>
 
@@ -557,53 +508,7 @@ export default function DeutschC1() {
               </div>
 
               <div className="p-8 rounded-xl bg-[#12122a] border border-[#1e1e3a] text-center mb-8">
-                {practiceMode === 'synonym' ? (
-                  <>
-                    <div className="text-2xl font-bold text-blue-300 mb-2">{current.wort}</div>
-                    <div className="text-slate-500 text-sm mb-6">Welche Wörter sind verwandt?</div>
-                    <div className="flex flex-wrap gap-2 justify-center mb-6">
-                      {synChips.map((chip) => {
-                        const isSelected = selectedChips.includes(chip.text)
-                        let chipClass = 'bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a]'
-                        if (synRevealed) {
-                          if (chip.correct && isSelected) chipClass = 'bg-green-600/30 border-green-500 text-green-300'
-                          else if (chip.correct && !isSelected) chipClass = 'bg-yellow-600/20 border-yellow-500 text-yellow-300'
-                          else if (!chip.correct && isSelected) chipClass = 'bg-red-600/30 border-red-500 text-red-300'
-                          else chipClass = 'bg-[#1e1e3a] text-slate-500 opacity-50'
-                        } else if (isSelected) {
-                          chipClass = 'bg-blue-600/30 border-blue-500 text-blue-300'
-                        }
-                        return (
-                          <button
-                            key={chip.text}
-                            onClick={() => {
-                              if (synRevealed) return
-                              setSelectedChips((prev) => prev.includes(chip.text) ? prev.filter((c) => c !== chip.text) : [...prev, chip.text])
-                            }}
-                            disabled={synRevealed}
-                            className={`px-3 py-1.5 rounded-full text-sm font-medium border transition cursor-pointer ${chipClass}`}
-                          >
-                            {synRevealed && chip.correct && isSelected && '✅ '}
-                            {synRevealed && chip.correct && !isSelected && '⚠️ '}
-                            {synRevealed && !chip.correct && isSelected && '❌ '}
-                            {chip.text}
-                          </button>
-                        )
-                      })}
-                    </div>
-                    {!synRevealed ? (
-                      <button
-                        onClick={() => { setSynRevealed(true); setRevealed(true) }}
-                        disabled={selectedChips.length === 0}
-                        className="px-8 py-3 rounded-lg bg-purple-600/20 border border-purple-500/30 text-purple-300 hover:bg-purple-600/30 disabled:opacity-30 transition cursor-pointer text-lg"
-                      >
-                        Auflösen
-                      </button>
-                    ) : (
-                      <div className="text-slate-500 text-sm italic mt-2">{current.definition}</div>
-                    )}
-                  </>
-                ) : direction === 'forward' ? (
+                {direction === 'forward' ? (
                   <>
                     <div className="text-2xl font-bold text-blue-300 mb-6">{current.wort}</div>
                     {revealed ? (
