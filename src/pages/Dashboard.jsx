@@ -54,14 +54,14 @@ const modes = [
     color: 'red',
   },
   {
-    key: 'deutschc1',
-    path: '/deutsch-c1',
-    emoji: '🇩🇪',
-    title: 'Deutsch C1',
-    desc: 'C1 Wortschatz mit Spaced Repetition',
+    key: 'sprachen',
+    path: '/sprachen',
+    emoji: '🌍',
+    title: 'Sprachen',
+    desc: 'Vokabeln und Grammatik lernen',
     table: null,
     statLabel: null,
-    color: 'cyan',
+    color: 'teal',
   },
 ]
 
@@ -106,13 +106,13 @@ const colorMap = {
     stat: 'text-red-400',
     statBg: 'bg-red-500/10',
   },
-  cyan: {
-    border: 'border-b-cyan-500',
-    hoverBorder: 'hover:border-cyan-500/50',
-    hoverText: 'group-hover:text-cyan-300',
-    shadow: 'hover:shadow-cyan-500/20',
-    stat: 'text-cyan-400',
-    statBg: 'bg-cyan-500/10',
+  teal: {
+    border: 'border-b-teal-500',
+    hoverBorder: 'hover:border-teal-500/50',
+    hoverText: 'group-hover:text-teal-300',
+    shadow: 'hover:shadow-teal-500/20',
+    stat: 'text-teal-400',
+    statBg: 'bg-teal-500/10',
   },
 }
 
@@ -126,7 +126,7 @@ export default function Dashboard() {
     async function fetchStats() {
       const results = await Promise.all(
         modes.map(async (m) => {
-          if (m.key === 'deutschc1') return [m.key, 204]
+          if (m.key === 'sprachen') return [m.key, null]
           if (!m.table) return [m.key, null]
           const { count } = await supabase
             .from(m.table)
@@ -185,10 +185,10 @@ export default function Dashboard() {
                 <div className={`mt-auto px-3 py-1.5 rounded-full text-xs font-medium ${c.stat} ${c.statBg}`}>
                   {mode.key === 'lernkarten' && dueCount > 0
                     ? `${dueCount} heute fällig`
-                    : mode.key === 'deutschc1'
-                      ? '51 Wörter'
-                      : mode.key === 'peglist'
-                        ? '101 Einträge'
+                    : mode.key === 'peglist'
+                      ? '101 Einträge'
+                      : mode.key === 'sprachen'
+                        ? '1 Sprache'
                         : mode.statLabel
                           ? (count !== undefined ? `${count} ${mode.statLabel}` : '...')
                           : 'Spielen'

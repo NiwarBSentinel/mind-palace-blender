@@ -11,6 +11,10 @@ import LernkartenPractice from './pages/LernkartenPractice'
 import PegList from './pages/PegList'
 import Trivia from './pages/Trivia'
 import DeutschC1 from './pages/DeutschC1'
+import SprachenDashboard from './pages/SprachenDashboard'
+import DeutschDashboard from './pages/DeutschDashboard'
+import DeutschLernkarten from './pages/DeutschLernkarten'
+import DeutschLernkartenPractice from './pages/DeutschLernkartenPractice'
 
 export default function App() {
   return (
@@ -27,6 +31,10 @@ export default function App() {
         <Route path="/lernkarten/practice" element={<LernkartenPractice />} />
         <Route path="/peglist" element={<PegList />} />
         <Route path="/trivia" element={<Trivia />} />
+        <Route path="/sprachen" element={<SprachenDashboard />} />
+        <Route path="/sprachen/deutsch" element={<DeutschDashboard />} />
+        <Route path="/sprachen/deutsch/lernkarten" element={<DeutschLernkarten />} />
+        <Route path="/sprachen/deutsch/lernkarten/practice" element={<DeutschLernkartenPractice />} />
         <Route path="/deutsch-c1" element={<DeutschC1 />} />
       </Routes>
     </div>
