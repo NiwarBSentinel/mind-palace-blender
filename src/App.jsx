@@ -27,6 +27,7 @@ import ZeitdruckQuiz from './pages/ZeitdruckQuiz'
 import ArtikelTrainer from './pages/ArtikelTrainer'
 import Login from './pages/Login'
 import AuthCallback from './pages/AuthCallback'
+import UserDashboard from './pages/UserDashboard'
 
 export default function App() {
   return (
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/login" element={<Login />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/dashboard/user" element={<UserDashboard />} />
           <Route path="/palaces" element={<PalaceDashboard />} />
           <Route path="/palace/:id" element={<Editor />} />
           <Route path="/practice/:id" element={<Practice />} />
