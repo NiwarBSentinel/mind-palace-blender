@@ -2,6 +2,52 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { isDue, getDueCount } from '../lib/srs'
+import { C1_WOERTER } from '../data/c1WordsFull'
+
+function findSimilarC1Words(word) {
+  const clean = word.replace(/^(die|der|das)\s+/, '').toLowerCase()
+  const prefix = clean.substring(0, 3)
+  const len = clean.length
+  return C1_WOERTER
+    .filter((w) => {
+      if (w.wort === word) return false
+      const other = w.wort.replace(/^(die|der|das)\s+/, '').toLowerCase()
+      return other.startsWith(prefix) || (other[0] === clean[0] && Math.abs(other.length - len) <= 2)
+    })
+    .slice(0, 6)
+}
+
+function parseWikiGrammar(wikitext, wordType, word) {
+  try {
+    const cleanWord = (word || '').replace(/^(die|der|das)\s+/, '')
+    let type = wordType
+    if (!type) {
+      if (/Wortart\|Verb/.test(wikitext)) type = 'Verb'
+      else if (/Wortart\|Adjektiv/.test(wikitext)) type = 'Adjektiv'
+      else if (/Wortart\|Substantiv/.test(wikitext)) type = 'Substantiv'
+    }
+    const isVerb = type === 'Verb' || /Konjugation/.test(wikitext) || cleanWord.endsWith('en') || cleanWord.endsWith('ieren')
+    if (isVerb && type !== 'Substantiv' && type !== 'Adjektiv') {
+      const praesIch = wikitext.match(/\|Präsens_ich=([^\n|]+)/)?.[1]?.trim() || null
+      const praeteritum = wikitext.match(/\|Präteritum_ich=([^\n|]+)/)?.[1]?.trim() || null
+      const partizipII = wikitext.match(/\|Partizip II=([^\n|]+)/)?.[1]?.trim() || null
+      return { type: 'Verb', praesIch, praeteritum, partizipII }
+    }
+    if (type === 'Adjektiv') {
+      const komparativ = wikitext.match(/\|Komparativ=([^\n|]+)/)?.[1]?.trim() || null
+      const superlativ = wikitext.match(/\|Superlativ=([^\n|]+)/)?.[1]?.trim() || null
+      return { type: 'Adjektiv', komparativ, superlativ }
+    }
+    if (type === 'Substantiv' || !type) {
+      const genusMatch = wikitext.match(/\|Genus=([mfn])/i)
+      const genus = genusMatch ? (genusMatch[1] === 'm' ? 'der' : genusMatch[1] === 'f' ? 'die' : 'das') : null
+      const genSg = wikitext.match(/\|Genitiv Singular=([^\n|]+)/)?.[1]?.trim() || null
+      const nomPl = wikitext.match(/\|Nominativ Plural=([^\n|]+)/)?.[1]?.trim() || null
+      if (genus || genSg || nomPl) return { type: 'Substantiv', genus, genSg, nomPl }
+    }
+  } catch {}
+  return null
+}
 
 function isDeutschCard(card) {
   const cat = (card.kategorie || '').toLowerCase()
@@ -19,6 +65,9 @@ export default function DeutschLernkarten() {
   const [detailNotiz, setDetailNotiz] = useState('')
   const [detailSaving, setDetailSaving] = useState(false)
   const [toast, setToast] = useState(null)
+  const [c1Data, setC1Data] = useState(null)
+  const [c1Loading, setC1Loading] = useState(false)
+  const [c1Match, setC1Match] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => { fetchCards() }, [])
@@ -77,9 +126,43 @@ export default function DeutschLernkarten() {
     await fetchCards()
   }
 
-  function openDetailCard(card) {
+  async function openDetailCard(card) {
     setDetailCard(card)
     setDetailNotiz(card.mnemonik || '')
+    setC1Data(null)
+    setC1Match(null)
+
+    const isC1 = (card.kategorie || '').toLowerCase().includes('deutsch c1') || (card.kategorie || '').toLowerCase() === 'deutsch c1'
+    if (!isC1) return
+
+    const match = C1_WOERTER.find((w) => w.wort === card.frage) || null
+    setC1Match(match)
+    setC1Loading(true)
+
+    const clean = card.frage.replace(/^(die|der|das)\s+/, '')
+    const encoded = encodeURIComponent(clean)
+    const [thesRes, snippetRes, freqRes, wikiRes] = await Promise.allSettled([
+      fetch(`https://www.openthesaurus.de/synonyme/search?q=${encoded}&format=application/json&similar=true`).then((r) => r.json()),
+      fetch(`https://www.dwds.de/api/wb/snippet?q=${encoded}`).then((r) => r.json()),
+      fetch(`https://www.dwds.de/api/frequency/?q=${encoded}`).then((r) => r.json()),
+      fetch(`https://de.wiktionary.org/w/api.php?action=parse&page=${encoded}&prop=wikitext&format=json&origin=*`).then((r) => r.json()),
+    ])
+
+    const result = { synonyms: [], wortart: null, frequency: null, grammar: null }
+    if (thesRes.status === 'fulfilled') {
+      result.synonyms = (thesRes.value.synsets || []).flatMap((s) => s.terms.map((t) => t.term)).filter((t, i, a) => a.indexOf(t) === i).slice(0, 10)
+    }
+    if (snippetRes.status === 'fulfilled' && Array.isArray(snippetRes.value) && snippetRes.value[0]) {
+      result.wortart = snippetRes.value[0].pos || null
+    }
+    if (freqRes.status === 'fulfilled' && freqRes.value?.frequency !== undefined) {
+      result.frequency = freqRes.value.frequency
+    }
+    if (wikiRes.status === 'fulfilled' && wikiRes.value?.parse?.wikitext?.['*']) {
+      result.grammar = parseWikiGrammar(wikiRes.value.parse.wikitext['*'], result.wortart, card.frage)
+    }
+    setC1Data(result)
+    setC1Loading(false)
   }
 
   async function saveNotiz() {
@@ -287,6 +370,108 @@ export default function DeutschLernkarten() {
                 return <span className="text-xs px-2 py-0.5 rounded-full bg-[#1e1e3a] text-slate-500">Fällig in {days} {days === 1 ? 'Tag' : 'Tagen'}</span>
               })()}
             </div>
+
+            {/* C1 enriched sections */}
+            {c1Loading && <div className="text-slate-500 text-sm">Lade C1-Informationen...</div>}
+
+            {c1Data && (
+              <>
+                {(c1Data.wortart || c1Data.frequency !== null) && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {c1Data.wortart && (
+                      <span className="text-xs px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300">
+                        {c1Data.wortart === 'Substantiv' ? '📚' : c1Data.wortart === 'Verb' ? '🔤' : c1Data.wortart === 'Adjektiv' ? '🎨' : '📝'} {c1Data.wortart}
+                      </span>
+                    )}
+                    {c1Data.frequency !== null && (
+                      <span className="text-xs px-2.5 py-1 rounded-full bg-[#1e1e3a] text-slate-300 flex items-center gap-1.5">
+                        Häufigkeit: <span className="font-mono tracking-tight">{'█'.repeat(Math.max(1, c1Data.frequency))}{'░'.repeat(Math.max(0, 6 - c1Data.frequency))}</span>
+                        <span className="text-slate-500">({c1Data.frequency}/6)</span>
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {c1Data.grammar && (
+                  <div>
+                    <h3 className="text-slate-400 text-sm font-medium mb-2">Grammatik</h3>
+                    <div className="p-3 rounded-lg bg-[#0a0a1a] text-sm">
+                      {c1Data.grammar.type === 'Substantiv' && (
+                        <div className="text-slate-200">
+                          <span className="mr-1">{c1Data.grammar.genus === 'der' ? '🟢' : c1Data.grammar.genus === 'die' ? '🔵' : c1Data.grammar.genus === 'das' ? '🟡' : '⚪'}</span>
+                          {c1Data.grammar.genus && <span className="font-medium">{c1Data.grammar.genus} </span>}
+                          {detailCard.frage.replace(/^(die|der|das)\s+/, '')}
+                          {c1Data.grammar.genSg && <><span className="text-slate-400 mx-2">|</span>Gen: <span className="text-slate-300">{c1Data.grammar.genSg}</span></>}
+                          {c1Data.grammar.nomPl && <><span className="text-slate-400 mx-2">|</span>Pl: <span className="text-slate-300">{c1Data.grammar.nomPl}</span></>}
+                        </div>
+                      )}
+                      {c1Data.grammar.type === 'Verb' && (
+                        <div className="text-slate-200">
+                          <span className="text-slate-400 mr-1">⚫</span>
+                          <span className="font-medium">{detailCard.frage.replace(/^(die|der|das)\s+/, '')}</span>
+                          {c1Data.grammar.praesIch && <><span className="text-slate-400 mx-2">|</span>ich {c1Data.grammar.praesIch}</>}
+                          {c1Data.grammar.praeteritum && <><span className="text-slate-400 mx-2">|</span>Prät: {c1Data.grammar.praeteritum}</>}
+                          {c1Data.grammar.partizipII && <><span className="text-slate-400 mx-2">|</span>Part. II: <span className="text-slate-300">{c1Data.grammar.partizipII}</span></>}
+                        </div>
+                      )}
+                      {c1Data.grammar.type === 'Adjektiv' && (
+                        <div className="text-slate-200">
+                          <span className="text-yellow-400 mr-1">🟡</span>
+                          <span className="font-medium">{detailCard.frage.replace(/^(die|der|das)\s+/, '')}</span>
+                          {c1Data.grammar.komparativ && <><span className="text-slate-400 mx-2">|</span><span className="text-slate-300">{c1Data.grammar.komparativ}</span></>}
+                          {c1Data.grammar.superlativ && <><span className="text-slate-400 mx-2">|</span>am <span className="text-slate-300">{c1Data.grammar.superlativ}en</span></>}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {c1Data.synonyms.length > 0 && (
+                  <div>
+                    <h3 className="text-slate-400 text-sm font-medium mb-2">Synonyme</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {c1Data.synonyms.map((s) => (
+                        <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300">{s}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {c1Match?.synonyme?.length > 0 && (
+                  <div>
+                    <h3 className="text-slate-400 text-sm font-medium mb-2">C1 Synonyme</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {c1Match.synonyme.map((s) => (
+                        <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-green-500/20 text-green-300">{s}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {(() => {
+                  const similar = findSimilarC1Words(detailCard.frage)
+                  return similar.length > 0 ? (
+                    <div>
+                      <h3 className="text-slate-400 text-sm font-medium mb-2">Ähnlich klingende C1 Wörter</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {similar.map((w) => (
+                          <span key={w.wort} className="text-xs px-2.5 py-1 rounded-full bg-[#1e1e3a] text-slate-300">{w.wort}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null
+                })()}
+
+                <a
+                  href={`https://www.dwds.de/wb/${encodeURIComponent(detailCard.frage.replace(/^(die|der|das)\s+/, ''))}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs px-3 py-1.5 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-300 hover:bg-blue-600/30 transition inline-block"
+                >
+                  Im DWDS nachschlagen →
+                </a>
+              </>
+            )}
 
             <div>
               <label className="text-slate-400 text-sm font-medium block mb-2">Notizen / Mnemonik</label>
