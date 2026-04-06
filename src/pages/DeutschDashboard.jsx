@@ -85,6 +85,27 @@ export default function DeutschDashboard() {
           )
         })}
       </div>
+
+      {/* Spiele */}
+      <h2 className="text-xl font-bold text-slate-300 mt-12 mb-4">🎮 Spiele</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div
+          onClick={() => navigate('/sprachen/deutsch/hangman')}
+          className="p-5 rounded-xl bg-[#12122a] border border-[#1e1e3a] border-b-2 border-b-rose-500 cursor-pointer transition-all duration-300 group hover:border-rose-500/50 hover:scale-[1.02] hover:shadow-xl hover:shadow-rose-500/10 hover:bg-[#13132e]"
+        >
+          <div className="text-3xl mb-2 transition-transform duration-300 group-hover:scale-110">💀</div>
+          <div className="text-slate-200 font-bold group-hover:text-rose-300 transition">Hangman</div>
+          <div className="text-slate-500 text-xs mt-1">C1 Wörter erraten</div>
+        </div>
+        <div
+          onClick={() => navigate('/sprachen/deutsch/c1/quiz')}
+          className="p-5 rounded-xl bg-[#12122a] border border-[#1e1e3a] border-b-2 border-b-purple-500 cursor-pointer transition-all duration-300 group hover:border-purple-500/50 hover:scale-[1.02] hover:shadow-xl hover:shadow-purple-500/10 hover:bg-[#13132e]"
+        >
+          <div className="text-3xl mb-2 transition-transform duration-300 group-hover:scale-110">🎯</div>
+          <div className="text-slate-200 font-bold group-hover:text-purple-300 transition">C1 Quiz</div>
+          <div className="text-slate-500 text-xs mt-1">Vokabeln, Definitionen und Synonyme</div>
+        </div>
+      </div>
     </div>
   )
 }

@@ -41,7 +41,7 @@ export default function App() {
         <Route path="/deutsch-c1" element={<DeutschC1 />} />
         <Route path="/sprachen/deutsch/c1/quiz" element={<DeutschC1Quiz />} />
         <Route path="/sprachen/deutsch/:level" element={<GoetheLevel />} />
-        <Route path="/hangman" element={<HangmanGame />} />
+        <Route path="/sprachen/deutsch/hangman" element={<HangmanGame />} />
       </Routes>
     </div>
   )
