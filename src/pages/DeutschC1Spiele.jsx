@@ -7,6 +7,7 @@ export default function DeutschC1Spiele() {
     { emoji: '💀', title: 'Hangman', desc: 'C1 Wörter erraten — 6 Versuche', path: '/sprachen/deutsch/hangman', color: 'rose' },
     { emoji: '📝', title: 'Lückentext', desc: 'Fehlende Wörter im Satz ergänzen', path: '/sprachen/deutsch/lueckentext', color: 'amber' },
     { emoji: '🧠', title: 'Memory', desc: 'Wort-Definition-Paare finden', path: '/sprachen/deutsch/memory', color: 'cyan' },
+    { emoji: '⚡', title: 'Zeitdruck', desc: 'Synonyme finden in 60 Sekunden', path: '/sprachen/deutsch/zeitdruck', color: 'yellow' },
   ]
 
   return (
@@ -31,14 +32,16 @@ export default function DeutschC1Spiele() {
             key={g.path}
             onClick={() => navigate(g.path)}
             className={`p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] border-b-2 ${
-              g.color === 'rose' ? 'border-b-rose-500 hover:border-rose-500/50 hover:shadow-rose-500/10'
-              : g.color === 'amber' ? 'border-b-amber-500 hover:border-amber-500/50 hover:shadow-amber-500/10'
-              : 'border-b-cyan-500 hover:border-cyan-500/50 hover:shadow-cyan-500/10'
+              { rose: 'border-b-rose-500 hover:border-rose-500/50 hover:shadow-rose-500/10',
+                amber: 'border-b-amber-500 hover:border-amber-500/50 hover:shadow-amber-500/10',
+                cyan: 'border-b-cyan-500 hover:border-cyan-500/50 hover:shadow-cyan-500/10',
+                yellow: 'border-b-yellow-500 hover:border-yellow-500/50 hover:shadow-yellow-500/10',
+              }[g.color]
             } cursor-pointer transition-all duration-300 group hover:scale-[1.02] hover:shadow-xl hover:bg-[#13132e]`}
           >
             <div className="text-4xl mb-3 transition-transform duration-300 group-hover:scale-110">{g.emoji}</div>
             <div className={`text-lg font-bold text-slate-200 transition ${
-              g.color === 'rose' ? 'group-hover:text-rose-300' : g.color === 'amber' ? 'group-hover:text-amber-300' : 'group-hover:text-cyan-300'
+              { rose: 'group-hover:text-rose-300', amber: 'group-hover:text-amber-300', cyan: 'group-hover:text-cyan-300', yellow: 'group-hover:text-yellow-300' }[g.color]
             }`}>{g.title}</div>
             <div className="text-slate-500 text-sm mt-1">{g.desc}</div>
           </div>
