@@ -1,5 +1,5 @@
 export async function fetchGoetheWords(level) {
-  const response = await fetch(`https://www.dwds.de/api/lemma/goethe/${level}.json`)
+  const response = await fetch(`https://api.allorigins.win/raw?url=https://www.dwds.de/api/lemma/goethe/${level}.json`)
   if (!response.ok) throw new Error(`Failed to fetch ${level} word list`)
   const data = await response.json()
   return data.map((entry) => ({
