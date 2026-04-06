@@ -5,7 +5,7 @@ const levels = [
   { level: 'A2', name: 'Grundlegende Kenntnisse', color: 'teal', active: true, vocPath: '/sprachen/deutsch/a2' },
   { level: 'B1', name: 'Mittelstufe', color: 'blue', active: true, vocPath: '/sprachen/deutsch/b1' },
   { level: 'B2', name: 'Obere Mittelstufe', color: 'indigo', active: false },
-  { level: 'C1', name: 'Fortgeschritten', color: 'purple', active: true, vocPath: '/deutsch-c1', cardPath: '/sprachen/deutsch/lernkarten', quizPath: '/sprachen/deutsch/c1/quiz' },
+  { level: 'C1', name: 'Fortgeschritten', color: 'purple', active: true, vocPath: '/deutsch-c1', cardPath: '/sprachen/deutsch/lernkarten', quizPath: '/sprachen/deutsch/c1/quiz', hangmanPath: '/sprachen/deutsch/hangman' },
   { level: 'C2', name: 'Experte', color: 'red', active: false },
 ]
 
@@ -53,30 +53,36 @@ export default function DeutschDashboard() {
                   )}
                 </div>
                 <div className="text-slate-200 font-medium text-sm mb-4">{l.name}</div>
-                <div className="flex gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {l.active ? (
                     <>
                       {l.vocPath ? (
-                        <button onClick={() => navigate(l.vocPath)} className={`flex-1 px-3 py-2 rounded-lg ${c.btn} text-white text-xs font-medium transition cursor-pointer`}>📖 Vokabeln</button>
+                        <button onClick={() => navigate(l.vocPath)} className={`px-3 py-2 rounded-lg ${c.btn} text-white text-xs font-medium transition cursor-pointer`}>📖 Vokabeln</button>
                       ) : (
-                        <div className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">📖 Vokabeln</div>
+                        <div className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">📖 Vokabeln</div>
                       )}
                       {l.cardPath ? (
-                        <button onClick={() => navigate(l.cardPath)} className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] text-xs font-medium transition cursor-pointer">🃏 Lernkarten</button>
+                        <button onClick={() => navigate(l.cardPath)} className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] text-xs font-medium transition cursor-pointer">🃏 Lernkarten</button>
                       ) : (
-                        <div className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🃏 Lernkarten</div>
+                        <div className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🃏 Lernkarten</div>
                       )}
                       {l.quizPath ? (
-                        <button onClick={() => navigate(l.quizPath)} className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] text-xs font-medium transition cursor-pointer">🎯 Quiz</button>
+                        <button onClick={() => navigate(l.quizPath)} className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] text-xs font-medium transition cursor-pointer">🎯 Quiz</button>
                       ) : (
-                        <div className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🎯 Quiz</div>
+                        <div className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🎯 Quiz</div>
+                      )}
+                      {l.hangmanPath ? (
+                        <button onClick={() => navigate(l.hangmanPath)} className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] text-xs font-medium transition cursor-pointer">🎮 Hangman</button>
+                      ) : (
+                        <div className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🎮 Hangman</div>
                       )}
                     </>
                   ) : (
                     <>
-                      <div className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">📖 Vokabeln</div>
-                      <div className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🃏 Lernkarten</div>
-                      <div className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🎯 Quiz</div>
+                      <div className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">📖 Vokabeln</div>
+                      <div className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🃏 Lernkarten</div>
+                      <div className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🎯 Quiz</div>
+                      <div className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🎮 Hangman</div>
                     </>
                   )}
                 </div>
@@ -84,27 +90,6 @@ export default function DeutschDashboard() {
             </div>
           )
         })}
-      </div>
-
-      {/* Spiele */}
-      <h2 className="text-xl font-bold text-slate-300 mt-12 mb-4">🎮 Spiele</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div
-          onClick={() => navigate('/sprachen/deutsch/hangman')}
-          className="p-5 rounded-xl bg-[#12122a] border border-[#1e1e3a] border-b-2 border-b-rose-500 cursor-pointer transition-all duration-300 group hover:border-rose-500/50 hover:scale-[1.02] hover:shadow-xl hover:shadow-rose-500/10 hover:bg-[#13132e]"
-        >
-          <div className="text-3xl mb-2 transition-transform duration-300 group-hover:scale-110">💀</div>
-          <div className="text-slate-200 font-bold group-hover:text-rose-300 transition">Hangman</div>
-          <div className="text-slate-500 text-xs mt-1">C1 Wörter erraten</div>
-        </div>
-        <div
-          onClick={() => navigate('/sprachen/deutsch/c1/quiz')}
-          className="p-5 rounded-xl bg-[#12122a] border border-[#1e1e3a] border-b-2 border-b-purple-500 cursor-pointer transition-all duration-300 group hover:border-purple-500/50 hover:scale-[1.02] hover:shadow-xl hover:shadow-purple-500/10 hover:bg-[#13132e]"
-        >
-          <div className="text-3xl mb-2 transition-transform duration-300 group-hover:scale-110">🎯</div>
-          <div className="text-slate-200 font-bold group-hover:text-purple-300 transition">C1 Quiz</div>
-          <div className="text-slate-500 text-xs mt-1">Vokabeln, Definitionen und Synonyme</div>
-        </div>
       </div>
     </div>
   )
