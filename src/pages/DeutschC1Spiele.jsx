@@ -1,30 +1,33 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
 export default function DeutschC1Spiele() {
   const navigate = useNavigate()
+  const { level = 'C1' } = useParams()
+  const lv = level.toLowerCase()
+  const uv = level.toUpperCase()
 
   const games = [
-    { emoji: '💀', title: 'Hangman', desc: 'C1 Wörter erraten — 6 Versuche', path: '/sprachen/deutsch/hangman', color: 'rose' },
-    { emoji: '📝', title: 'Lückentext', desc: 'Fehlende Wörter im Satz ergänzen', path: '/sprachen/deutsch/lueckentext', color: 'amber' },
-    { emoji: '🧠', title: 'Memory', desc: 'Wort-Definition-Paare finden', path: '/sprachen/deutsch/memory', color: 'cyan' },
-    { emoji: '⚡', title: 'Zeitdruck', desc: 'Synonyme finden in 60 Sekunden', path: '/sprachen/deutsch/zeitdruck', color: 'yellow' },
+    { emoji: '💀', title: 'Hangman', desc: `${uv} Wörter erraten — 6 Versuche`, path: `/sprachen/deutsch/${lv}/hangman`, color: 'rose' },
+    { emoji: '📝', title: 'Lückentext', desc: 'Fehlende Wörter im Satz ergänzen', path: `/sprachen/deutsch/${lv}/lueckentext`, color: 'amber' },
+    { emoji: '🧠', title: 'Memory', desc: 'Wort-Definition-Paare finden', path: `/sprachen/deutsch/${lv}/memory`, color: 'cyan' },
+    { emoji: '⚡', title: 'Zeitdruck', desc: 'Synonyme finden in 60 Sekunden', path: `/sprachen/deutsch/${lv}/zeitdruck`, color: 'yellow' },
     { emoji: '🧩', title: 'Artikel-Trainer', desc: 'der, die oder das?', path: '/sprachen/deutsch/artikel', color: 'green' },
   ]
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <button
-        onClick={() => navigate('/sprachen/deutsch')}
+        onClick={() => navigate(`/sprachen/deutsch/${lv}`)}
         className="text-slate-400 hover:text-slate-200 transition text-sm mb-4 cursor-pointer"
       >
-        ← Zurück zu Deutsch
+        ← Zurück zu Deutsch {uv}
       </button>
 
       <h1 className="text-3xl font-bold text-center mb-2 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-        🎮 C1 Spiele
+        🎮 {uv} Spiele
       </h1>
       <p className="text-center text-slate-400 mb-10">
-        Spielerisch C1 Wortschatz üben
+        Spielerisch {uv} Wortschatz üben
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

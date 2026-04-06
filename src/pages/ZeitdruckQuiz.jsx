@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { C1_WOERTER } from '../data/c1WordsFull'
+import { useNavigate, useParams } from 'react-router-dom'
+import { getWordsForLevel } from '../data/wordLoader'
 
 function shuffle(arr) {
   const a = [...arr]
@@ -11,12 +11,12 @@ function shuffle(arr) {
   return a
 }
 
-function buildRound() {
-  const word = C1_WOERTER[Math.floor(Math.random() * C1_WOERTER.length)]
+function buildRound(words) {
+  const word = words[Math.floor(Math.random() * words.length)]
   const correctSyns = shuffle(word.synonyme || []).slice(0, 3)
   const correctSet = new Set([word.wort, ...correctSyns])
   const allOtherSyns = [...new Set(
-    C1_WOERTER.filter((w) => w.wort !== word.wort)
+    words.filter((w) => w.wort !== word.wort)
       .flatMap((w) => w.synonyme || [])
       .filter((s) => !correctSet.has(s))
   )]
@@ -30,6 +30,8 @@ function buildRound() {
 
 export default function ZeitdruckQuiz() {
   const navigate = useNavigate()
+  const { level = 'C1' } = useParams()
+  const words = getWordsForLevel(level)
   const [screen, setScreen] = useState('start')
   const [round, setRound] = useState(null)
   const [selected, setSelected] = useState([])
@@ -40,7 +42,7 @@ export default function ZeitdruckQuiz() {
   const timerRef = useRef(null)
 
   const startGame = useCallback(() => {
-    setRound(buildRound())
+    setRound(buildRound(words))
     setSelected([])
     setScore(0)
     setAnswered(0)
@@ -87,7 +89,7 @@ export default function ZeitdruckQuiz() {
   }
 
   function nextRound() {
-    setRound(buildRound())
+    setRound(buildRound(words))
     setSelected([])
   }
 
@@ -96,7 +98,7 @@ export default function ZeitdruckQuiz() {
     return (
       <div className="max-w-xl mx-auto px-4 py-8">
         <button
-          onClick={() => navigate('/sprachen/deutsch/c1/spiele')}
+          onClick={() => navigate(`/sprachen/deutsch/${level.toLowerCase()}/spiele`)}
           className="text-slate-400 hover:text-slate-200 transition text-sm mb-4 cursor-pointer"
         >
           ← Zurück zu Spiele
@@ -200,7 +202,7 @@ export default function ZeitdruckQuiz() {
             Nochmal
           </button>
           <button
-            onClick={() => navigate('/sprachen/deutsch/c1/spiele')}
+            onClick={() => navigate(`/sprachen/deutsch/${level.toLowerCase()}/spiele`)}
             className="px-6 py-2.5 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] transition cursor-pointer"
           >
             ← Zurück

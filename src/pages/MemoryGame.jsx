@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { C1_WOERTER } from '../data/c1WordsFull'
+import { useNavigate, useParams } from 'react-router-dom'
+import { getWordsForLevel } from '../data/wordLoader'
 
 function shuffle(arr) {
   const a = [...arr]
@@ -11,8 +11,8 @@ function shuffle(arr) {
   return a
 }
 
-function buildCards() {
-  const picked = shuffle(C1_WOERTER).slice(0, 6)
+function buildCards(words) {
+  const picked = shuffle(words).slice(0, 6)
   const cards = picked.flatMap((w, i) => [
     { id: `w${i}`, pairId: i, type: 'wort', text: w.wort, flipped: false, matched: false },
     { id: `d${i}`, pairId: i, type: 'definition', text: w.definition, flipped: false, matched: false },
@@ -22,7 +22,9 @@ function buildCards() {
 
 export default function MemoryGame() {
   const navigate = useNavigate()
-  const [cards, setCards] = useState(() => buildCards())
+  const { level = 'C1' } = useParams()
+  const words = getWordsForLevel(level)
+  const [cards, setCards] = useState(() => buildCards(words))
   const [flipped, setFlipped] = useState([])
   const [moves, setMoves] = useState(0)
   const [won, setWon] = useState(false)
@@ -67,7 +69,7 @@ export default function MemoryGame() {
 
   function restart() {
     if (timerRef.current) clearTimeout(timerRef.current)
-    setCards(buildCards())
+    setCards(buildCards(words))
     setFlipped([])
     setMoves(0)
     setWon(false)
@@ -76,7 +78,7 @@ export default function MemoryGame() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <button
-        onClick={() => navigate('/sprachen/deutsch/c1/spiele')}
+        onClick={() => navigate(`/sprachen/deutsch/${level.toLowerCase()}/spiele`)}
         className="text-slate-400 hover:text-slate-200 transition text-sm mb-4 cursor-pointer"
       >
         ← Zurück zu Spiele

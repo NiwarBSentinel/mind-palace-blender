@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { C1_WOERTER } from '../data/c1WordsFull'
+import { useNavigate, useParams } from 'react-router-dom'
+import { getWordsForLevel } from '../data/wordLoader'
 
 function shuffle(arr) {
   const a = [...arr]
@@ -16,10 +16,10 @@ function pickRandom(arr, n, exclude) {
   return shuffle(filtered).slice(0, n)
 }
 
-function buildQuestions(mode) {
-  const picked = shuffle(C1_WOERTER).slice(0, 10)
+function buildQuestions(mode, words) {
+  const picked = shuffle(words).slice(0, 10)
   return picked.map((word) => {
-    const wrongWords = pickRandom(C1_WOERTER, 3, word)
+    const wrongWords = pickRandom(words, 3, word)
     if (mode === 'wort-def') {
       const answers = shuffle([
         { text: word.definition, correct: true },
@@ -36,11 +36,10 @@ function buildQuestions(mode) {
   })
 }
 
-function buildSynChips(word) {
+function buildSynChips(word, words) {
   const correctSyns = shuffle(word.synonyme || []).slice(0, 3)
-  // Pick wrong synonyms from other words' synonyme arrays
   const correctSet = new Set([word.wort, ...correctSyns])
-  const allOtherSyns = C1_WOERTER
+  const allOtherSyns = words
     .filter((w) => w.wort !== word.wort)
     .flatMap((w) => w.synonyme || [])
     .filter((s) => !correctSet.has(s))
@@ -54,6 +53,9 @@ function buildSynChips(word) {
 
 export default function DeutschC1Quiz() {
   const navigate = useNavigate()
+  const { level = 'C1' } = useParams()
+  const words = getWordsForLevel(level)
+  const upperLevel = level.toUpperCase()
   const [screen, setScreen] = useState('start')
   const [mode, setMode] = useState('wort-def')
   const [questions, setQuestions] = useState([])
@@ -83,11 +85,11 @@ export default function DeutschC1Quiz() {
     setSynRevealed(false)
 
     if (m === 'synonym') {
-      const cards = shuffle(C1_WOERTER).slice(0, 10)
+      const cards = shuffle(words).slice(0, 10)
       setSynCards(cards)
-      setSynChips(buildSynChips(cards[0]))
+      setSynChips(buildSynChips(cards[0], words))
     } else {
-      setQuestions(buildQuestions(m))
+      setQuestions(buildQuestions(m, words))
     }
     setScreen('game')
   }
@@ -135,7 +137,7 @@ export default function DeutschC1Quiz() {
     setCurrentIdx(nextIdx)
     setSynRevealed(false)
     setSelectedChips([])
-    setSynChips(buildSynChips(synCards[nextIdx]))
+    setSynChips(buildSynChips(synCards[nextIdx], words))
   }
 
   const totalQ = mode === 'synonym' ? synCards.length : questions.length
@@ -145,17 +147,17 @@ export default function DeutschC1Quiz() {
     return (
       <div className="max-w-xl mx-auto px-4 py-8">
         <button
-          onClick={() => navigate('/sprachen/deutsch')}
+          onClick={() => navigate(`/sprachen/deutsch/${level.toLowerCase()}`)}
           className="text-slate-400 hover:text-slate-200 transition text-sm mb-4 cursor-pointer"
         >
           ← Zurück zu Deutsch
         </button>
 
         <h1 className="text-3xl font-bold text-center mb-1 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-          C1 Vokabel-Quiz
+          {upperLevel} Vokabel-Quiz
         </h1>
         <p className="text-center text-slate-400 mb-10">
-          10 Fragen · Wie gut kennst du die C1 Wörter?
+          10 Fragen · Wie gut kennst du die {upperLevel} Wörter?
         </p>
 
         <div className="p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] space-y-4">
@@ -353,7 +355,7 @@ export default function DeutschC1Quiz() {
             Neue Runde
           </button>
           <button
-            onClick={() => navigate('/sprachen/deutsch')}
+            onClick={() => navigate(`/sprachen/deutsch/${level.toLowerCase()}`)}
             className="px-6 py-2.5 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] transition cursor-pointer"
           >
             ← Zurück

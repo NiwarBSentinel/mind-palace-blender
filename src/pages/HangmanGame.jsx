@@ -1,12 +1,12 @@
 import { useState, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { C1_WOERTER } from '../data/c1WordsFull'
+import { useNavigate, useParams } from 'react-router-dom'
+import { getWordsForLevel } from '../data/wordLoader'
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ'.split('')
 const MAX_WRONG = 6
 
-function pickWord() {
-  const w = C1_WOERTER[Math.floor(Math.random() * C1_WOERTER.length)]
+function pickWord(words) {
+  const w = words[Math.floor(Math.random() * words.length)]
   // Strip article for guessing
   const clean = w.wort.replace(/^(die|der|das)\s+/, '')
   return { ...w, guessWord: clean.toUpperCase() }
@@ -38,7 +38,9 @@ function HangmanSVG({ wrong }) {
 
 export default function HangmanGame() {
   const navigate = useNavigate()
-  const [word, setWord] = useState(() => pickWord())
+  const { level = 'C1' } = useParams()
+  const words = getWordsForLevel(level)
+  const [word, setWord] = useState(() => pickWord(words))
   const [guessed, setGuessed] = useState(new Set())
 
   const wrongGuesses = [...guessed].filter((l) => !word.guessWord.includes(l))
@@ -53,17 +55,17 @@ export default function HangmanGame() {
   }, [gameOver, guessed])
 
   function restart() {
-    setWord(pickWord())
+    setWord(pickWord(words))
     setGuessed(new Set())
   }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <button
-        onClick={() => navigate('/sprachen/deutsch')}
+        onClick={() => navigate(`/sprachen/deutsch/${level.toLowerCase()}/spiele`)}
         className="text-slate-400 hover:text-slate-200 transition text-sm mb-4 cursor-pointer"
       >
-        ← Zurück zu Deutsch
+        ← Zurück zu Spiele
       </button>
 
       <h1 className="text-3xl font-bold text-center mb-1 bg-gradient-to-r from-rose-400 to-red-400 bg-clip-text text-transparent">

@@ -1,15 +1,14 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { C1_WOERTER } from '../data/c1WordsFull'
+import { useNavigate, useParams } from 'react-router-dom'
+import { getWordsForLevel } from '../data/wordLoader'
 
-function pickWord() {
-  // Only pick words that have a beispiel containing the word
-  const candidates = C1_WOERTER.filter((w) => {
+function pickWord(words) {
+  const candidates = words.filter((w) => {
     if (!w.beispiel) return false
     const clean = w.wort.replace(/^(die|der|das)\s+/, '')
     return w.beispiel.toLowerCase().includes(clean.toLowerCase())
   })
-  if (candidates.length === 0) return C1_WOERTER[Math.floor(Math.random() * C1_WOERTER.length)]
+  if (candidates.length === 0) return words[Math.floor(Math.random() * words.length)]
   return candidates[Math.floor(Math.random() * candidates.length)]
 }
 
@@ -30,17 +29,18 @@ function buildSentence(word) {
 
 export default function LueckentextGame() {
   const navigate = useNavigate()
-  const [word, setWord] = useState(() => pickWord())
-  const [sentence, setSentence] = useState(() => buildSentence(pickWord()))
+  const { level = 'C1' } = useParams()
+  const words = getWordsForLevel(level)
+  const [word, setWord] = useState(() => pickWord(words))
+  const [sentence, setSentence] = useState(() => buildSentence(pickWord(words)))
   const [input, setInput] = useState('')
   const [checked, setChecked] = useState(false)
   const [correct, setCorrect] = useState(false)
   const [score, setScore] = useState(0)
   const [total, setTotal] = useState(0)
 
-  // Initialize properly
   useState(() => {
-    const w = pickWord()
+    const w = pickWord(words)
     setWord(w)
     setSentence(buildSentence(w))
   })
@@ -55,7 +55,7 @@ export default function LueckentextGame() {
   }
 
   function next() {
-    const w = pickWord()
+    const w = pickWord(words)
     setWord(w)
     setSentence(buildSentence(w))
     setInput('')
@@ -73,7 +73,7 @@ export default function LueckentextGame() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <button
-        onClick={() => navigate('/sprachen/deutsch/c1/spiele')}
+        onClick={() => navigate(`/sprachen/deutsch/${level.toLowerCase()}/spiele`)}
         className="text-slate-400 hover:text-slate-200 transition text-sm mb-4 cursor-pointer"
       >
         ← Zurück zu Spiele

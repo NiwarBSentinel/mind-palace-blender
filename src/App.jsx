@@ -43,15 +43,17 @@ export default function App() {
         <Route path="/sprachen/deutsch" element={<DeutschDashboard />} />
         <Route path="/sprachen/deutsch/lernkarten" element={<DeutschLernkarten />} />
         <Route path="/sprachen/deutsch/lernkarten/practice" element={<DeutschLernkartenPractice />} />
-        <Route path="/deutsch-c1" element={<DeutschC1 />} />
-        <Route path="/sprachen/deutsch/c1/quiz" element={<DeutschC1Quiz />} />
-        <Route path="/sprachen/deutsch/:level" element={<GoetheLevel />} />
-        <Route path="/sprachen/deutsch/c1/spiele" element={<DeutschC1Spiele />} />
-        <Route path="/sprachen/deutsch/hangman" element={<HangmanGame />} />
-        <Route path="/sprachen/deutsch/lueckentext" element={<LueckentextGame />} />
-        <Route path="/sprachen/deutsch/memory" element={<MemoryGame />} />
-        <Route path="/sprachen/deutsch/zeitdruck" element={<ZeitdruckQuiz />} />
         <Route path="/sprachen/deutsch/artikel" element={<ArtikelTrainer />} />
+        {/* Level-specific routes */}
+        <Route path="/sprachen/deutsch/c1" element={<DeutschC1 />} />
+        <Route path="/sprachen/deutsch/:level/quiz" element={<DeutschC1Quiz />} />
+        <Route path="/sprachen/deutsch/:level/spiele" element={<DeutschC1Spiele />} />
+        <Route path="/sprachen/deutsch/:level/hangman" element={<HangmanGame />} />
+        <Route path="/sprachen/deutsch/:level/lueckentext" element={<LueckentextGame />} />
+        <Route path="/sprachen/deutsch/:level/memory" element={<MemoryGame />} />
+        <Route path="/sprachen/deutsch/:level/zeitdruck" element={<ZeitdruckQuiz />} />
+        {/* Fallback for A1/A2/B1 vocabulary pages */}
+        <Route path="/sprachen/deutsch/:level" element={<GoetheLevel />} />
       </Routes>
     </div>
   )

@@ -1,13 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { C1_WOERTER } from '../data/c1WordsFull'
-import { GOETHE_A1_WORDS } from '../data/goetheA1Words'
-import { GOETHE_A2_WORDS } from '../data/goetheA2Words'
-import { GOETHE_B1_WORDS } from '../data/goetheB1Words'
+import { getAllWords } from '../data/wordLoader'
 
-// Collect all nouns with articles from all word lists
 function getAllNouns() {
-  const allWords = [...GOETHE_A1_WORDS, ...GOETHE_A2_WORDS, ...GOETHE_B1_WORDS, ...C1_WOERTER]
+  const allWords = getAllWords()
   const nouns = []
   const seen = new Set()
   for (const w of allWords) {

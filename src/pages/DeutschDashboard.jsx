@@ -1,11 +1,16 @@
 import { useNavigate } from 'react-router-dom'
 
+function makePaths(lv) {
+  const l = lv.toLowerCase()
+  return { vocPath: `/sprachen/deutsch/${l}`, quizPath: `/sprachen/deutsch/${l}/quiz`, spielePath: `/sprachen/deutsch/${l}/spiele` }
+}
+
 const levels = [
-  { level: 'A1', name: 'Anfänger', color: 'green', active: true, vocPath: '/sprachen/deutsch/a1' },
-  { level: 'A2', name: 'Grundlegende Kenntnisse', color: 'teal', active: true, vocPath: '/sprachen/deutsch/a2' },
-  { level: 'B1', name: 'Mittelstufe', color: 'blue', active: true, vocPath: '/sprachen/deutsch/b1' },
+  { level: 'A1', name: 'Anfänger', color: 'green', active: true, ...makePaths('a1') },
+  { level: 'A2', name: 'Grundlegende Kenntnisse', color: 'teal', active: true, ...makePaths('a2') },
+  { level: 'B1', name: 'Mittelstufe', color: 'blue', active: true, ...makePaths('b1') },
   { level: 'B2', name: 'Obere Mittelstufe', color: 'indigo', active: false },
-  { level: 'C1', name: 'Fortgeschritten', color: 'purple', active: true, vocPath: '/deutsch-c1', cardPath: '/sprachen/deutsch/lernkarten', quizPath: '/sprachen/deutsch/c1/quiz', spielePath: '/sprachen/deutsch/c1/spiele' },
+  { level: 'C1', name: 'Fortgeschritten', color: 'purple', active: true, ...makePaths('c1'), cardPath: '/sprachen/deutsch/lernkarten' },
   { level: 'C2', name: 'Experte', color: 'red', active: false },
 ]
 
