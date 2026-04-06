@@ -35,6 +35,7 @@ export default function ZeitdruckQuiz() {
   const [selected, setSelected] = useState([])
   const [score, setScore] = useState(0)
   const [answered, setAnswered] = useState(0)
+  const [history, setHistory] = useState([])
   const [timeLeft, setTimeLeft] = useState(60)
   const timerRef = useRef(null)
 
@@ -43,6 +44,7 @@ export default function ZeitdruckQuiz() {
     setSelected([])
     setScore(0)
     setAnswered(0)
+    setHistory([])
     setTimeLeft(60)
     setScreen('game')
   }, [])
@@ -69,6 +71,10 @@ export default function ZeitdruckQuiz() {
   function confirm() {
     if (!round || selected.length === 0) return
     let roundScore = 0
+    const correctChips = round.chips.filter((c) => c.correct).map((c) => c.text)
+    const correctSelected = selected.filter((s) => correctChips.includes(s))
+    const wrongSelected = selected.filter((s) => !correctChips.includes(s))
+    const missed = correctChips.filter((s) => !selected.includes(s))
     for (const chip of round.chips) {
       if (selected.includes(chip.text)) {
         roundScore += chip.correct ? 1 : -0.5
@@ -76,6 +82,7 @@ export default function ZeitdruckQuiz() {
     }
     setScore((s) => Math.max(0, s + roundScore))
     setAnswered((a) => a + 1)
+    setHistory((h) => [...h, { wort: round.word.wort, correctSelected, wrongSelected, missed }])
     nextRound()
   }
 
@@ -136,7 +143,7 @@ export default function ZeitdruckQuiz() {
         </div>
 
         <div className="p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] text-center mb-6">
-          <div className="text-xs text-slate-500 mb-3">Welche Wörter sind Synonyme?</div>
+          <div className="text-xs text-slate-500 mb-3">Wähle {round.correctCount} richtige Synonyme</div>
           <div className="text-2xl font-bold text-yellow-300 mb-6">{round.word.wort}</div>
 
           <div className="flex flex-wrap gap-2 justify-center mb-6">
@@ -172,13 +179,18 @@ export default function ZeitdruckQuiz() {
 
   // RESULTS
   const finalScore = Math.round(score * 10) / 10
+  const totalCorrect = history.reduce((sum, h) => sum + h.correctSelected.length, 0)
+  const totalWrong = history.reduce((sum, h) => sum + h.wrongSelected.length, 0)
+  const totalPossible = history.reduce((sum, h) => sum + h.correctSelected.length + h.missed.length, 0)
+  const accuracy = totalPossible > 0 ? Math.round((totalCorrect / totalPossible) * 100) : 0
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <div className="p-12 rounded-xl bg-[#12122a] border border-[#1e1e3a] text-center">
+      <div className="p-8 rounded-xl bg-[#12122a] border border-[#1e1e3a] text-center mb-6">
         <div className="text-5xl mb-4">⏱️</div>
         <h2 className="text-2xl font-bold text-slate-200 mb-2">Zeit abgelaufen!</h2>
-        <div className="text-4xl font-bold text-yellow-400 mb-2">{finalScore} Punkte</div>
-        <p className="text-slate-400 mb-8">{answered} Wörter in 60 Sekunden</p>
+        <div className="text-4xl font-bold text-yellow-400 mb-1">{finalScore} Punkte</div>
+        <p className="text-slate-400 mb-1">{answered} Wörter in 60 Sekunden</p>
+        <p className="text-slate-500 text-sm mb-6">Genauigkeit: {accuracy}% ({totalCorrect} richtig, {totalWrong} falsch)</p>
 
         <div className="flex gap-3 justify-center">
           <button
@@ -195,6 +207,28 @@ export default function ZeitdruckQuiz() {
           </button>
         </div>
       </div>
+
+      {history.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-slate-400 text-sm font-medium mb-2">Zusammenfassung</h3>
+          {history.map((h, i) => (
+            <div key={i} className="p-3 rounded-xl bg-[#12122a] border border-[#1e1e3a]">
+              <div className="text-blue-300 font-medium text-sm mb-1.5">{h.wort}</div>
+              <div className="flex flex-wrap gap-1.5">
+                {h.correctSelected.map((s) => (
+                  <span key={s} className="text-xs px-2 py-0.5 rounded-full bg-green-600/20 border border-green-500/30 text-green-300">✅ {s}</span>
+                ))}
+                {h.wrongSelected.map((s) => (
+                  <span key={s} className="text-xs px-2 py-0.5 rounded-full bg-red-600/20 border border-red-500/30 text-red-300">❌ {s}</span>
+                ))}
+                {h.missed.map((s) => (
+                  <span key={s} className="text-xs px-2 py-0.5 rounded-full bg-yellow-600/20 border border-yellow-500/30 text-yellow-300">⚠️ {s}</span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
