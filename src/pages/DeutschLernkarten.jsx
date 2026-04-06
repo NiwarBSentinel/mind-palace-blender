@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { isDue, getDueCount } from '../lib/srs'
 import { C1_WOERTER } from '../data/c1WordsFull'
+import { useAuth } from '../contexts/AuthContext'
 
 function findSimilarC1Words(word) {
   const clean = word.replace(/^(die|der|das)\s+/, '').toLowerCase()
@@ -69,14 +70,14 @@ export default function DeutschLernkarten() {
   const [c1Loading, setC1Loading] = useState(false)
   const [c1Match, setC1Match] = useState(null)
   const navigate = useNavigate()
+  const { user } = useAuth()
 
-  useEffect(() => { fetchCards() }, [])
+  useEffect(() => { fetchCards() }, [user])
 
   async function fetchCards() {
-    const { data, error } = await supabase
-      .from('lernkarten')
-      .select('*')
-      .order('created_at', { ascending: false })
+    let query = supabase.from('lernkarten').select('*').order('created_at', { ascending: false })
+    if (user) query = query.eq('user_id', user.id)
+    const { data, error } = await query
     if (error) console.error('fetchCards error:', error)
     setCards((data || []).filter(isDeutschCard))
     setLoading(false)
@@ -112,7 +113,8 @@ export default function DeutschLernkarten() {
       const { error } = await supabase.from('lernkarten').update(payload).eq('id', editingId)
       if (error) console.error('update error:', error)
     } else {
-      const { error } = await supabase.from('lernkarten').insert(payload)
+      const insertPayload = user ? { ...payload, user_id: user.id } : payload
+      const { error } = await supabase.from('lernkarten').insert(insertPayload)
       if (error) console.error('insert error:', error)
     }
     setShowForm(false)

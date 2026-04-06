@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { C1_WOERTER } from '../data/c1WordsFull'
+import { useAuth } from '../contexts/AuthContext'
+import { loadSRSData, saveSRSWord, saveSRSLocal } from '../lib/srsStorage'
 
 const STORAGE_KEY = 'c1_srs_data'
 
@@ -68,6 +70,7 @@ function shuffle(arr) {
 
 export default function DeutschC1() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [tab, setTab] = useState('lernen')
   const [search, setSearch] = useState('')
   const [srsData, setSrsData] = useState(loadSRS)
@@ -87,6 +90,12 @@ export default function DeutschC1() {
   const [finished, setFinished] = useState(false)
   const [direction, setDirection] = useState('forward')
   const [results, setResults] = useState({ schwer: [], ok: [], einfach: [] })
+
+  useEffect(() => {
+    if (user) {
+      loadSRSData('C1', user.id).then((data) => setSrsData(data))
+    }
+  }, [user])
 
   const dueCount = C1_WOERTER.filter((w) => isDue(srsData[w.wort])).length
   const learnedCount = C1_WOERTER.filter((w) => srsData[w.wort]?.repetitions > 0).length
@@ -108,7 +117,8 @@ export default function DeutschC1() {
     const updated = calculateSRS(quality, srsData[card.wort])
     const newData = { ...srsData, [card.wort]: updated }
     setSrsData(newData)
-    saveSRS(newData)
+    saveSRSWord('C1', card.wort, updated, user?.id)
+    if (!user) saveSRS(newData)
 
     const key = quality === 0 ? 'schwer' : quality === 3 ? 'ok' : 'einfach'
     setResults((prev) => ({ ...prev, [key]: [...prev[key], card.wort] }))

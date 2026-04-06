@@ -2,15 +2,10 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { fetchGoetheWords } from '../data/goetheWordLists'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
+import { loadSRSData, saveSRSWord, saveSRSLocal } from '../lib/srsStorage'
 
 const LEVEL_NAMES = { A1: 'Anfänger', A2: 'Grundlegende Kenntnisse', B1: 'Mittelstufe', B2: 'Obere Mittelstufe', C2: 'Experte' }
-
-function loadSRS(level) {
-  try { return JSON.parse(localStorage.getItem(`srs_${level}`)) || {} } catch { return {} }
-}
-function saveSRS(level, data) {
-  localStorage.setItem(`srs_${level}`, JSON.stringify(data))
-}
 
 function calculateSRS(quality, srs) {
   const rep = srs?.repetitions || 0
@@ -55,12 +50,13 @@ export default function GoetheLevel() {
   const { level } = useParams()
   const upperLevel = level.toUpperCase()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [words, setWords] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [tab, setTab] = useState('lernen')
   const [search, setSearch] = useState('')
-  const [srsData, setSrsData] = useState(() => loadSRS(upperLevel))
+  const [srsData, setSrsData] = useState({})
 
   // Practice state
   const [practiceCards, setPracticeCards] = useState([])
@@ -78,13 +74,15 @@ export default function GoetheLevel() {
       try {
         const data = await fetchGoetheWords(upperLevel)
         setWords(data)
+        const srs = await loadSRSData(upperLevel, user?.id)
+        setSrsData(srs)
       } catch (err) {
         setError(err.message)
       }
       setLoading(false)
     }
     load()
-  }, [upperLevel])
+  }, [upperLevel, user])
 
   const dueCount = words.filter((w) => isDue(srsData[w.wort])).length
   const learnedCount = words.filter((w) => srsData[w.wort]?.repetitions > 0).length
@@ -94,12 +92,14 @@ export default function GoetheLevel() {
   const filtered = search ? words.filter((w) => w.wort.toLowerCase().includes(searchLower) || (w.definition || '').toLowerCase().includes(searchLower)) : words
 
   async function saveToLernkarten(w) {
-    const { error } = await supabase.from('lernkarten').insert({
+    const payload = {
       frage: w.wort,
-      antwort: w.definition || detailData?.definition || w.wort,
+      antwort: w.definition || w.wort,
       kategorie: `Deutsch ${upperLevel}`,
       mnemonik: w.beispiel || null,
-    })
+    }
+    if (user) payload.user_id = user.id
+    const { error } = await supabase.from('lernkarten').insert(payload)
     if (error) console.error('save error:', error)
     setToast('Lernkarte gespeichert!')
     setTimeout(() => setToast(null), 2500)
@@ -126,7 +126,8 @@ export default function GoetheLevel() {
     const updated = calculateSRS(quality, srsData[card.wort])
     const newData = { ...srsData, [card.wort]: updated }
     setSrsData(newData)
-    saveSRS(upperLevel, newData)
+    saveSRSWord(upperLevel, card.wort, updated, user?.id)
+    if (!user) saveSRSLocal(upperLevel, newData)
     const key = quality === 0 ? 'schwer' : quality === 3 ? 'ok' : 'einfach'
     setResults((prev) => ({ ...prev, [key]: [...prev[key], card.wort] }))
     if (currentIdx >= practiceCards.length - 1) { setFinished(true); return }

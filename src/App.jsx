@@ -1,4 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
+import { AuthProvider } from './contexts/AuthContext'
+import UserMenu from './components/UserMenu'
 import Dashboard from './pages/Dashboard'
 import PalaceDashboard from './pages/PalaceDashboard'
 import Editor from './pages/Editor'
@@ -23,38 +25,41 @@ import LueckentextGame from './pages/LueckentextGame'
 import MemoryGame from './pages/MemoryGame'
 import ZeitdruckQuiz from './pages/ZeitdruckQuiz'
 import ArtikelTrainer from './pages/ArtikelTrainer'
+import Login from './pages/Login'
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-[#0a0a1a]">
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/palaces" element={<PalaceDashboard />} />
-        <Route path="/palace/:id" element={<Editor />} />
-        <Route path="/practice/:id" element={<Practice />} />
-        <Route path="/bmp" element={<BMPDashboard />} />
-        <Route path="/bmp/:personId" element={<BMPEditor />} />
-        <Route path="/bmp/:personId/practice" element={<BMPPractice />} />
-        <Route path="/lernkarten" element={<LernkartenDashboard />} />
-        <Route path="/lernkarten/practice" element={<LernkartenPractice />} />
-        <Route path="/peglist" element={<PegList />} />
-        <Route path="/trivia" element={<Trivia />} />
-        <Route path="/sprachen" element={<SprachenDashboard />} />
-        <Route path="/sprachen/deutsch" element={<DeutschDashboard />} />
-        <Route path="/sprachen/deutsch/lernkarten" element={<DeutschLernkarten />} />
-        <Route path="/sprachen/deutsch/lernkarten/practice" element={<DeutschLernkartenPractice />} />
-        <Route path="/sprachen/deutsch/artikel" element={<ArtikelTrainer />} />
-        {/* Level-specific routes */}
-        <Route path="/sprachen/deutsch/c1" element={<DeutschC1 />} />
-        <Route path="/sprachen/deutsch/:level/quiz" element={<DeutschC1Quiz />} />
-        <Route path="/sprachen/deutsch/:level/spiele" element={<DeutschC1Spiele />} />
-        <Route path="/sprachen/deutsch/:level/hangman" element={<HangmanGame />} />
-        <Route path="/sprachen/deutsch/:level/lueckentext" element={<LueckentextGame />} />
-        <Route path="/sprachen/deutsch/:level/memory" element={<MemoryGame />} />
-        <Route path="/sprachen/deutsch/:level/zeitdruck" element={<ZeitdruckQuiz />} />
-        {/* Fallback for A1/A2/B1 vocabulary pages */}
-        <Route path="/sprachen/deutsch/:level" element={<GoetheLevel />} />
-      </Routes>
-    </div>
+    <AuthProvider>
+      <div className="min-h-screen bg-[#0a0a1a]">
+        <UserMenu />
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/palaces" element={<PalaceDashboard />} />
+          <Route path="/palace/:id" element={<Editor />} />
+          <Route path="/practice/:id" element={<Practice />} />
+          <Route path="/bmp" element={<BMPDashboard />} />
+          <Route path="/bmp/:personId" element={<BMPEditor />} />
+          <Route path="/bmp/:personId/practice" element={<BMPPractice />} />
+          <Route path="/lernkarten" element={<LernkartenDashboard />} />
+          <Route path="/lernkarten/practice" element={<LernkartenPractice />} />
+          <Route path="/peglist" element={<PegList />} />
+          <Route path="/trivia" element={<Trivia />} />
+          <Route path="/sprachen" element={<SprachenDashboard />} />
+          <Route path="/sprachen/deutsch" element={<DeutschDashboard />} />
+          <Route path="/sprachen/deutsch/lernkarten" element={<DeutschLernkarten />} />
+          <Route path="/sprachen/deutsch/lernkarten/practice" element={<DeutschLernkartenPractice />} />
+          <Route path="/sprachen/deutsch/artikel" element={<ArtikelTrainer />} />
+          <Route path="/sprachen/deutsch/c1" element={<DeutschC1 />} />
+          <Route path="/sprachen/deutsch/:level/quiz" element={<DeutschC1Quiz />} />
+          <Route path="/sprachen/deutsch/:level/spiele" element={<DeutschC1Spiele />} />
+          <Route path="/sprachen/deutsch/:level/hangman" element={<HangmanGame />} />
+          <Route path="/sprachen/deutsch/:level/lueckentext" element={<LueckentextGame />} />
+          <Route path="/sprachen/deutsch/:level/memory" element={<MemoryGame />} />
+          <Route path="/sprachen/deutsch/:level/zeitdruck" element={<ZeitdruckQuiz />} />
+          <Route path="/sprachen/deutsch/:level" element={<GoetheLevel />} />
+        </Routes>
+      </div>
+    </AuthProvider>
   )
 }
