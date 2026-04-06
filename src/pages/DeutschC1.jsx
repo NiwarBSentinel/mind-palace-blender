@@ -78,6 +78,8 @@ export default function DeutschC1() {
   const [detailLoading, setDetailLoading] = useState(false)
   const [wortart, setWortart] = useState(null)
   const [frequency, setFrequency] = useState(null)
+  const [grammar, setGrammar] = useState(null)
+  const [grammarLoading, setGrammarLoading] = useState(false)
 
   // Practice state
   const [practiceCards, setPracticeCards] = useState([])
@@ -146,21 +148,70 @@ export default function DeutschC1() {
       .slice(0, 8)
   }
 
+  function parseWikiGrammar(wikitext, wordType) {
+    const lines = wikitext.split('\n')
+    try {
+      if (wordType === 'Substantiv' || !wordType) {
+        // Try to find genus and declension
+        let genus = null
+        let genSg = null
+        let nomPl = null
+        const genusMatch = wikitext.match(/\|Genus=([mfn])/i)
+        if (genusMatch) {
+          genus = genusMatch[1] === 'm' ? 'der' : genusMatch[1] === 'f' ? 'die' : 'das'
+        }
+        const genSgMatch = wikitext.match(/\|Genitiv Singular=([^\n|]+)/)
+        if (genSgMatch) genSg = genSgMatch[1].trim()
+        const nomPlMatch = wikitext.match(/\|Nominativ Plural=([^\n|]+)/)
+        if (nomPlMatch) nomPl = nomPlMatch[1].trim()
+        if (genus || genSg || nomPl) {
+          return { type: 'Substantiv', genus, genSg, nomPl }
+        }
+      }
+      if (wordType === 'Verb' || !wordType) {
+        let praesIch = null, praeteritum = null, partizipII = null
+        const praesMatch = wikitext.match(/\|Präsens_ich=([^\n|]+)/)
+        if (praesMatch) praesIch = praesMatch[1].trim()
+        const praetMatch = wikitext.match(/\|Präteritum_ich=([^\n|]+)/)
+        if (praetMatch) praeteritum = praetMatch[1].trim()
+        const partMatch = wikitext.match(/\|Partizip II=([^\n|]+)/)
+        if (partMatch) partizipII = partMatch[1].trim()
+        if (praesIch || praeteritum || partizipII) {
+          return { type: 'Verb', praesIch, praeteritum, partizipII }
+        }
+      }
+      if (wordType === 'Adjektiv' || !wordType) {
+        let komparativ = null, superlativ = null
+        const kompMatch = wikitext.match(/\|Komparativ=([^\n|]+)/)
+        if (kompMatch) komparativ = kompMatch[1].trim()
+        const supMatch = wikitext.match(/\|Superlativ=([^\n|]+)/)
+        if (supMatch) superlativ = supMatch[1].trim()
+        if (komparativ || superlativ) {
+          return { type: 'Adjektiv', komparativ, superlativ }
+        }
+      }
+    } catch {}
+    return null
+  }
+
   async function openDetail(w) {
     setDetailWord(w)
     setSynonyms(null)
     setSimilarTerms(null)
     setWortart(null)
     setFrequency(null)
+    setGrammar(null)
     setDetailLoading(true)
+    setGrammarLoading(true)
     const clean = w.wort.replace(/^(die|der|das)\s+/, '')
     const encoded = encodeURIComponent(clean)
 
     // Fetch all APIs in parallel
-    const [thesaurusRes, snippetRes, freqRes] = await Promise.allSettled([
+    const [thesaurusRes, snippetRes, freqRes, wikiRes] = await Promise.allSettled([
       fetch(`https://www.openthesaurus.de/synonyme/search?q=${encoded}&format=application/json&similar=true`).then((r) => r.json()),
       fetch(`https://www.dwds.de/api/wb/snippet?q=${encoded}`).then((r) => r.json()),
       fetch(`https://www.dwds.de/api/frequency/?q=${encoded}`).then((r) => r.json()),
+      fetch(`https://de.wiktionary.org/w/api.php?action=parse&page=${encoded}&prop=wikitext&format=json&origin=*`).then((r) => r.json()),
     ])
 
     // OpenThesaurus
@@ -187,6 +238,16 @@ export default function DeutschC1() {
     if (freqRes.status === 'fulfilled' && freqRes.value?.frequency !== undefined) {
       setFrequency(freqRes.value.frequency)
     }
+
+    // Wiktionary Grammar
+    if (wikiRes.status === 'fulfilled' && wikiRes.value?.parse?.wikitext?.['*']) {
+      const wikitext = wikiRes.value.parse.wikitext['*']
+      const detectedType = snippetRes.status === 'fulfilled' && Array.isArray(snippetRes.value) && snippetRes.value[0]?.pos
+        ? snippetRes.value[0].pos
+        : null
+      setGrammar(parseWikiGrammar(wikitext, detectedType))
+    }
+    setGrammarLoading(false)
 
     setDetailLoading(false)
   }
@@ -499,6 +560,55 @@ export default function DeutschC1() {
 
             <div className="text-slate-200">{detailWord.definition}</div>
             <div className="text-slate-500 text-sm italic">{detailWord.beispiel}</div>
+
+            <div>
+              <h3 className="text-slate-400 text-sm font-medium mb-2">Grammatik</h3>
+              {grammarLoading ? (
+                <div className="text-slate-500 text-sm">Lade...</div>
+              ) : grammar ? (
+                <div className="p-3 rounded-lg bg-[#0a0a1a] text-sm space-y-1">
+                  {grammar.type === 'Substantiv' && (
+                    <>
+                      <div className="text-slate-200">
+                        <span className="text-blue-400 mr-1">🔵</span>
+                        {grammar.genus && <span className="font-medium">{grammar.genus} </span>}
+                        {detailWord.wort.replace(/^(die|der|das)\s+/, '')}
+                        {grammar.genSg && <span className="text-slate-400 mx-2">|</span>}
+                        {grammar.genSg && <span>Gen: <span className="text-slate-300">{grammar.genSg}</span></span>}
+                        {grammar.nomPl && <span className="text-slate-400 mx-2">|</span>}
+                        {grammar.nomPl && <span>Pl: <span className="text-slate-300">{grammar.nomPl}</span></span>}
+                      </div>
+                    </>
+                  )}
+                  {grammar.type === 'Verb' && (
+                    <div className="text-slate-200">
+                      <span className="text-green-400 mr-1">🟢</span>
+                      <span className="font-medium">{detailWord.wort.replace(/^(die|der|das)\s+/, '')}</span>
+                      {grammar.praesIch && <><span className="text-slate-400 mx-2">|</span>ich {grammar.praesIch}</>}
+                      {grammar.praeteritum && <><span className="text-slate-400 mx-2">|</span>Prät: {grammar.praeteritum}</>}
+                      {grammar.partizipII && <><span className="text-slate-400 mx-2">|</span>Part. II: <span className="text-slate-300">{grammar.partizipII}</span></>}
+                    </div>
+                  )}
+                  {grammar.type === 'Adjektiv' && (
+                    <div className="text-slate-200">
+                      <span className="text-yellow-400 mr-1">🟡</span>
+                      <span className="font-medium">{detailWord.wort.replace(/^(die|der|das)\s+/, '')}</span>
+                      {grammar.komparativ && <><span className="text-slate-400 mx-2">|</span><span className="text-slate-300">{grammar.komparativ}</span></>}
+                      {grammar.superlativ && <><span className="text-slate-400 mx-2">|</span>am <span className="text-slate-300">{grammar.superlativ}en</span></>}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <a
+                  href={`https://de.wiktionary.org/wiki/${encodeURIComponent(detailWord.wort.replace(/^(die|der|das)\s+/, ''))}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 text-sm hover:underline"
+                >
+                  Im Wiktionary nachschlagen →
+                </a>
+              )}
+            </div>
 
             <div>
               <h3 className="text-slate-400 text-sm font-medium mb-2">Synonyme</h3>
