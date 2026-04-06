@@ -76,6 +76,8 @@ export default function DeutschC1() {
   const [synonyms, setSynonyms] = useState(null)
   const [similarTerms, setSimilarTerms] = useState(null)
   const [detailLoading, setDetailLoading] = useState(false)
+  const [wortart, setWortart] = useState(null)
+  const [frequency, setFrequency] = useState(null)
 
   // Practice state
   const [practiceCards, setPracticeCards] = useState([])
@@ -148,22 +150,44 @@ export default function DeutschC1() {
     setDetailWord(w)
     setSynonyms(null)
     setSimilarTerms(null)
+    setWortart(null)
+    setFrequency(null)
     setDetailLoading(true)
-    try {
-      const clean = w.wort.replace(/^(die|der|das)\s+/, '')
-      const res = await fetch(`https://www.openthesaurus.de/synonyme/search?q=${encodeURIComponent(clean)}&format=application/json&similar=true`)
-      const data = await res.json()
-      const syns = (data.synsets || [])
-        .flatMap((s) => s.terms.map((t) => t.term))
-        .filter((t, i, arr) => arr.indexOf(t) === i)
-        .slice(0, 10)
-      const similar = (data.similarterms || []).map((t) => t.term).slice(0, 5)
-      setSynonyms(syns)
-      setSimilarTerms(similar)
-    } catch {
+    const clean = w.wort.replace(/^(die|der|das)\s+/, '')
+    const encoded = encodeURIComponent(clean)
+
+    // Fetch all APIs in parallel
+    const [thesaurusRes, snippetRes, freqRes] = await Promise.allSettled([
+      fetch(`https://www.openthesaurus.de/synonyme/search?q=${encoded}&format=application/json&similar=true`).then((r) => r.json()),
+      fetch(`https://www.dwds.de/api/wb/snippet?q=${encoded}`).then((r) => r.json()),
+      fetch(`https://www.dwds.de/api/frequency/?q=${encoded}`).then((r) => r.json()),
+    ])
+
+    // OpenThesaurus
+    if (thesaurusRes.status === 'fulfilled') {
+      const data = thesaurusRes.value
+      setSynonyms(
+        (data.synsets || [])
+          .flatMap((s) => s.terms.map((t) => t.term))
+          .filter((t, i, arr) => arr.indexOf(t) === i)
+          .slice(0, 10)
+      )
+      setSimilarTerms((data.similarterms || []).map((t) => t.term).slice(0, 5))
+    } else {
       setSynonyms([])
       setSimilarTerms([])
     }
+
+    // DWDS Wortart
+    if (snippetRes.status === 'fulfilled' && Array.isArray(snippetRes.value) && snippetRes.value.length > 0) {
+      setWortart(snippetRes.value[0].pos || null)
+    }
+
+    // DWDS Frequency
+    if (freqRes.status === 'fulfilled' && freqRes.value?.frequency !== undefined) {
+      setFrequency(freqRes.value.frequency)
+    }
+
     setDetailLoading(false)
   }
 
@@ -457,6 +481,22 @@ export default function DeutschC1() {
               </button>
             </div>
 
+            {!detailLoading && (wortart || frequency !== null) && (
+              <div className="flex flex-wrap items-center gap-2">
+                {wortart && (
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300">
+                    {wortart === 'Substantiv' ? '📚' : wortart === 'Verb' ? '🔤' : wortart === 'Adjektiv' ? '🎨' : '📝'} {wortart}
+                  </span>
+                )}
+                {frequency !== null && (
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-[#1e1e3a] text-slate-300 flex items-center gap-1.5">
+                    Häufigkeit: <span className="font-mono tracking-tight">{('█').repeat(Math.max(1, frequency))}{'░'.repeat(Math.max(0, 6 - frequency))}</span>
+                    <span className="text-slate-500">({frequency}/6 · {frequency <= 1 ? 'sehr selten' : frequency <= 2 ? 'selten' : frequency <= 3 ? 'mittel' : frequency <= 4 ? 'häufig' : 'sehr häufig'})</span>
+                  </span>
+                )}
+              </div>
+            )}
+
             <div className="text-slate-200">{detailWord.definition}</div>
             <div className="text-slate-500 text-sm italic">{detailWord.beispiel}</div>
 
@@ -508,13 +548,21 @@ export default function DeutschC1() {
               })()}
             </div>
 
-            <div className="pt-2">
+            <div className="pt-2 flex items-center gap-3">
               <button
                 onClick={(e) => { e.stopPropagation(); saveToLernkarten(detailWord) }}
                 className="text-xs px-3 py-1.5 rounded-lg bg-purple-600/20 border border-purple-500/30 text-purple-300 hover:bg-purple-600/30 transition cursor-pointer"
               >
                 💾 Als Lernkarte speichern
               </button>
+              <a
+                href={`https://www.dwds.de/wb/${encodeURIComponent(detailWord.wort.replace(/^(die|der|das)\s+/, ''))}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs px-3 py-1.5 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-300 hover:bg-blue-600/30 transition"
+              >
+                Im DWDS nachschlagen →
+              </a>
             </div>
           </div>
         </div>
