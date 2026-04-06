@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { fetchGoetheWords } from '../data/goetheWordLists'
 import { supabase } from '../lib/supabase'
@@ -42,33 +42,13 @@ function shuffle(arr) {
   const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]] }; return a
 }
 
-const POS_BADGES = { Substantiv: '📚', Verb: '🔤', Adjektiv: '🎨', Adverb: '📝', Präposition: '🔗', Konjunktion: '🔗', Partikel: '📝' }
-
-function parseWikiGrammar(wikitext, wordType, word) {
-  try {
-    const cleanWord = (word || '').replace(/^(die|der|das)\s+/, '')
-    let type = wordType
-    if (!type) {
-      if (/Wortart\|Verb/.test(wikitext)) type = 'Verb'
-      else if (/Wortart\|Adjektiv/.test(wikitext)) type = 'Adjektiv'
-      else if (/Wortart\|Substantiv/.test(wikitext)) type = 'Substantiv'
-    }
-    const isVerb = type === 'Verb' || /Konjugation/.test(wikitext) || cleanWord.endsWith('en') || cleanWord.endsWith('ieren')
-    if (isVerb && type !== 'Substantiv' && type !== 'Adjektiv') {
-      return { type: 'Verb', praesIch: wikitext.match(/\|Präsens_ich=([^\n|]+)/)?.[1]?.trim() || null, praeteritum: wikitext.match(/\|Präteritum_ich=([^\n|]+)/)?.[1]?.trim() || null, partizipII: wikitext.match(/\|Partizip II=([^\n|]+)/)?.[1]?.trim() || null }
-    }
-    if (type === 'Adjektiv') {
-      return { type: 'Adjektiv', komparativ: wikitext.match(/\|Komparativ=([^\n|]+)/)?.[1]?.trim() || null, superlativ: wikitext.match(/\|Superlativ=([^\n|]+)/)?.[1]?.trim() || null }
-    }
-    if (type === 'Substantiv' || !type) {
-      const gm = wikitext.match(/\|Genus=([mfn])/i)
-      const genus = gm ? (gm[1] === 'm' ? 'der' : gm[1] === 'f' ? 'die' : 'das') : null
-      const genSg = wikitext.match(/\|Genitiv Singular=([^\n|]+)/)?.[1]?.trim() || null
-      const nomPl = wikitext.match(/\|Nominativ Plural=([^\n|]+)/)?.[1]?.trim() || null
-      if (genus || genSg || nomPl) return { type: 'Substantiv', genus, genSg, nomPl }
-    }
-  } catch {}
-  return null
+function getWordType(w) {
+  const artikel = w.wort.match(/^(der|die|das)\s+/)
+  if (artikel) return { type: 'Substantiv', artikel: artikel[1] }
+  if (w.pos === 'Verb' || w.wort.endsWith('en') || w.wort.endsWith('ieren')) return { type: 'Verb' }
+  if (w.pos === 'Adjektiv') return { type: 'Adjektiv' }
+  if (w.pos) return { type: w.pos }
+  return { type: null }
 }
 
 export default function GoetheLevel() {
@@ -91,8 +71,6 @@ export default function GoetheLevel() {
 
   // Detail modal state
   const [detailWord, setDetailWord] = useState(null)
-  const [detailData, setDetailData] = useState(null)
-  const [detailLoading, setDetailLoading] = useState(false)
   const [toast, setToast] = useState(null)
 
   useEffect(() => {
@@ -113,7 +91,7 @@ export default function GoetheLevel() {
 
   // Search filter
   const searchLower = search.toLowerCase()
-  const filtered = search ? words.filter((w) => w.wort.toLowerCase().includes(searchLower) || w.pos.toLowerCase().includes(searchLower)) : words
+  const filtered = search ? words.filter((w) => w.wort.toLowerCase().includes(searchLower) || (w.definition || '').toLowerCase().includes(searchLower)) : words
 
   async function saveToLernkarten(w) {
     const { error } = await supabase.from('lernkarten').insert({
@@ -127,35 +105,8 @@ export default function GoetheLevel() {
     setTimeout(() => setToast(null), 2500)
   }
 
-  // Detail modal
-  async function openDetail(w) {
+  function openDetail(w) {
     setDetailWord(w)
-    setDetailData(null)
-    setDetailLoading(true)
-    const clean = w.wort.replace(/^(die|der|das)\s+/, '')
-    const encoded = encodeURIComponent(clean)
-    const [thesRes, snippetRes, freqRes, wikiRes] = await Promise.allSettled([
-      fetch(`https://www.openthesaurus.de/synonyme/search?q=${encoded}&format=application/json&similar=true`).then((r) => r.json()),
-      fetch(`https://www.dwds.de/api/wb/snippet?q=${encoded}`).then((r) => r.json()),
-      fetch(`https://www.dwds.de/api/frequency/?q=${encoded}`).then((r) => r.json()),
-      fetch(`https://de.wiktionary.org/w/api.php?action=parse&page=${encoded}&prop=wikitext&format=json&origin=*`).then((r) => r.json()),
-    ])
-    const result = { synonyms: [], wortart: null, frequency: null, definition: null, grammar: null }
-    if (thesRes.status === 'fulfilled') {
-      result.synonyms = (thesRes.value.synsets || []).flatMap((s) => s.terms.map((t) => t.term)).filter((t, i, a) => a.indexOf(t) === i).slice(0, 10)
-    }
-    if (snippetRes.status === 'fulfilled' && Array.isArray(snippetRes.value) && snippetRes.value[0]) {
-      result.wortart = snippetRes.value[0].pos || null
-      if (snippetRes.value[0].definition) result.definition = snippetRes.value[0].definition
-    }
-    if (freqRes.status === 'fulfilled' && freqRes.value?.frequency !== undefined) {
-      result.frequency = freqRes.value.frequency
-    }
-    if (wikiRes.status === 'fulfilled' && wikiRes.value?.parse?.wikitext?.['*']) {
-      result.grammar = parseWikiGrammar(wikiRes.value.parse.wikitext['*'], result.wortart, w.wort)
-    }
-    setDetailData(result)
-    setDetailLoading(false)
   }
 
   // Practice
@@ -241,7 +192,7 @@ export default function GoetheLevel() {
                       {w.beispiel && <div className="text-slate-500 text-sm italic">{w.beispiel}</div>}
                     </div>
                     <div className="flex flex-col items-end gap-2 shrink-0">
-                      {w.pos && <span className="text-xs px-2 py-0.5 rounded-full bg-[#1e1e3a] text-slate-500">{POS_BADGES[w.pos] || '📝'} {w.pos}</span>}
+                      {(() => { const t = getWordType(w); return t.type && <span className="text-xs px-2 py-0.5 rounded-full bg-[#1e1e3a] text-slate-500">{t.type === 'Substantiv' ? '📚' : t.type === 'Verb' ? '🔤' : t.type === 'Adjektiv' ? '🎨' : '📝'} {t.type}</span> })()}
                       {srs?.repetitions > 0 ? (
                         due ? <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">Fällig</span>
                              : <span className="text-xs px-2 py-0.5 rounded-full bg-[#1e1e3a] text-slate-500">Gelernt</span>
@@ -322,125 +273,90 @@ export default function GoetheLevel() {
       )}
 
       {/* Detail Modal */}
-      {detailWord && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4" onClick={() => setDetailWord(null)}>
-          <div className="w-full max-w-lg max-h-[85vh] overflow-y-auto p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] space-y-4" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-start justify-between">
-              <div className="text-2xl font-bold text-blue-300">{detailWord.wort}</div>
-              <button onClick={() => setDetailWord(null)} className="text-slate-500 hover:text-slate-300 transition cursor-pointer text-xl leading-none ml-4">×</button>
-            </div>
+      {detailWord && (() => {
+        const wt = getWordType(detailWord)
+        return (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4" onClick={() => setDetailWord(null)}>
+            <div className="w-full max-w-lg max-h-[85vh] overflow-y-auto p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] space-y-4" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-start justify-between">
+                <div className="text-2xl font-bold text-blue-300">{detailWord.wort}</div>
+                <button onClick={() => setDetailWord(null)} className="text-slate-500 hover:text-slate-300 transition cursor-pointer text-xl leading-none ml-4">×</button>
+              </div>
 
-            {detailWord.definition && <div className="text-slate-200">{detailWord.definition}</div>}
-            {detailWord.beispiel && <div className="text-slate-500 text-sm italic">{detailWord.beispiel}</div>}
+              {detailWord.definition && <div className="text-slate-200">{detailWord.definition}</div>}
+              {detailWord.beispiel && <div className="text-slate-500 text-sm italic">{detailWord.beispiel}</div>}
 
-            {detailLoading ? (
-              <div className="text-slate-500 text-sm">Lade Grammatik, Synonyme und mehr...</div>
-            ) : detailData && (
-              <>
-                {(detailData.wortart || detailData.frequency !== null || detailWord.pos) && (
-                  <div className="flex flex-wrap items-center gap-2">
-                    {(detailData.wortart || detailWord.pos) && (
-                      <span className="text-xs px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300">
-                        {(() => { const p = detailData.wortart || detailWord.pos; return p === 'Substantiv' ? '📚' : p === 'Verb' ? '🔤' : p === 'Adjektiv' ? '🎨' : '📝' })()}{' '}{detailData.wortart || detailWord.pos}
+              {/* Grammatik */}
+              {wt.type && (
+                <div>
+                  <h3 className="text-slate-400 text-sm font-medium mb-2">Grammatik</h3>
+                  <div className="p-3 rounded-lg bg-[#0a0a1a] text-sm text-slate-200">
+                    {wt.type === 'Substantiv' && (
+                      <span>
+                        <span className="mr-1">{wt.artikel === 'der' ? '🟢' : wt.artikel === 'die' ? '🔵' : '🟡'}</span>
+                        <span className="font-medium">{wt.artikel} {detailWord.wort.replace(/^(die|der|das)\s+/, '')}</span>
                       </span>
                     )}
-                    {detailData.frequency !== null && (
-                      <span className="text-xs px-2.5 py-1 rounded-full bg-[#1e1e3a] text-slate-300 flex items-center gap-1.5">
-                        Häufigkeit: <span className="font-mono tracking-tight">{'█'.repeat(Math.max(1, detailData.frequency))}{'░'.repeat(Math.max(0, 6 - detailData.frequency))}</span>
-                        <span className="text-slate-500">({detailData.frequency}/6)</span>
-                      </span>
+                    {wt.type === 'Verb' && <span><span className="mr-1">⚫</span><span className="font-medium">{detailWord.wort}</span></span>}
+                    {wt.type === 'Adjektiv' && <span><span className="text-yellow-400 mr-1">🟡</span><span className="font-medium">{detailWord.wort}</span></span>}
+                    {wt.type !== 'Substantiv' && wt.type !== 'Verb' && wt.type !== 'Adjektiv' && (
+                      <span><span className="mr-1">📝</span><span className="font-medium">{detailWord.wort}</span> — {wt.type}</span>
                     )}
                   </div>
-                )}
-
-                {detailData.grammar && (
-                  <div>
-                    <h3 className="text-slate-400 text-sm font-medium mb-2">Grammatik</h3>
-                    <div className="p-3 rounded-lg bg-[#0a0a1a] text-sm">
-                      {detailData.grammar.type === 'Substantiv' && (
-                        <div className="text-slate-200">
-                          <span className="mr-1">{detailData.grammar.genus === 'der' ? '🟢' : detailData.grammar.genus === 'die' ? '🔵' : detailData.grammar.genus === 'das' ? '🟡' : '⚪'}</span>
-                          {detailData.grammar.genus && <span className="font-medium">{detailData.grammar.genus} </span>}
-                          {detailWord.wort.replace(/^(die|der|das)\s+/, '')}
-                          {detailData.grammar.genSg && <><span className="text-slate-400 mx-2">|</span>Gen: <span className="text-slate-300">{detailData.grammar.genSg}</span></>}
-                          {detailData.grammar.nomPl && <><span className="text-slate-400 mx-2">|</span>Pl: <span className="text-slate-300">{detailData.grammar.nomPl}</span></>}
-                        </div>
-                      )}
-                      {detailData.grammar.type === 'Verb' && (
-                        <div className="text-slate-200">
-                          <span className="text-slate-400 mr-1">⚫</span>
-                          <span className="font-medium">{detailWord.wort.replace(/^(die|der|das)\s+/, '')}</span>
-                          {detailData.grammar.praesIch && <><span className="text-slate-400 mx-2">|</span>ich {detailData.grammar.praesIch}</>}
-                          {detailData.grammar.praeteritum && <><span className="text-slate-400 mx-2">|</span>Prät: {detailData.grammar.praeteritum}</>}
-                          {detailData.grammar.partizipII && <><span className="text-slate-400 mx-2">|</span>Part. II: <span className="text-slate-300">{detailData.grammar.partizipII}</span></>}
-                        </div>
-                      )}
-                      {detailData.grammar.type === 'Adjektiv' && (
-                        <div className="text-slate-200">
-                          <span className="text-yellow-400 mr-1">🟡</span>
-                          <span className="font-medium">{detailWord.wort.replace(/^(die|der|das)\s+/, '')}</span>
-                          {detailData.grammar.komparativ && <><span className="text-slate-400 mx-2">|</span><span className="text-slate-300">{detailData.grammar.komparativ}</span></>}
-                          {detailData.grammar.superlativ && <><span className="text-slate-400 mx-2">|</span>am <span className="text-slate-300">{detailData.grammar.superlativ}en</span></>}
-                        </div>
-                      )}
-                    </div>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-[10px] text-slate-600">
+                    <span className={wt.artikel === 'die' ? 'text-blue-400' : ''}>🔵 die (Fem.)</span>
+                    <span className={wt.artikel === 'der' ? 'text-green-400' : ''}>🟢 der (Mask.)</span>
+                    <span className={wt.artikel === 'das' || (wt.type === 'Adjektiv') ? 'text-yellow-400' : ''}>🟡 das (Neutr.)</span>
+                    <span className={wt.type === 'Verb' ? 'text-slate-300' : ''}>⚫ Verb</span>
+                    <span className={wt.type === 'Adjektiv' ? 'text-yellow-400' : ''}>🟡 Adjektiv</span>
                   </div>
-                )}
+                </div>
+              )}
 
-                {detailData.synonyms.length > 0 && (
-                  <div>
-                    <h3 className="text-slate-400 text-sm font-medium mb-2">Synonyme (OpenThesaurus)</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {detailData.synonyms.map((s) => (
-                        <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300">{s}</span>
-                      ))}
-                    </div>
+              {/* Synonyme */}
+              {detailWord.synonyme?.length > 0 && (
+                <div>
+                  <h3 className="text-slate-400 text-sm font-medium mb-2">Synonyme</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {detailWord.synonyme.map((s) => (
+                      <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-green-500/20 text-green-300">{s}</span>
+                    ))}
                   </div>
-                )}
+                </div>
+              )}
 
-                {detailWord.synonyme?.length > 0 && (
-                  <div>
-                    <h3 className="text-slate-400 text-sm font-medium mb-2">Synonyme</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {detailWord.synonyme.map((s) => (
-                        <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-green-500/20 text-green-300">{s}</span>
-                      ))}
-                    </div>
+              {/* Ähnliche Wörter */}
+              {detailWord.aehnlich?.length > 0 && (
+                <div>
+                  <h3 className="text-slate-400 text-sm font-medium mb-2">Ähnliche Wörter</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {detailWord.aehnlich.map((s) => (
+                      <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-[#1e1e3a] text-slate-300">{s}</span>
+                    ))}
                   </div>
-                )}
+                </div>
+              )}
 
-                {detailWord.aehnlich?.length > 0 && (
-                  <div>
-                    <h3 className="text-slate-400 text-sm font-medium mb-2">Ähnliche Wörter</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {detailWord.aehnlich.map((s) => (
-                        <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-[#1e1e3a] text-slate-300">{s}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
-            <div className="flex items-center gap-3 pt-2">
-              <button
-                onClick={(e) => { e.stopPropagation(); saveToLernkarten(detailWord) }}
-                className="text-xs px-3 py-1.5 rounded-lg bg-purple-600/20 border border-purple-500/30 text-purple-300 hover:bg-purple-600/30 transition cursor-pointer"
-              >
-                💾 Als Lernkarte speichern
-              </button>
-              <a
-                href={`https://www.dwds.de/wb/${encodeURIComponent(detailWord.wort.replace(/^(die|der|das)\s+/, ''))}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs px-3 py-1.5 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-300 hover:bg-blue-600/30 transition"
-              >
-                Im DWDS nachschlagen →
-              </a>
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  onClick={(e) => { e.stopPropagation(); saveToLernkarten(detailWord) }}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-purple-600/20 border border-purple-500/30 text-purple-300 hover:bg-purple-600/30 transition cursor-pointer"
+                >
+                  💾 Als Lernkarte speichern
+                </button>
+                <a
+                  href={`https://www.dwds.de/wb/${encodeURIComponent(detailWord.wort.replace(/^(die|der|das)\s+/, ''))}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs px-3 py-1.5 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-300 hover:bg-blue-600/30 transition"
+                >
+                  Im DWDS nachschlagen →
+                </a>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Toast */}
       {toast && (
