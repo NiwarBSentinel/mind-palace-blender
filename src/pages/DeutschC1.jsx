@@ -321,10 +321,10 @@ export default function DeutschC1() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <button
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/sprachen/deutsch')}
         className="text-slate-400 hover:text-slate-200 transition text-sm mb-4 cursor-pointer"
       >
-        ← Zurück zur Übersicht
+        ← Zurück zu Deutsch
       </button>
 
       <h1 className="text-3xl font-bold text-center mb-1 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
