@@ -184,21 +184,25 @@ export default function GoetheLevel() {
             {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition cursor-pointer text-lg leading-none">×</button>}
           </div>
           {search && <p className="text-sm text-slate-400 mb-4">{filtered.length} Wörter</p>}
-          <div className="space-y-2">
+          <div className="space-y-3">
             {filtered.map((w) => {
               const srs = srsData[w.wort]
               const due = isDue(srs)
               return (
-                <div key={w.wort} onClick={() => openDetail(w)} className="p-4 rounded-xl bg-[#12122a] border border-[#1e1e3a] cursor-pointer hover:border-blue-500/30 transition flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-blue-300 font-medium">{w.wort}</span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#1e1e3a] text-slate-500">{POS_BADGES[w.pos] || '📝'} {w.pos}</span>
-                  </div>
-                  <div>
-                    {srs?.repetitions > 0 ? (
-                      due ? <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">Fällig</span>
-                           : <span className="text-xs px-2 py-0.5 rounded-full bg-[#1e1e3a] text-slate-500">Gelernt</span>
-                    ) : <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">Neu</span>}
+                <div key={w.wort} onClick={() => openDetail(w)} className="p-5 rounded-xl bg-[#12122a] border border-[#1e1e3a] group cursor-pointer hover:border-blue-500/30 transition">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="text-lg font-bold text-blue-300 mb-1">{w.wort}</div>
+                      {w.definition && <div className="text-slate-200 text-sm mb-2">{w.definition}</div>}
+                      {w.beispiel && <div className="text-slate-500 text-sm italic">{w.beispiel}</div>}
+                    </div>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      {w.pos && <span className="text-xs px-2 py-0.5 rounded-full bg-[#1e1e3a] text-slate-500">{POS_BADGES[w.pos] || '📝'} {w.pos}</span>}
+                      {srs?.repetitions > 0 ? (
+                        due ? <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">Fällig</span>
+                             : <span className="text-xs px-2 py-0.5 rounded-full bg-[#1e1e3a] text-slate-500">Gelernt</span>
+                      ) : <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">Neu</span>}
+                    </div>
                   </div>
                 </div>
               )
