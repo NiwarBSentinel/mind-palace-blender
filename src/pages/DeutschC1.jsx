@@ -72,6 +72,10 @@ export default function DeutschC1() {
   const [search, setSearch] = useState('')
   const [srsData, setSrsData] = useState(loadSRS)
   const [toast, setToast] = useState(null)
+  const [detailWord, setDetailWord] = useState(null)
+  const [synonyms, setSynonyms] = useState(null)
+  const [similarTerms, setSimilarTerms] = useState(null)
+  const [detailLoading, setDetailLoading] = useState(false)
 
   // Practice state
   const [practiceCards, setPracticeCards] = useState([])
@@ -125,6 +129,46 @@ export default function DeutschC1() {
     if (error) console.error('save error:', error)
     setToast('Lernkarte gespeichert!')
     setTimeout(() => setToast(null), 2500)
+  }
+
+  function findSimilarWords(word) {
+    const clean = word.replace(/^(die|der|das)\s+/, '').toLowerCase()
+    const prefix = clean.substring(0, 3)
+    const len = clean.length
+    return C1_WOERTER
+      .filter((w) => {
+        if (w.wort === word) return false
+        const other = w.wort.replace(/^(die|der|das)\s+/, '').toLowerCase()
+        return other.startsWith(prefix) || (other[0] === clean[0] && Math.abs(other.length - len) <= 2)
+      })
+      .slice(0, 8)
+  }
+
+  async function openDetail(w) {
+    setDetailWord(w)
+    setSynonyms(null)
+    setSimilarTerms(null)
+    setDetailLoading(true)
+    try {
+      const clean = w.wort.replace(/^(die|der|das)\s+/, '')
+      const res = await fetch(`https://www.openthesaurus.de/synonyme/search?q=${encodeURIComponent(clean)}&format=application/json&similar=true`)
+      const data = await res.json()
+      const syns = (data.synsets || [])
+        .flatMap((s) => s.terms.map((t) => t.term))
+        .filter((t, i, arr) => arr.indexOf(t) === i)
+        .slice(0, 10)
+      const similar = (data.similarterms || []).map((t) => t.term).slice(0, 5)
+      setSynonyms(syns)
+      setSimilarTerms(similar)
+    } catch {
+      setSynonyms([])
+      setSimilarTerms([])
+    }
+    setDetailLoading(false)
+  }
+
+  function closeDetail() {
+    setDetailWord(null)
   }
 
   // Filter for browse mode
@@ -220,7 +264,7 @@ export default function DeutschC1() {
               const srs = srsData[w.wort]
               const due = isDue(srs)
               return (
-                <div key={w.wort} className="p-5 rounded-xl bg-[#12122a] border border-[#1e1e3a] group">
+                <div key={w.wort} onClick={() => openDetail(w)} className="p-5 rounded-xl bg-[#12122a] border border-[#1e1e3a] group cursor-pointer hover:border-blue-500/30 transition">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
                       <div className="text-lg font-bold text-blue-300 mb-1">{w.wort}</div>
@@ -239,7 +283,7 @@ export default function DeutschC1() {
                   </div>
                   <div className="mt-3 opacity-0 group-hover:opacity-100 transition">
                     <button
-                      onClick={() => saveToLernkarten(w)}
+                      onClick={(e) => { e.stopPropagation(); saveToLernkarten(w) }}
                       className="text-xs px-3 py-1 rounded-lg bg-purple-600/20 border border-purple-500/30 text-purple-300 hover:bg-purple-600/30 transition cursor-pointer"
                     >
                       💾 Als Lernkarte speichern
@@ -397,6 +441,83 @@ export default function DeutschC1() {
             </>
           )}
         </>
+      )}
+
+      {/* Detail Modal */}
+      {detailWord && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4" onClick={closeDetail}>
+          <div className="w-full max-w-lg max-h-[85vh] overflow-y-auto p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] space-y-5" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between">
+              <div className="text-2xl font-bold text-blue-300">{detailWord.wort}</div>
+              <button
+                onClick={closeDetail}
+                className="text-slate-500 hover:text-slate-300 transition cursor-pointer text-xl leading-none ml-4"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="text-slate-200">{detailWord.definition}</div>
+            <div className="text-slate-500 text-sm italic">{detailWord.beispiel}</div>
+
+            <div>
+              <h3 className="text-slate-400 text-sm font-medium mb-2">Synonyme</h3>
+              {detailLoading ? (
+                <div className="text-slate-500 text-sm">Lade...</div>
+              ) : synonyms && synonyms.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {synonyms.map((s) => (
+                    <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300">{s}</span>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-slate-600 text-sm">Keine Synonyme gefunden</div>
+              )}
+            </div>
+
+            {!detailLoading && similarTerms && similarTerms.length > 0 && (
+              <div>
+                <h3 className="text-slate-400 text-sm font-medium mb-2">Ähnliche Begriffe (OpenThesaurus)</h3>
+                <div className="flex flex-wrap gap-2">
+                  {similarTerms.map((s) => (
+                    <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-[#1e1e3a] text-slate-400">{s}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <h3 className="text-slate-400 text-sm font-medium mb-2">Ähnlich klingende Wörter</h3>
+              {(() => {
+                const similar = findSimilarWords(detailWord.wort)
+                return similar.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {similar.map((w) => (
+                      <button
+                        key={w.wort}
+                        onClick={() => openDetail(w)}
+                        className="text-xs px-2.5 py-1 rounded-full bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] transition cursor-pointer"
+                      >
+                        {w.wort}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-slate-600 text-sm">Keine ähnlichen Wörter gefunden</div>
+                )
+              })()}
+            </div>
+
+            <div className="pt-2">
+              <button
+                onClick={(e) => { e.stopPropagation(); saveToLernkarten(detailWord) }}
+                className="text-xs px-3 py-1.5 rounded-lg bg-purple-600/20 border border-purple-500/30 text-purple-300 hover:bg-purple-600/30 transition cursor-pointer"
+              >
+                💾 Als Lernkarte speichern
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Toast */}
