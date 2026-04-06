@@ -316,7 +316,7 @@ export default function GoetheLevel() {
               {/* Synonyme */}
               {detailWord.synonyme?.length > 0 && (
                 <div>
-                  <h3 className="text-slate-400 text-sm font-medium mb-2">Synonyme</h3>
+                  <h3 className="text-slate-400 text-sm font-medium mb-2">Synonyme <span title="Bedeutungsgleiche Wörter — können oft ausgetauscht werden" className="text-slate-600 cursor-help">ℹ️</span></h3>
                   <div className="flex flex-wrap gap-2">
                     {detailWord.synonyme.map((s) => (
                       <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-green-500/20 text-green-300">{s}</span>
@@ -325,10 +325,10 @@ export default function GoetheLevel() {
                 </div>
               )}
 
-              {/* Ähnliche Wörter */}
+              {/* Verwandte Begriffe */}
               {detailWord.aehnlich?.length > 0 && (
                 <div>
-                  <h3 className="text-slate-400 text-sm font-medium mb-2">Ähnliche Wörter</h3>
+                  <h3 className="text-slate-400 text-sm font-medium mb-2">Verwandte Begriffe <span title="Thematisch verwandte Wörter — gleicher Wissensbereich, aber nicht austauschbar" className="text-slate-600 cursor-help">ℹ️</span></h3>
                   <div className="flex flex-wrap gap-2">
                     {detailWord.aehnlich.map((s) => (
                       <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-[#1e1e3a] text-slate-300">{s}</span>
