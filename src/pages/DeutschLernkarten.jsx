@@ -347,161 +347,170 @@ export default function DeutschLernkarten() {
         </div>
       )}
       {/* Detail Modal */}
-      {detailCard && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4" onClick={() => setDetailCard(null)}>
-          <div className="w-full max-w-lg max-h-[85vh] overflow-y-auto p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] space-y-4" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-start justify-between">
-              <div className="text-2xl font-bold text-green-300">{detailCard.frage}</div>
-              <button onClick={() => setDetailCard(null)} className="text-slate-500 hover:text-slate-300 transition cursor-pointer text-xl leading-none ml-4">×</button>
-            </div>
+      {detailCard && (() => {
+        const isC1 = (detailCard.kategorie || '').toLowerCase().includes('deutsch c1')
+        return (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4" onClick={() => setDetailCard(null)}>
+            <div className="w-full max-w-lg max-h-[85vh] overflow-y-auto p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a] space-y-4" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-start justify-between">
+                <div className={`text-2xl font-bold ${isC1 ? 'text-blue-300' : 'text-green-300'}`}>{detailCard.frage}</div>
+                <button onClick={() => setDetailCard(null)} className="text-slate-500 hover:text-slate-300 transition cursor-pointer text-xl leading-none ml-4">×</button>
+              </div>
 
-            <div className="text-slate-200">{detailCard.antwort}</div>
+              {isC1 ? (
+                <>
+                  {/* C1 enriched view — shown immediately */}
+                  <div className="text-slate-200">{detailCard.antwort}</div>
 
-            {detailCard.beispiel && (
-              <div className="text-slate-500 text-sm italic">{detailCard.beispiel}</div>
-            )}
-
-            <div className="flex items-center gap-2">
-              <span className="text-xs px-2 py-0.5 rounded-full bg-[#1e1e3a] text-slate-400">{detailCard.kategorie || 'Deutsch C1'}</span>
-              {(() => {
-                if (!detailCard.repetitions && detailCard.repetitions !== 0) return <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">Neu</span>
-                if (isDue(detailCard.next_review)) return <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">Heute fällig</span>
-                const days = Math.ceil((new Date(detailCard.next_review) - new Date()) / (1000 * 60 * 60 * 24))
-                return <span className="text-xs px-2 py-0.5 rounded-full bg-[#1e1e3a] text-slate-500">Fällig in {days} {days === 1 ? 'Tag' : 'Tagen'}</span>
-              })()}
-            </div>
-
-            {/* C1 enriched sections */}
-            {c1Loading && <div className="text-slate-500 text-sm">Lade C1-Informationen...</div>}
-
-            {c1Data && (
-              <>
-                {(c1Data.wortart || c1Data.frequency !== null) && (
-                  <div className="flex flex-wrap items-center gap-2">
-                    {c1Data.wortart && (
-                      <span className="text-xs px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300">
-                        {c1Data.wortart === 'Substantiv' ? '📚' : c1Data.wortart === 'Verb' ? '🔤' : c1Data.wortart === 'Adjektiv' ? '🎨' : '📝'} {c1Data.wortart}
-                      </span>
-                    )}
-                    {c1Data.frequency !== null && (
-                      <span className="text-xs px-2.5 py-1 rounded-full bg-[#1e1e3a] text-slate-300 flex items-center gap-1.5">
-                        Häufigkeit: <span className="font-mono tracking-tight">{'█'.repeat(Math.max(1, c1Data.frequency))}{'░'.repeat(Math.max(0, 6 - c1Data.frequency))}</span>
-                        <span className="text-slate-500">({c1Data.frequency}/6)</span>
-                      </span>
-                    )}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">Deutsch C1</span>
+                    {(() => {
+                      if (!detailCard.repetitions && detailCard.repetitions !== 0) return <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">Neu</span>
+                      if (isDue(detailCard.next_review)) return <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">Heute fällig</span>
+                      const days = Math.ceil((new Date(detailCard.next_review) - new Date()) / (1000 * 60 * 60 * 24))
+                      return <span className="text-xs px-2 py-0.5 rounded-full bg-[#1e1e3a] text-slate-500">Fällig in {days} {days === 1 ? 'Tag' : 'Tagen'}</span>
+                    })()}
                   </div>
-                )}
 
-                {c1Data.grammar && (
-                  <div>
-                    <h3 className="text-slate-400 text-sm font-medium mb-2">Grammatik</h3>
-                    <div className="p-3 rounded-lg bg-[#0a0a1a] text-sm">
-                      {c1Data.grammar.type === 'Substantiv' && (
-                        <div className="text-slate-200">
-                          <span className="mr-1">{c1Data.grammar.genus === 'der' ? '🟢' : c1Data.grammar.genus === 'die' ? '🔵' : c1Data.grammar.genus === 'das' ? '🟡' : '⚪'}</span>
-                          {c1Data.grammar.genus && <span className="font-medium">{c1Data.grammar.genus} </span>}
-                          {detailCard.frage.replace(/^(die|der|das)\s+/, '')}
-                          {c1Data.grammar.genSg && <><span className="text-slate-400 mx-2">|</span>Gen: <span className="text-slate-300">{c1Data.grammar.genSg}</span></>}
-                          {c1Data.grammar.nomPl && <><span className="text-slate-400 mx-2">|</span>Pl: <span className="text-slate-300">{c1Data.grammar.nomPl}</span></>}
+                  {c1Loading ? (
+                    <div className="text-slate-500 text-sm py-2">Lade Grammatik, Synonyme und mehr...</div>
+                  ) : c1Data ? (
+                    <>
+                      {(c1Data.wortart || c1Data.frequency !== null) && (
+                        <div className="flex flex-wrap items-center gap-2">
+                          {c1Data.wortart && (
+                            <span className="text-xs px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300">
+                              {c1Data.wortart === 'Substantiv' ? '📚' : c1Data.wortart === 'Verb' ? '🔤' : c1Data.wortart === 'Adjektiv' ? '🎨' : '📝'} {c1Data.wortart}
+                            </span>
+                          )}
+                          {c1Data.frequency !== null && (
+                            <span className="text-xs px-2.5 py-1 rounded-full bg-[#1e1e3a] text-slate-300 flex items-center gap-1.5">
+                              Häufigkeit: <span className="font-mono tracking-tight">{'█'.repeat(Math.max(1, c1Data.frequency))}{'░'.repeat(Math.max(0, 6 - c1Data.frequency))}</span>
+                              <span className="text-slate-500">({c1Data.frequency}/6)</span>
+                            </span>
+                          )}
                         </div>
                       )}
-                      {c1Data.grammar.type === 'Verb' && (
-                        <div className="text-slate-200">
-                          <span className="text-slate-400 mr-1">⚫</span>
-                          <span className="font-medium">{detailCard.frage.replace(/^(die|der|das)\s+/, '')}</span>
-                          {c1Data.grammar.praesIch && <><span className="text-slate-400 mx-2">|</span>ich {c1Data.grammar.praesIch}</>}
-                          {c1Data.grammar.praeteritum && <><span className="text-slate-400 mx-2">|</span>Prät: {c1Data.grammar.praeteritum}</>}
-                          {c1Data.grammar.partizipII && <><span className="text-slate-400 mx-2">|</span>Part. II: <span className="text-slate-300">{c1Data.grammar.partizipII}</span></>}
+
+                      {c1Data.grammar && (
+                        <div>
+                          <h3 className="text-slate-400 text-sm font-medium mb-2">Grammatik</h3>
+                          <div className="p-3 rounded-lg bg-[#0a0a1a] text-sm">
+                            {c1Data.grammar.type === 'Substantiv' && (
+                              <div className="text-slate-200">
+                                <span className="mr-1">{c1Data.grammar.genus === 'der' ? '🟢' : c1Data.grammar.genus === 'die' ? '🔵' : c1Data.grammar.genus === 'das' ? '🟡' : '⚪'}</span>
+                                {c1Data.grammar.genus && <span className="font-medium">{c1Data.grammar.genus} </span>}
+                                {detailCard.frage.replace(/^(die|der|das)\s+/, '')}
+                                {c1Data.grammar.genSg && <><span className="text-slate-400 mx-2">|</span>Gen: <span className="text-slate-300">{c1Data.grammar.genSg}</span></>}
+                                {c1Data.grammar.nomPl && <><span className="text-slate-400 mx-2">|</span>Pl: <span className="text-slate-300">{c1Data.grammar.nomPl}</span></>}
+                              </div>
+                            )}
+                            {c1Data.grammar.type === 'Verb' && (
+                              <div className="text-slate-200">
+                                <span className="text-slate-400 mr-1">⚫</span>
+                                <span className="font-medium">{detailCard.frage.replace(/^(die|der|das)\s+/, '')}</span>
+                                {c1Data.grammar.praesIch && <><span className="text-slate-400 mx-2">|</span>ich {c1Data.grammar.praesIch}</>}
+                                {c1Data.grammar.praeteritum && <><span className="text-slate-400 mx-2">|</span>Prät: {c1Data.grammar.praeteritum}</>}
+                                {c1Data.grammar.partizipII && <><span className="text-slate-400 mx-2">|</span>Part. II: <span className="text-slate-300">{c1Data.grammar.partizipII}</span></>}
+                              </div>
+                            )}
+                            {c1Data.grammar.type === 'Adjektiv' && (
+                              <div className="text-slate-200">
+                                <span className="text-yellow-400 mr-1">🟡</span>
+                                <span className="font-medium">{detailCard.frage.replace(/^(die|der|das)\s+/, '')}</span>
+                                {c1Data.grammar.komparativ && <><span className="text-slate-400 mx-2">|</span><span className="text-slate-300">{c1Data.grammar.komparativ}</span></>}
+                                {c1Data.grammar.superlativ && <><span className="text-slate-400 mx-2">|</span>am <span className="text-slate-300">{c1Data.grammar.superlativ}en</span></>}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
-                      {c1Data.grammar.type === 'Adjektiv' && (
-                        <div className="text-slate-200">
-                          <span className="text-yellow-400 mr-1">🟡</span>
-                          <span className="font-medium">{detailCard.frage.replace(/^(die|der|das)\s+/, '')}</span>
-                          {c1Data.grammar.komparativ && <><span className="text-slate-400 mx-2">|</span><span className="text-slate-300">{c1Data.grammar.komparativ}</span></>}
-                          {c1Data.grammar.superlativ && <><span className="text-slate-400 mx-2">|</span>am <span className="text-slate-300">{c1Data.grammar.superlativ}en</span></>}
+
+                      {c1Data.synonyms.length > 0 && (
+                        <div>
+                          <h3 className="text-slate-400 text-sm font-medium mb-2">Synonyme</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {c1Data.synonyms.map((s) => (
+                              <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300">{s}</span>
+                            ))}
+                          </div>
                         </div>
                       )}
-                    </div>
+
+                      {c1Match?.synonyme?.length > 0 && (
+                        <div>
+                          <h3 className="text-slate-400 text-sm font-medium mb-2">C1 Synonyme</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {c1Match.synonyme.map((s) => (
+                              <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-green-500/20 text-green-300">{s}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {(() => {
+                        const similar = findSimilarC1Words(detailCard.frage)
+                        return similar.length > 0 ? (
+                          <div>
+                            <h3 className="text-slate-400 text-sm font-medium mb-2">Ähnlich klingende C1 Wörter</h3>
+                            <div className="flex flex-wrap gap-2">
+                              {similar.map((w) => (
+                                <span key={w.wort} className="text-xs px-2.5 py-1 rounded-full bg-[#1e1e3a] text-slate-300">{w.wort}</span>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null
+                      })()}
+
+                      <a
+                        href={`https://www.dwds.de/wb/${encodeURIComponent(detailCard.frage.replace(/^(die|der|das)\s+/, ''))}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs px-3 py-1.5 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-300 hover:bg-blue-600/30 transition inline-block"
+                      >
+                        Im DWDS nachschlagen →
+                      </a>
+                    </>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  {/* Basic view for non-C1 cards */}
+                  <div className="text-slate-200">{detailCard.antwort}</div>
+                  {detailCard.beispiel && <div className="text-slate-500 text-sm italic">{detailCard.beispiel}</div>}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#1e1e3a] text-slate-400">{detailCard.kategorie || 'Deutsch C1'}</span>
+                    {(() => {
+                      if (!detailCard.repetitions && detailCard.repetitions !== 0) return <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">Neu</span>
+                      if (isDue(detailCard.next_review)) return <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">Heute fällig</span>
+                      const days = Math.ceil((new Date(detailCard.next_review) - new Date()) / (1000 * 60 * 60 * 24))
+                      return <span className="text-xs px-2 py-0.5 rounded-full bg-[#1e1e3a] text-slate-500">Fällig in {days} {days === 1 ? 'Tag' : 'Tagen'}</span>
+                    })()}
                   </div>
-                )}
+                </>
+              )}
 
-                {c1Data.synonyms.length > 0 && (
-                  <div>
-                    <h3 className="text-slate-400 text-sm font-medium mb-2">Synonyme</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {c1Data.synonyms.map((s) => (
-                        <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300">{s}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
+              <div>
+                <label className="text-slate-400 text-sm font-medium block mb-2">Notizen / Mnemonik</label>
+                <textarea
+                  value={detailNotiz}
+                  onChange={(e) => setDetailNotiz(e.target.value)}
+                  placeholder="Eselsbrücke, Beispielsatz oder eigene Notizen..."
+                  rows={3}
+                  className="w-full px-3 py-2 rounded-lg bg-[#0a0a1a] border border-[#2a2a4a] text-slate-200 placeholder-slate-600 text-sm focus:outline-none focus:border-green-500 transition resize-none"
+                />
+              </div>
 
-                {c1Match?.synonyme?.length > 0 && (
-                  <div>
-                    <h3 className="text-slate-400 text-sm font-medium mb-2">C1 Synonyme</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {c1Match.synonyme.map((s) => (
-                        <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-green-500/20 text-green-300">{s}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {(() => {
-                  const similar = findSimilarC1Words(detailCard.frage)
-                  return similar.length > 0 ? (
-                    <div>
-                      <h3 className="text-slate-400 text-sm font-medium mb-2">Ähnlich klingende C1 Wörter</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {similar.map((w) => (
-                          <span key={w.wort} className="text-xs px-2.5 py-1 rounded-full bg-[#1e1e3a] text-slate-300">{w.wort}</span>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null
-                })()}
-
-                <a
-                  href={`https://www.dwds.de/wb/${encodeURIComponent(detailCard.frage.replace(/^(die|der|das)\s+/, ''))}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs px-3 py-1.5 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-300 hover:bg-blue-600/30 transition inline-block"
-                >
-                  Im DWDS nachschlagen →
-                </a>
-              </>
-            )}
-
-            <div>
-              <label className="text-slate-400 text-sm font-medium block mb-2">Notizen / Mnemonik</label>
-              <textarea
-                value={detailNotiz}
-                onChange={(e) => setDetailNotiz(e.target.value)}
-                placeholder="Eselsbrücke, Beispielsatz oder eigene Notizen..."
-                rows={3}
-                className="w-full px-3 py-2 rounded-lg bg-[#0a0a1a] border border-[#2a2a4a] text-slate-200 placeholder-slate-600 text-sm focus:outline-none focus:border-green-500 transition resize-none"
-              />
-            </div>
-
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => setDetailCard(null)}
-                className="px-4 py-2 rounded-lg text-slate-400 hover:bg-[#1e1e3a] transition cursor-pointer"
-              >
-                Schließen
-              </button>
-              <button
-                onClick={saveNotiz}
-                disabled={detailSaving}
-                className="px-5 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-medium transition cursor-pointer"
-              >
-                {detailSaving ? 'Speichert...' : 'Speichern'}
-              </button>
+              <div className="flex gap-2 justify-end">
+                <button onClick={() => setDetailCard(null)} className="px-4 py-2 rounded-lg text-slate-400 hover:bg-[#1e1e3a] transition cursor-pointer">Schließen</button>
+                <button onClick={saveNotiz} disabled={detailSaving} className="px-5 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-medium transition cursor-pointer">
+                  {detailSaving ? 'Speichert...' : 'Speichern'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Toast */}
       {toast && (
