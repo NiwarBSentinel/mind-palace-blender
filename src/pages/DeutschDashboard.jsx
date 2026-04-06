@@ -1,24 +1,25 @@
 import { useNavigate } from 'react-router-dom'
 
+const levels = [
+  { level: 'A1', name: 'Anfänger', color: 'green', active: false },
+  { level: 'A2', name: 'Grundlegende Kenntnisse', color: 'teal', active: false },
+  { level: 'B1', name: 'Mittelstufe', color: 'blue', active: false },
+  { level: 'B2', name: 'Obere Mittelstufe', color: 'indigo', active: false },
+  { level: 'C1', name: 'Fortgeschritten', color: 'purple', active: true, vocPath: '/deutsch-c1', cardPath: '/sprachen/deutsch/lernkarten' },
+  { level: 'C2', name: 'Experte', color: 'red', active: false },
+]
+
+const colorClasses = {
+  green:  { border: 'border-b-green-500',  badge: 'bg-green-500/20 text-green-300',  text: 'text-green-400',  btn: 'bg-green-600 hover:bg-green-500' },
+  teal:   { border: 'border-b-teal-500',   badge: 'bg-teal-500/20 text-teal-300',    text: 'text-teal-400',   btn: 'bg-teal-600 hover:bg-teal-500' },
+  blue:   { border: 'border-b-blue-500',   badge: 'bg-blue-500/20 text-blue-300',    text: 'text-blue-400',   btn: 'bg-blue-600 hover:bg-blue-500' },
+  indigo: { border: 'border-b-indigo-500', badge: 'bg-indigo-500/20 text-indigo-300', text: 'text-indigo-400', btn: 'bg-indigo-600 hover:bg-indigo-500' },
+  purple: { border: 'border-b-purple-500', badge: 'bg-purple-500/20 text-purple-300', text: 'text-purple-400', btn: 'bg-purple-600 hover:bg-purple-500' },
+  red:    { border: 'border-b-red-500',    badge: 'bg-red-500/20 text-red-300',      text: 'text-red-400',    btn: 'bg-red-600 hover:bg-red-500' },
+}
+
 export default function DeutschDashboard() {
   const navigate = useNavigate()
-
-  const modes = [
-    {
-      emoji: '📖',
-      title: 'C1 Vokabeltrainer',
-      desc: '204 Wörter mit SRS, Synonymen und Grammatik',
-      path: '/deutsch-c1',
-      color: 'blue',
-    },
-    {
-      emoji: '🃏',
-      title: 'Lernkarten Deutsch',
-      desc: 'Alle Deutsch-Lernkarten an einem Ort',
-      path: '/sprachen/deutsch/lernkarten',
-      color: 'green',
-    },
-  ]
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -29,31 +30,60 @@ export default function DeutschDashboard() {
         ← Zurück zu Sprachen
       </button>
 
-      <h1 className="text-3xl font-bold text-center mb-2 bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
+      <h1 className="text-3xl font-bold text-center mb-2 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
         🇩🇪 Deutsch
       </h1>
       <p className="text-center text-slate-400 mb-10">
-        C1 Niveau Wortschatz und Lernkarten
+        Wähle dein Niveau
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
-        {modes.map((mode) => (
-          <div
-            key={mode.path}
-            onClick={() => navigate(mode.path)}
-            className={`p-8 rounded-xl bg-[#12122a] border border-[#1e1e3a] border-b-2 ${
-              mode.color === 'blue' ? 'border-b-blue-500 hover:border-blue-500/50 hover:shadow-blue-500/10' : 'border-b-green-500 hover:border-green-500/50 hover:shadow-green-500/10'
-            } cursor-pointer transition-all duration-300 group flex flex-col items-center text-center hover:scale-[1.02] hover:shadow-xl hover:bg-[#13132e]`}
-          >
-            <div className="text-5xl mb-4 transition-transform duration-300 group-hover:scale-110">{mode.emoji}</div>
-            <h2 className={`text-xl font-bold text-slate-200 transition mb-2 ${
-              mode.color === 'blue' ? 'group-hover:text-blue-300' : 'group-hover:text-green-300'
-            }`}>
-              {mode.title}
-            </h2>
-            <p className="text-slate-400 text-sm">{mode.desc}</p>
-          </div>
-        ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {levels.map((l) => {
+          const c = colorClasses[l.color]
+          return (
+            <div
+              key={l.level}
+              className={`rounded-xl bg-[#12122a] border border-[#1e1e3a] border-b-2 ${c.border} overflow-hidden ${l.active ? '' : 'opacity-60'}`}
+            >
+              <div className="p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className={`text-2xl font-extrabold ${c.text}`}>{l.level}</span>
+                  {!l.active && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-500/20 text-slate-500">Kommt bald</span>
+                  )}
+                </div>
+                <div className="text-slate-200 font-medium text-sm mb-4">{l.name}</div>
+                <div className="flex gap-2">
+                  {l.active ? (
+                    <>
+                      <button
+                        onClick={() => navigate(l.vocPath)}
+                        className={`flex-1 px-3 py-2 rounded-lg ${c.btn} text-white text-xs font-medium transition cursor-pointer`}
+                      >
+                        📖 Vokabeln
+                      </button>
+                      <button
+                        onClick={() => navigate(l.cardPath)}
+                        className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] text-xs font-medium transition cursor-pointer"
+                      >
+                        🃏 Lernkarten
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">
+                        📖 Vokabeln
+                      </div>
+                      <div className="flex-1 px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">
+                        🃏 Lernkarten
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
