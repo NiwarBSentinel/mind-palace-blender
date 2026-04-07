@@ -57,20 +57,23 @@ export default function RouteEditor() {
     load()
   }, [id])
 
-  // Init map
+  // Init map once route is loaded and the div is in the DOM
   useEffect(() => {
-    if (mapInstanceRef.current || !mapRef.current) return
+    if (!route || mapInstanceRef.current || !mapRef.current) return
     const map = L.map(mapRef.current).setView([47.0, 8.3], 8)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
     }).addTo(map)
     mapInstanceRef.current = map
 
+    // Fix tile rendering after container becomes visible
+    setTimeout(() => map.invalidateSize(), 100)
+
     return () => {
       map.remove()
       mapInstanceRef.current = null
     }
-  }, [])
+  }, [route])
 
   // Handle map clicks in edit mode
   useEffect(() => {
@@ -85,7 +88,7 @@ export default function RouteEditor() {
     }
     map.on('click', onClick)
     return () => map.off('click', onClick)
-  }, [editMode])
+  }, [editMode, route])
 
   // Render markers + polyline when loci change
   useEffect(() => {
