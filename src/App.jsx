@@ -26,6 +26,7 @@ import MemoryGame from './pages/MemoryGame'
 import ZeitdruckQuiz from './pages/ZeitdruckQuiz'
 import ArtikelTrainer from './pages/ArtikelTrainer'
 import VerbKasusTrainer from './pages/VerbKasusTrainer'
+import Raetsel from './pages/Raetsel'
 import Login from './pages/Login'
 import AuthCallback from './pages/AuthCallback'
 import UserDashboard from './pages/UserDashboard'
@@ -60,6 +61,7 @@ export default function App() {
           <Route path="/lernkarten/practice" element={<LernkartenPractice />} />
           <Route path="/peglist" element={<PegList />} />
           <Route path="/trivia" element={<Trivia />} />
+          <Route path="/raetsel" element={<Raetsel />} />
           <Route path="/sprachen" element={<SprachenDashboard />} />
           <Route path="/sprachen/deutsch" element={<DeutschDashboard />} />
           <Route path="/sprachen/deutsch/lernkarten" element={<DeutschLernkarten />} />

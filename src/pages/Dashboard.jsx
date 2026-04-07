@@ -33,6 +33,14 @@ const groups = [
     color: 'red',
     path: '/trivia',
   },
+  {
+    key: 'raetsel',
+    emoji: '🧩',
+    title: 'Rätsel',
+    desc: 'Logikrätsel & Scherzfragen zum Knobeln',
+    color: 'orange',
+    path: '/raetsel',
+  },
 ]
 
 const colorMap = {
@@ -53,6 +61,12 @@ const colorMap = {
     hoverBorder: 'hover:border-red-500/50',
     hoverText: 'group-hover:text-red-300',
     shadow: 'hover:shadow-red-500/20',
+  },
+  orange: {
+    border: 'border-b-orange-500',
+    hoverBorder: 'hover:border-orange-500/50',
+    hoverText: 'group-hover:text-orange-300',
+    shadow: 'hover:shadow-orange-500/20',
   },
   teal: {
     border: 'border-b-teal-500',
@@ -81,7 +95,7 @@ export default function Dashboard() {
           Dein persönliches Gedächtnissystem
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-3xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
           {groups.map((g) => {
             const c = colorMap[g.color]
             return (
