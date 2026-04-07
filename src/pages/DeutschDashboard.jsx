@@ -96,6 +96,26 @@ export default function DeutschDashboard() {
           )
         })}
       </div>
+
+      <h2 className="text-lg font-semibold text-slate-300 mt-10 mb-4">Grammatik-Trainer</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div
+          onClick={() => navigate('/sprachen/deutsch/artikel')}
+          className="p-5 rounded-xl bg-[#12122a] border border-[#1e1e3a] border-b-2 border-b-teal-500 hover:border-teal-500/50 cursor-pointer transition-all duration-200 hover:bg-[#16163a] group"
+        >
+          <div className="text-2xl mb-2">📝</div>
+          <h3 className="text-base font-bold text-slate-200 group-hover:text-teal-300 transition mb-1">Artikel-Trainer</h3>
+          <p className="text-slate-400 text-xs">der, die, das — Genus üben</p>
+        </div>
+        <div
+          onClick={() => navigate('/sprachen/deutsch/verb-kasus')}
+          className="p-5 rounded-xl bg-[#12122a] border border-[#1e1e3a] border-b-2 border-b-purple-500 hover:border-purple-500/50 cursor-pointer transition-all duration-200 hover:bg-[#16163a] group"
+        >
+          <div className="text-2xl mb-2">🔀</div>
+          <h3 className="text-base font-bold text-slate-200 group-hover:text-purple-300 transition mb-1">Verben mit Kasus</h3>
+          <p className="text-slate-400 text-xs">Genitiv & Dativ — welchen Kasus verlangt das Verb?</p>
+        </div>
+      </div>
     </div>
   )
 }
