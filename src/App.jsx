@@ -27,6 +27,7 @@ import ZeitdruckQuiz from './pages/ZeitdruckQuiz'
 import ArtikelTrainer from './pages/ArtikelTrainer'
 import VerbKasusTrainer from './pages/VerbKasusTrainer'
 import Raetsel from './pages/Raetsel'
+import Geographie from './pages/Geographie'
 import Login from './pages/Login'
 import AuthCallback from './pages/AuthCallback'
 import UserDashboard from './pages/UserDashboard'
@@ -62,6 +63,7 @@ export default function App() {
           <Route path="/peglist" element={<PegList />} />
           <Route path="/trivia" element={<Trivia />} />
           <Route path="/raetsel" element={<Raetsel />} />
+          <Route path="/geographie" element={<Geographie />} />
           <Route path="/sprachen" element={<SprachenDashboard />} />
           <Route path="/sprachen/deutsch" element={<DeutschDashboard />} />
           <Route path="/sprachen/deutsch/lernkarten" element={<DeutschLernkarten />} />

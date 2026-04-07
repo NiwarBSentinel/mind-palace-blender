@@ -41,6 +41,14 @@ const groups = [
     color: 'orange',
     path: '/raetsel',
   },
+  {
+    key: 'geographie',
+    emoji: '🌐',
+    title: 'Geographie',
+    desc: 'Hauptstädte, Flaggen & Weltkarte interaktiv lernen',
+    color: 'cyan',
+    path: '/geographie',
+  },
 ]
 
 const colorMap = {
@@ -67,6 +75,12 @@ const colorMap = {
     hoverBorder: 'hover:border-orange-500/50',
     hoverText: 'group-hover:text-orange-300',
     shadow: 'hover:shadow-orange-500/20',
+  },
+  cyan: {
+    border: 'border-b-cyan-500',
+    hoverBorder: 'hover:border-cyan-500/50',
+    hoverText: 'group-hover:text-cyan-300',
+    shadow: 'hover:shadow-cyan-500/20',
   },
   teal: {
     border: 'border-b-teal-500',
