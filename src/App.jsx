@@ -30,6 +30,8 @@ import AuthCallback from './pages/AuthCallback'
 import UserDashboard from './pages/UserDashboard'
 import CreatePalace from './pages/CreatePalace'
 import CustomPalaceView from './pages/CustomPalaceView'
+import RoutesDashboard from './pages/RoutesDashboard'
+import RouteEditor from './pages/RouteEditor'
 
 export default function App() {
   return (
@@ -44,6 +46,8 @@ export default function App() {
           <Route path="/palaces" element={<PalaceDashboard />} />
           <Route path="/palace/:id" element={<Editor />} />
           <Route path="/practice/:id" element={<Practice />} />
+          <Route path="/routes" element={<RoutesDashboard />} />
+          <Route path="/routes/:id" element={<RouteEditor />} />
           <Route path="/bmp" element={<BMPDashboard />} />
           <Route path="/bmp/create" element={<CreatePalace />} />
           <Route path="/bmp/custom/:id" element={<CustomPalaceView />} />

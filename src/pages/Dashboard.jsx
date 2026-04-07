@@ -34,6 +34,16 @@ const modes = [
     color: 'green',
   },
   {
+    key: 'routes',
+    path: '/routes',
+    emoji: '🗺️',
+    title: 'Routen',
+    desc: 'Historische Routen auf der Karte mit Loci und Ereignissen',
+    table: 'routes',
+    statLabel: 'Routen',
+    color: 'amber',
+  },
+  {
     key: 'peglist',
     path: '/peglist',
     emoji: '🔢',
@@ -105,6 +115,14 @@ const colorMap = {
     shadow: 'hover:shadow-red-500/20',
     stat: 'text-red-400',
     statBg: 'bg-red-500/10',
+  },
+  amber: {
+    border: 'border-b-amber-500',
+    hoverBorder: 'hover:border-amber-500/50',
+    hoverText: 'group-hover:text-amber-300',
+    shadow: 'hover:shadow-amber-500/20',
+    stat: 'text-amber-400',
+    statBg: 'bg-amber-500/10',
   },
   teal: {
     border: 'border-b-teal-500',
