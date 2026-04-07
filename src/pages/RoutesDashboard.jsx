@@ -18,7 +18,10 @@ export default function RoutesDashboard() {
       .select('*, route_loci(id)')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .then(({ data }) => setRoutes(data || []))
+      .then(({ data, error }) => {
+        if (error) console.error('Supabase fetch routes error:', error)
+        setRoutes(data || [])
+      })
   }, [user])
 
   async function handleCreate(e) {
@@ -30,7 +33,9 @@ export default function RoutesDashboard() {
       .insert({ user_id: user.id, title: title.trim(), description: description.trim() })
       .select()
       .single()
-    if (!error && data) {
+    if (error) {
+      console.error('Supabase insert routes error:', error)
+    } else if (data) {
       navigate(`/routes/${data.id}`)
     }
     setLoading(false)
