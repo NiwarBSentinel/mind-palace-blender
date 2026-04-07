@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
+import { LocusFieldsEditable } from '../components/LocusFields'
 
 const BODY_DOTS = [
   { koerperteil: 'Kopf',       x: 150, y: 30,  labelX: 165, labelY: 34  },
@@ -177,6 +179,7 @@ function BodySilhouette({ rooms, expandedRoom, fillStats, onDotClick }) {
 export default function BMPEditor() {
   const { personId } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [person, setPerson] = useState(null)
   const [rooms, setRooms] = useState([])
   const [expandedRoom, setExpandedRoom] = useState(null)
@@ -407,6 +410,7 @@ export default function BMPEditor() {
                           rows={2}
                           className="w-full px-3 py-2 rounded bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-600 text-sm focus:outline-none focus:border-purple-500 transition resize-none"
                         />
+                        <LocusFieldsEditable palaceId={`bmp_${personId}`} locusId={`${roomIdx}_${locus.position}`} userId={user?.id} />
                       </div>
                     )
                   })}

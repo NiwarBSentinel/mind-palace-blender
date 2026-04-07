@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
+import LocusFields, { LocusFieldsEditable } from '../components/LocusFields'
 
 const EMOJIS = ['🏛️', '🏠', '🏰', '🏫', '🏢', '🏗️', '🌳', '🏔️', '🌊', '🚀', '🎭', '🎪', '📚', '🧪', '🔬', '🎨', '🎵', '⚽', '🧠', '💡', '🗺️', '🏝️', '🌌', '🔮']
 
 export default function CustomPalaceView() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [palace, setPalace] = useState(null)
   const [loading, setLoading] = useState(true)
   const [expandedRoom, setExpandedRoom] = useState(null)
@@ -177,11 +180,18 @@ export default function CustomPalaceView() {
                 {(room.loci || []).map((locus, locusIdx) => (
                   <div key={locusIdx} className="p-3 rounded-lg bg-[#0a0a1a] flex items-start gap-3">
                     <span className="text-purple-300 font-bold text-lg font-mono w-8 shrink-0">{locus.position}</span>
-                    {editing ? (
-                      <input type="text" value={locus.beschreibung} onChange={(e) => updateLocus(roomIdx, locusIdx, e.target.value)} className="flex-1 bg-transparent text-slate-200 border-b border-[#2a2a4a] focus:outline-none focus:border-purple-500 text-sm" />
-                    ) : (
-                      <span className="text-slate-200">{locus.beschreibung}</span>
-                    )}
+                    <div className="flex-1">
+                      {editing ? (
+                        <input type="text" value={locus.beschreibung} onChange={(e) => updateLocus(roomIdx, locusIdx, e.target.value)} className="w-full bg-transparent text-slate-200 border-b border-[#2a2a4a] focus:outline-none focus:border-purple-500 text-sm" />
+                      ) : (
+                        <span className="text-slate-200">{locus.beschreibung}</span>
+                      )}
+                      {editing ? (
+                        <LocusFieldsEditable palaceId={`custom_${id}`} locusId={`${roomIdx}_${locusIdx}`} userId={user?.id} />
+                      ) : (
+                        <LocusFields palaceId={`custom_${id}`} locusId={`${roomIdx}_${locusIdx}`} userId={user?.id} />
+                      )}
+                    </div>
                     {editing && (
                       <button onClick={() => deleteLocus(roomIdx, locusIdx)} className="text-red-400 hover:text-red-300 text-xs cursor-pointer shrink-0">×</button>
                     )}
