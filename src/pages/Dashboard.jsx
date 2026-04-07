@@ -146,9 +146,10 @@ export default function Dashboard() {
         modes.map(async (m) => {
           if (m.key === 'sprachen') return [m.key, null]
           if (!m.table) return [m.key, null]
-          const { count } = await supabase
+          const { count, error } = await supabase
             .from(m.table)
             .select('*', { count: 'exact', head: true })
+          if (error) return [m.key, 0]
           return [m.key, count ?? 0]
         })
       )
