@@ -1,18 +1,8 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { aufgaben } from '../data/verbKasusData'
 
-const aufgaben = [
-  {verb:"bedürfen", kasus:"Genitiv", satz:"Sie bedürfen ___ (die Hilfe).", antwort:"der Hilfe", optionen:["der Hilfe","die Hilfe","der Hilfen","ein Hilfe"]},
-  {verb:"helfen", kasus:"Dativ", satz:"Er hilft ___ (sein Bruder).", antwort:"seinem Bruder", optionen:["seinem Bruder","seinen Bruder","sein Bruder","dem Bruder sein"]},
-  {verb:"gedenken", kasus:"Genitiv", satz:"Wir gedenken ___ (die Opfer).", antwort:"der Opfer", optionen:["der Opfer","die Opfer","den Opfern","des Opfers"]},
-  {verb:"danken", kasus:"Dativ", satz:"Sie dankt ___ (ihre Lehrerin).", antwort:"ihrer Lehrerin", optionen:["ihrer Lehrerin","ihre Lehrerin","ihren Lehrerin","die Lehrerin"]},
-  {verb:"sich schämen", kasus:"Genitiv", satz:"Er schämt sich ___ (sein Fehler).", antwort:"seines Fehlers", optionen:["seines Fehlers","seinen Fehler","seinem Fehler","sein Fehler"]},
-  {verb:"folgen", kasus:"Dativ", satz:"Der Hund folgt ___ (das Kind).", antwort:"dem Kind", optionen:["dem Kind","das Kind","den Kindes","eines Kindes"]},
-  {verb:"sich bedienen", kasus:"Genitiv", satz:"Sie bedient sich ___ (ein Trick).", antwort:"eines Tricks", optionen:["eines Tricks","einen Trick","einem Trick","ein Trick"]},
-  {verb:"vertrauen", kasus:"Dativ", satz:"Ich vertraue ___ (mein Freund).", antwort:"meinem Freund", optionen:["meinem Freund","mein Freund","meines Freundes","meinen Freund"]},
-  {verb:"sich bemächtigen", kasus:"Genitiv", satz:"Er bemächtigt sich ___ (die Macht).", antwort:"der Macht", optionen:["der Macht","die Macht","den Mächten","einer Machts"]},
-  {verb:"begegnen", kasus:"Dativ", satz:"Wir begegnen ___ (eine Frau).", antwort:"einer Frau", optionen:["eine Frau","einer Frau","einer Frauen","den Frau"]},
-]
+const ROUND_SIZE = 10
 
 function shuffle(arr) {
   const a = [...arr]
@@ -33,7 +23,7 @@ export default function VerbKasusTrainer() {
 
   const filtered = useMemo(() => {
     const list = filter === 'Alle' ? aufgaben : aufgaben.filter((a) => a.kasus === filter)
-    return shuffle(list)
+    return shuffle(list).slice(0, ROUND_SIZE)
   }, [filter, roundKey])
 
   const done = index >= filtered.length
