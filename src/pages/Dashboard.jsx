@@ -24,16 +24,6 @@ const modes = [
     color: 'blue',
   },
   {
-    key: 'lernkarten',
-    path: '/lernkarten',
-    emoji: '🃏',
-    title: 'Lernkarten',
-    desc: 'Fragen & Antworten mit Mnemonik und Major-System Hilfe',
-    table: 'lernkarten',
-    statLabel: 'Karten',
-    color: 'green',
-  },
-  {
     key: 'routes',
     path: '/routes',
     emoji: '🗺️',
@@ -54,14 +44,14 @@ const modes = [
     color: 'orange',
   },
   {
-    key: 'trivia',
-    path: '/trivia',
-    emoji: '🎯',
-    title: 'Trivia',
-    desc: 'Allgemeinwissen testen mit tausenden Fragen',
-    table: null,
-    statLabel: null,
-    color: 'red',
+    key: 'lernkarten',
+    path: '/lernkarten',
+    emoji: '🃏',
+    title: 'Lernkarten',
+    desc: 'Fragen & Antworten mit Mnemonik und Major-System Hilfe',
+    table: 'lernkarten',
+    statLabel: 'Karten',
+    color: 'green',
   },
   {
     key: 'sprachen',
@@ -73,7 +63,26 @@ const modes = [
     statLabel: null,
     color: 'teal',
   },
+  {
+    key: 'trivia',
+    path: '/trivia',
+    emoji: '🎯',
+    title: 'Trivia',
+    desc: 'Allgemeinwissen testen mit tausenden Fragen',
+    table: null,
+    statLabel: null,
+    color: 'red',
+  },
 ]
+
+const groups = [
+  { label: 'Mnemotechnik', keys: ['palaces', 'bmp', 'routes', 'peglist'] },
+  { label: 'Lernkarten', keys: ['lernkarten'] },
+  { label: 'Sprachen', keys: ['sprachen'] },
+  { label: 'Trivia', keys: ['trivia'] },
+]
+
+const modesByKey = Object.fromEntries(modes.map((m) => [m.key, m]))
 
 const colorMap = {
   purple: {
@@ -182,40 +191,48 @@ export default function Dashboard() {
           Dein persönliches Gedächtnissystem
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
-          {modes.map((mode) => {
-            const c = colorMap[mode.color]
-            const count = stats[mode.key]
-            return (
-              <div
-                key={mode.key}
-                onClick={() => navigate(mode.path)}
-                className={`relative p-8 rounded-2xl bg-[#0f0f25]/80 backdrop-blur border border-[#1e1e3a] border-b-2 ${c.border} ${c.hoverBorder} cursor-pointer transition-all duration-300 group flex flex-col items-center text-center hover:scale-[1.03] hover:shadow-xl ${c.shadow} hover:bg-[#13132e]`}
-              >
-                <div className="text-5xl mb-5 transition-transform duration-300 group-hover:scale-110">
-                  {mode.emoji}
-                </div>
-                <h2 className={`text-xl font-bold text-slate-200 ${c.hoverText} transition mb-2`}>
-                  {mode.title}
-                </h2>
-                <p className="text-slate-400 text-sm leading-relaxed mb-5">
-                  {mode.desc}
-                </p>
-                <div className={`mt-auto px-3 py-1.5 rounded-full text-xs font-medium ${c.stat} ${c.statBg}`}>
-                  {mode.key === 'lernkarten' && dueCount > 0
-                    ? `${dueCount} heute fällig`
-                    : mode.key === 'peglist'
-                      ? '101 Einträge'
-                      : mode.key === 'sprachen'
-                        ? '1 Sprache'
-                        : mode.statLabel
-                          ? (count !== undefined ? `${count} ${mode.statLabel}` : '...')
-                          : 'Spielen'
-                  }
-                </div>
+        <div className="w-full max-w-5xl space-y-10">
+          {groups.map((group) => (
+            <div key={group.label}>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-widest mb-4">{group.label}</p>
+              <div className={`grid gap-6 ${group.keys.length === 1 ? 'grid-cols-1 max-w-sm' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+                {group.keys.map((key) => {
+                  const mode = modesByKey[key]
+                  const c = colorMap[mode.color]
+                  const count = stats[mode.key]
+                  return (
+                    <div
+                      key={mode.key}
+                      onClick={() => navigate(mode.path)}
+                      className={`relative p-8 rounded-2xl bg-[#0f0f25]/80 backdrop-blur border border-[#1e1e3a] border-b-2 ${c.border} ${c.hoverBorder} cursor-pointer transition-all duration-300 group flex flex-col items-center text-center hover:scale-[1.03] hover:shadow-xl ${c.shadow} hover:bg-[#13132e]`}
+                    >
+                      <div className="text-5xl mb-5 transition-transform duration-300 group-hover:scale-110">
+                        {mode.emoji}
+                      </div>
+                      <h2 className={`text-xl font-bold text-slate-200 ${c.hoverText} transition mb-2`}>
+                        {mode.title}
+                      </h2>
+                      <p className="text-slate-400 text-sm leading-relaxed mb-5">
+                        {mode.desc}
+                      </p>
+                      <div className={`mt-auto px-3 py-1.5 rounded-full text-xs font-medium ${c.stat} ${c.statBg}`}>
+                        {mode.key === 'lernkarten' && dueCount > 0
+                          ? `${dueCount} heute fällig`
+                          : mode.key === 'peglist'
+                            ? '101 Einträge'
+                            : mode.key === 'sprachen'
+                              ? '1 Sprache'
+                              : mode.statLabel
+                                ? (count !== undefined ? `${count} ${mode.statLabel}` : '...')
+                                : 'Spielen'
+                        }
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
-            )
-          })}
+            </div>
+          ))}
         </div>
       </div>
 
