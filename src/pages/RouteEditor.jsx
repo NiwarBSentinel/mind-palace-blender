@@ -185,7 +185,7 @@ export default function RouteEditor() {
                   : 'bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a]'
               }`}
             >
-              {editMode ? 'Bearbeiten' : 'Ansehen'}
+              {editMode ? 'Ansehen' : 'Bearbeiten'}
             </button>
             <button
               onClick={handleDeleteRoute}
