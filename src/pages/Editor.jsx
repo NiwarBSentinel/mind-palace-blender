@@ -740,7 +740,7 @@ function ImageMapSection({ palace, markers, rooms, imgRef, uploading, dragging, 
                   )}
                   <button
                     onClick={(e) => deleteMarker(marker.id, e)}
-                    className="absolute -top-2 -right-2 w-6 h-6 sm:w-5 sm:h-5 rounded-full bg-red-600 text-white text-[10px] sm:text-[9px] flex items-center justify-center opacity-0 group-hover/marker:opacity-100 transition cursor-pointer hover:bg-red-500"
+                    className="absolute -top-2 -right-2 w-6 h-6 sm:w-5 sm:h-5 rounded-full bg-red-600 text-white text-[10px] sm:text-[9px] flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover/marker:opacity-100 transition cursor-pointer hover:bg-red-500"
                   >
                     ✕
                   </button>
