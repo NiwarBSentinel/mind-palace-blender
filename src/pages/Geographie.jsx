@@ -178,7 +178,10 @@ export default function Geographie() {
             {tab === 'Hauptstädte' && (
               <>
                 <p className="text-slate-300 text-sm mb-1">Was ist die Hauptstadt von:</p>
-                <h3 className="text-2xl font-bold text-cyan-300 mb-6">{current.flagge} {current.de}</h3>
+                <div className="flex items-center gap-3 mb-6">
+                  <img src={`https://flagcdn.com/w40/${current.flagge}.png`} alt={current.de} style={{width:40,height:'auto',borderRadius:4}} />
+                  <h3 className="text-2xl font-bold text-cyan-300">{current.de}</h3>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {options.map((opt) => {
                     let cls = 'bg-[#0a0a1a] border border-[#2a2a4a] text-slate-200 hover:border-cyan-500/50 hover:bg-[#16163a]'
@@ -209,8 +212,8 @@ export default function Geographie() {
             {/* === FLAGGEN === */}
             {tab === 'Flaggen' && (
               <>
-                <p className="text-slate-300 text-sm mb-1">Welches Land hat diese Flagge?</p>
-                <div className="text-7xl mb-6">{current.flagge}</div>
+                <p className="text-slate-300 text-sm mb-3">Welches Land hat diese Flagge?</p>
+                <img src={`https://flagcdn.com/w160/${current.flagge}.png`} alt={current.de} style={{width:160,height:'auto',borderRadius:6,marginBottom:'1rem'}} />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {options.map((opt) => {
                     let cls = 'bg-[#0a0a1a] border border-[#2a2a4a] text-slate-200 hover:border-cyan-500/50 hover:bg-[#16163a]'
@@ -242,7 +245,10 @@ export default function Geographie() {
             {tab === 'Karte' && (
               <>
                 <p className="text-slate-300 text-sm mb-1">Finde dieses Land auf der Karte:</p>
-                <h3 className="text-2xl font-bold text-orange-400 mb-4">{current.flagge} {current.de}</h3>
+                <div className="flex items-center gap-3 mb-4">
+                  <img src={`https://flagcdn.com/w40/${current.flagge}.png`} alt={current.de} style={{width:40,height:'auto',borderRadius:4}} />
+                  <h3 className="text-2xl font-bold text-orange-400">{current.de}</h3>
+                </div>
                 <div className="rounded-xl overflow-hidden border border-[#1e1e3a] bg-[#0a0a1a]" style={{ height: 400 }}>
                   <ComposableMap
                     projectionConfig={{ scale: 147 }}
