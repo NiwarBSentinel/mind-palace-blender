@@ -71,16 +71,19 @@ export default function Editor() {
     const file = e.target.files?.[0]
     if (!file) return
     setUploading(true)
-    const ext = file.name.split('.').pop()
-    const path = `${id}.${ext}`
+    // Use a fixed filename per palace to avoid orphaned files
+    const path = `${id}`
     const { error: upErr } = await supabase.storage
       .from('palace-images')
-      .upload(path, file, { upsert: true })
+      .upload(path, file, { upsert: true, contentType: file.type })
     if (upErr) { console.error('upload error:', upErr); setUploading(false); return }
     const { data: urlData } = supabase.storage.from('palace-images').getPublicUrl(path)
-    const image_url = urlData.publicUrl + '?t=' + Date.now()
-    await supabase.from('palaces').update({ image_url }).eq('id', id)
-    setPalace((p) => ({ ...p, image_url }))
+    const image_url = urlData.publicUrl
+    console.log('Saved image_url:', image_url)
+    const { error: dbErr } = await supabase.from('palaces').update({ image_url }).eq('id', id)
+    if (dbErr) console.error('save image_url error:', dbErr)
+    // Add cache buster only for display, not stored in DB
+    setPalace((p) => ({ ...p, image_url: image_url + '?t=' + Date.now() }))
     setUploading(false)
   }
 
