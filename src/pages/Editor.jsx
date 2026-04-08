@@ -103,27 +103,35 @@ export default function Editor() {
     if (!error && data) setMarkers((prev) => [...prev, data])
   }
 
-  function handleMarkerMouseDown(e, marker) {
+  function handleMarkerPointerDown(e, marker) {
     e.stopPropagation()
     e.preventDefault()
     setDragging(marker.id)
     const rect = imgRef.current.getBoundingClientRect()
 
+    function getPos(ev) {
+      const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX
+      const clientY = ev.touches ? ev.touches[0].clientY : ev.clientY
+      return {
+        x: Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100)),
+        y: Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100)),
+      }
+    }
+
     function onMove(ev) {
-      const x = ((ev.clientX - rect.left) / rect.width) * 100
-      const y = ((ev.clientY - rect.top) / rect.height) * 100
-      const clamped_x = Math.max(0, Math.min(100, x))
-      const clamped_y = Math.max(0, Math.min(100, y))
+      ev.preventDefault()
+      const { x, y } = getPos(ev)
       setMarkers((prev) => prev.map((m) =>
-        m.id === marker.id ? { ...m, x_percent: clamped_x, y_percent: clamped_y } : m
+        m.id === marker.id ? { ...m, x_percent: x, y_percent: y } : m
       ))
     }
 
     function onUp() {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
+      window.removeEventListener('touchmove', onMove)
+      window.removeEventListener('touchend', onUp)
       setDragging(null)
-      // Save uses latest from state via markers ref
       setMarkers((prev) => {
         const m = prev.find((mk) => mk.id === marker.id)
         if (m) {
@@ -140,6 +148,8 @@ export default function Editor() {
 
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
+    window.addEventListener('touchmove', onMove, { passive: false })
+    window.addEventListener('touchend', onUp)
   }
 
   async function deleteMarker(markerId, e) {
@@ -319,7 +329,7 @@ export default function Editor() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 pt-14 pb-8">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <button
             onClick={() => navigate('/palaces')}
@@ -327,14 +337,14 @@ export default function Editor() {
           >
             ← Alle Paläste
           </button>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
             {palace?.name}
           </h1>
           {palace?.beschreibung && (
             <p className="text-slate-400 text-sm mt-1">{palace.beschreibung}</p>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 shrink-0">
           {user && rooms.length > 0 && (
             <button
               onClick={shareAsTemplate}
@@ -354,6 +364,24 @@ export default function Editor() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Mobile: Image map first */}
+        <div className="lg:hidden">
+          <ImageMapSection
+            palace={palace}
+            markers={markers}
+            rooms={rooms}
+            imgRef={imgRef}
+            uploading={uploading}
+            dragging={dragging}
+            highlightedRoom={highlightedRoom}
+            handleImageClick={handleImageClick}
+            handleMarkerPointerDown={handleMarkerPointerDown}
+            handleMarkerClick={handleMarkerClick}
+            deleteMarker={deleteMarker}
+            handleImageUpload={handleImageUpload}
+          />
+        </div>
+
         {/* Left: Room list (60%) */}
         <div className="lg:col-span-3">
           <form onSubmit={addRoom} className="flex gap-3 mb-6">
@@ -448,7 +476,7 @@ export default function Editor() {
                               className="p-3 rounded-lg bg-[#0a0a1a] group"
                             >
                               <div className="flex items-start justify-between">
-                                <div className="flex-1 grid grid-cols-6 gap-2 text-sm">
+                                <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-sm">
                                   <div>
                                     <span className="text-slate-500 text-xs">Pos</span>
                                     <div className="text-purple-300 font-bold">{locus.position}</div>
@@ -525,71 +553,23 @@ export default function Editor() {
           )}
         </div>
 
-        {/* Right: Image map (40%) */}
-        <div className="lg:col-span-2">
+        {/* Right: Image map (40%) – desktop only */}
+        <div className="hidden lg:block lg:col-span-2">
           <div className="sticky top-16">
-            <h3 className="text-sm font-semibold text-slate-300 mb-3">Palast-Bild</h3>
-            {palace?.image_url ? (
-              <div className="space-y-2">
-                <div
-                  className="relative rounded-xl overflow-hidden border border-[#1e1e3a] cursor-crosshair select-none"
-                  onClick={handleImageClick}
-                >
-                  <img
-                    ref={imgRef}
-                    src={palace.image_url}
-                    alt="Palace"
-                    className="w-full block"
-                    draggable={false}
-                  />
-                  {markers.map((marker) => {
-                    const room = rooms[marker.room_index - 1]
-                    return (
-                      <div
-                        key={marker.id}
-                        className="absolute group/marker"
-                        style={{ left: `${marker.x_percent}%`, top: `${marker.y_percent}%`, transform: 'translate(-50%, -50%)' }}
-                        onMouseDown={(e) => handleMarkerMouseDown(e, marker)}
-                        onClick={(e) => handleMarkerClick(marker, e)}
-                      >
-                        <div className="w-7 h-7 rounded-full bg-purple-600 border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold cursor-grab active:cursor-grabbing hover:bg-purple-500 transition">
-                          {marker.room_index}
-                        </div>
-                        {room && (
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 rounded bg-[#0a0a1a] border border-[#2a2a4a] text-xs text-slate-200 whitespace-nowrap opacity-0 group-hover/marker:opacity-100 transition pointer-events-none">
-                            {room.name}
-                          </div>
-                        )}
-                        <button
-                          onClick={(e) => deleteMarker(marker.id, e)}
-                          className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-600 text-white text-[8px] flex items-center justify-center opacity-0 group-hover/marker:opacity-100 transition cursor-pointer hover:bg-red-500"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    )
-                  })}
-                </div>
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-slate-500">
-                    Klicke aufs Bild, um Raum-Marker zu platzieren. Marker sind verschiebbar.
-                  </p>
-                  <label className="text-xs text-purple-400 hover:text-purple-300 cursor-pointer transition">
-                    Bild ändern
-                    <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                  </label>
-                </div>
-              </div>
-            ) : (
-              <label className="block rounded-xl border-2 border-dashed border-[#2a2a4a] hover:border-purple-500/40 p-10 text-center cursor-pointer transition group">
-                <div className="text-4xl mb-3 opacity-40 group-hover:opacity-70 transition">🖼️</div>
-                <p className="text-slate-500 text-sm mb-1 group-hover:text-slate-400 transition">
-                  {uploading ? 'Wird hochgeladen...' : 'Bild hochladen'}
-                </p>
-                <p className="text-slate-600 text-xs">Grundriss, Spielkarte, Foto...</p>
-                <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploading} />
-              </label>
-            )}
+            <ImageMapSection
+              palace={palace}
+              markers={markers}
+              rooms={rooms}
+              imgRef={imgRef}
+              uploading={uploading}
+              dragging={dragging}
+              highlightedRoom={highlightedRoom}
+              handleImageClick={handleImageClick}
+              handleMarkerPointerDown={handleMarkerPointerDown}
+              handleMarkerClick={handleMarkerClick}
+              deleteMarker={deleteMarker}
+              handleImageUpload={handleImageUpload}
+            />
           </div>
         </div>
       </div>
@@ -605,7 +585,7 @@ function LocusFormComponent({ form, setForm, onSave, onCancel }) {
 
   return (
     <form onSubmit={onSave} className="p-3 rounded-lg bg-[#0a0a1a] border border-purple-500/20 space-y-3">
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <input
           type="number"
           placeholder="Position"
@@ -628,7 +608,7 @@ function LocusFormComponent({ form, setForm, onSave, onCancel }) {
           className="px-3 py-2 rounded bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500 transition"
         />
       </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <input
           type="text"
           placeholder="Objekt"
@@ -675,5 +655,76 @@ function LocusFormComponent({ form, setForm, onSave, onCancel }) {
         </button>
       </div>
     </form>
+  )
+}
+
+function ImageMapSection({ palace, markers, rooms, imgRef, uploading, handleImageClick, handleMarkerPointerDown, handleMarkerClick, deleteMarker, handleImageUpload }) {
+  return (
+    <div>
+      <h3 className="text-sm font-semibold text-slate-300 mb-3">Palast-Bild</h3>
+      {palace?.image_url ? (
+        <div className="space-y-2">
+          <div
+            className="relative rounded-xl overflow-hidden border border-[#1e1e3a] cursor-crosshair select-none"
+            style={{ touchAction: 'pan-x pan-y' }}
+            onClick={handleImageClick}
+          >
+            <img
+              ref={imgRef}
+              src={palace.image_url}
+              alt="Palace"
+              className="w-full block"
+              draggable={false}
+            />
+            {markers.map((marker) => {
+              const room = rooms[marker.room_index - 1]
+              return (
+                <div
+                  key={marker.id}
+                  className="absolute group/marker"
+                  style={{ left: `${marker.x_percent}%`, top: `${marker.y_percent}%`, transform: 'translate(-50%, -50%)', touchAction: 'none' }}
+                  onMouseDown={(e) => handleMarkerPointerDown(e, marker)}
+                  onTouchStart={(e) => handleMarkerPointerDown(e, marker)}
+                  onClick={(e) => handleMarkerClick(marker, e)}
+                >
+                  <div className="w-9 h-9 sm:w-7 sm:h-7 rounded-full bg-purple-600 border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold cursor-grab active:cursor-grabbing hover:bg-purple-500 transition">
+                    {marker.room_index}
+                  </div>
+                  {room && (
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 rounded bg-[#0a0a1a] border border-[#2a2a4a] text-xs text-slate-200 whitespace-nowrap opacity-0 group-hover/marker:opacity-100 transition pointer-events-none">
+                      {room.name}
+                    </div>
+                  )}
+                  <button
+                    onClick={(e) => deleteMarker(marker.id, e)}
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 sm:w-4 sm:h-4 rounded-full bg-red-600 text-white text-[9px] sm:text-[8px] flex items-center justify-center opacity-0 group-hover/marker:opacity-100 transition cursor-pointer hover:bg-red-500"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-slate-500">
+              Tippe aufs Bild, um Marker zu setzen. Marker sind verschiebbar.
+            </p>
+            <label className="text-xs text-purple-400 hover:text-purple-300 cursor-pointer transition shrink-0 ml-2">
+              Bild ändern
+              <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+            </label>
+          </div>
+        </div>
+      ) : (
+        <label className="block rounded-xl border-2 border-dashed border-[#2a2a4a] hover:border-purple-500/40 p-10 text-center cursor-pointer transition group">
+          <div className="text-4xl mb-3 opacity-40 group-hover:opacity-70 transition">🖼️</div>
+          <p className="text-slate-500 text-sm mb-1 group-hover:text-slate-400 transition">
+            {uploading ? 'Wird hochgeladen...' : 'Bild hochladen'}
+          </p>
+          <p className="text-slate-600 text-xs">Grundriss, Spielkarte, Foto...</p>
+          <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploading} />
+        </label>
+      )}
+    </div>
   )
 }
