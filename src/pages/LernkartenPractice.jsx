@@ -70,7 +70,8 @@ export default function LernkartenPractice() {
       card.interval_days || 1,
       card.ease_factor || 2.5
     )
-    await supabase.from('lernkarten').update(update).eq('id', card.id)
+    const { error } = await supabase.from('lernkarten').update(update).eq('id', card.id)
+    if (error) console.error('update lernkarten SRS error:', error)
 
     const key = quality === 0 ? 'schwer' : quality === 3 ? 'ok' : 'einfach'
     setResults((prev) => ({ ...prev, [key]: [...prev[key], card.id] }))

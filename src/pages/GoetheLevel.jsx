@@ -101,8 +101,7 @@ export default function GoetheLevel() {
     if (user) payload.user_id = user.id
     console.log('saveToLernkarten', { user_id: user?.id, wort: w.wort })
     const { error } = await supabase.from('lernkarten').insert(payload)
-    if (error) console.error('saveToLernkarten error:', error)
-    if (error) console.error('save error:', error)
+    if (error) { console.error('saveToLernkarten error:', error); return }
     setToast('Lernkarte gespeichert!')
     setTimeout(() => setToast(null), 2500)
   }

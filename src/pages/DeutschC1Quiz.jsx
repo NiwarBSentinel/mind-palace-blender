@@ -298,7 +298,7 @@ export default function DeutschC1Quiz() {
             }
             return (
               <button
-                key={i}
+                key={answer.text}
                 onClick={() => handleAnswer(answer)}
                 disabled={selected !== null}
                 className={`p-4 rounded-xl font-medium text-left transition cursor-pointer text-sm ${btnClass}`}
@@ -331,8 +331,8 @@ export default function DeutschC1Quiz() {
           <div className="text-left mb-8">
             <h3 className="text-slate-400 text-sm font-medium mb-3">Falsche Antworten:</h3>
             <ul className="space-y-2">
-              {wrong.map((w, i) => (
-                <li key={i} className="p-3 rounded-lg bg-red-600/10 border border-red-500/20">
+              {wrong.map((w) => (
+                <li key={w.wort} className="p-3 rounded-lg bg-red-600/10 border border-red-500/20">
                   <div className="text-purple-300 font-medium text-sm">{w.wort}</div>
                   <div className="text-slate-400 text-sm mt-1">{w.definition}</div>
                 </li>

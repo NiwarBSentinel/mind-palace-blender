@@ -48,7 +48,7 @@ export default function LocusFields({ palaceId, locusId, userId }) {
       localStorage.setItem(key, JSON.stringify({ info: newInfo, peg: newPeg }))
       return
     }
-    await supabase.from('locus_data').upsert({
+    const { error } = await supabase.from('locus_data').upsert({
       user_id: userId,
       palace_id: palaceId,
       locus_id: locusId,
@@ -56,6 +56,7 @@ export default function LocusFields({ palaceId, locusId, userId }) {
       peg_nummer: newPeg,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id,palace_id,locus_id' })
+    if (error) console.error('upsert locus_data error:', error)
   }
 
   function handleInfoChange(val) {
@@ -136,7 +137,7 @@ export function LocusFieldsEditable({ palaceId, locusId, userId }) {
       localStorage.setItem(key, JSON.stringify({ info: newInfo, peg: newPeg }))
       return
     }
-    await supabase.from('locus_data').upsert({
+    const { error } = await supabase.from('locus_data').upsert({
       user_id: userId,
       palace_id: palaceId,
       locus_id: locusId,
@@ -144,6 +145,7 @@ export function LocusFieldsEditable({ palaceId, locusId, userId }) {
       peg_nummer: newPeg,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id,palace_id,locus_id' })
+    if (error) console.error('upsert locus_data error:', error)
   }
 
   function handleInfoChange(val) {

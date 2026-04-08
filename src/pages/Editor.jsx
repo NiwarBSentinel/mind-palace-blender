@@ -123,11 +123,17 @@ export default function Editor() {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
       setDragging(null)
-      const updated = markers.find((m) => m.id === marker.id)
       // Save uses latest from state via markers ref
       setMarkers((prev) => {
         const m = prev.find((mk) => mk.id === marker.id)
-        if (m) supabase.from('palace_markers').update({ x_percent: m.x_percent, y_percent: m.y_percent }).eq('id', m.id)
+        if (m) {
+          supabase.from('palace_markers')
+            .update({ x_percent: m.x_percent, y_percent: m.y_percent })
+            .eq('id', m.id)
+            .then(({ error }) => {
+              if (error) console.error('update marker position error:', error)
+            })
+        }
         return prev
       })
     }

@@ -47,11 +47,12 @@ export default function PalaceTemplates() {
     if (palErr || !palace) { console.error('copy palace error:', palErr); setCopying(null); return }
 
     // 2. Fetch template rooms
-    const { data: tRooms } = await supabase
+    const { data: tRooms, error: roomsErr } = await supabase
       .from('template_rooms')
       .select('*')
       .eq('template_id', template.id)
       .order('position')
+    if (roomsErr) { console.error('fetch template rooms error:', roomsErr); setCopying(null); return }
 
     if (tRooms && tRooms.length > 0) {
       // 3. Create rooms and map old→new IDs
@@ -64,11 +65,12 @@ export default function PalaceTemplates() {
         if (!newRoom) continue
 
         // 4. Fetch and copy loci for this room
-        const { data: tLoci } = await supabase
+        const { data: tLoci, error: lociErr } = await supabase
           .from('template_loci')
           .select('*')
           .eq('room_id', tRoom.id)
           .order('position')
+        if (lociErr) { console.error('fetch template loci error:', lociErr); continue }
 
         if (tLoci && tLoci.length > 0) {
           const lociInserts = tLoci.map((l) => ({
@@ -80,16 +82,18 @@ export default function PalaceTemplates() {
             major_zahl: l.major || '',
             notiz: l.notiz || '',
           }))
-          await supabase.from('loci').insert(lociInserts)
+          const { error: insertErr } = await supabase.from('loci').insert(lociInserts)
+          if (insertErr) console.error('insert loci error:', insertErr)
         }
       }
     }
 
     // 5. Increment copy count
-    await supabase
+    const { error: countErr } = await supabase
       .from('palace_templates')
       .update({ copy_count: (template.copy_count || 0) + 1 })
       .eq('id', template.id)
+    if (countErr) console.error('update copy count error:', countErr)
 
     setCopying(null)
     navigate(`/palace/${palace.id}`)

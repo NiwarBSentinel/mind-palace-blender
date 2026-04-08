@@ -194,7 +194,7 @@ export default function LernkartenDashboard() {
           {majorHints && (
             <div className="text-slate-500 text-sm px-1">
               Major-System: {majorHints.map((h, i) => (
-                <span key={i}>{i > 0 && ' · '}<span className="text-green-400/70">{h.num}</span> → {h.word}</span>
+                <span key={h.num}>{i > 0 && ' · '}<span className="text-green-400/70">{h.num}</span> → {h.word}</span>
               ))}
             </div>
           )}

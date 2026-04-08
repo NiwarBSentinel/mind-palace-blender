@@ -93,11 +93,11 @@ export default function HangmanGame() {
         {/* Word blanks */}
         <div className="flex justify-center gap-1.5 flex-wrap mb-6">
           {[...word.guessWord].map((letter, i) => {
-            if (letter === ' ') return <span key={i} className="w-4" />
+            if (letter === ' ') return <span key={`${i}_space`} className="w-4" />
             const revealed = guessed.has(letter) || gameOver
             return (
               <span
-                key={i}
+                key={`${i}_${letter}`}
                 className={`w-9 h-11 flex items-center justify-center rounded-lg text-xl font-bold border ${
                   revealed
                     ? lost && !guessed.has(letter)

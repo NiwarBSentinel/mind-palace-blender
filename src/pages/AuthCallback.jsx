@@ -6,7 +6,7 @@ export default function AuthCallback() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         navigate('/')
       }
@@ -14,13 +14,21 @@ export default function AuthCallback() {
 
     // Fallback: if already signed in, redirect after a short delay
     const timeout = setTimeout(() => {
-      supabase.auth.getSession().then(({ data: { session } }) => {
+      supabase.auth.getSession().then(({ data: { session }, error }) => {
+        if (error) {
+          console.error('getSession error:', error)
+          navigate('/login')
+          return
+        }
         if (session) navigate('/')
         else navigate('/login')
       })
     }, 3000)
 
-    return () => clearTimeout(timeout)
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timeout)
+    }
   }, [navigate])
 
   return (

@@ -361,7 +361,7 @@ export default function Trivia() {
             }
             return (
               <button
-                key={i}
+                key={answer}
                 onClick={() => handleAnswer(answer)}
                 disabled={selected !== null}
                 className={`p-4 rounded-xl font-medium text-left transition cursor-pointer ${btnClass}`}
@@ -465,7 +465,7 @@ export default function Trivia() {
             <h3 className="text-slate-400 text-sm font-medium mb-3">Falsche Antworten:</h3>
             <ul className="space-y-2">
               {wrong.map((w, i) => (
-                <li key={i} className="p-3 rounded-lg bg-red-600/10 border border-red-500/20">
+                <li key={`${w.question}_${i}`} className="p-3 rounded-lg bg-red-600/10 border border-red-500/20">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
                       <div className="text-slate-300 text-sm">{w.question}</div>

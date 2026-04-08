@@ -212,13 +212,14 @@ export default function BMPEditor() {
     // Fetch fill stats for all rooms
     const stats = {}
     for (const room of roomsData || []) {
-      const { data: lociData } = await supabase
+      const { data: lociData, error: lociErr } = await supabase
         .from('bmp_loci')
         .select('id')
         .eq('room_id', room.id)
+      if (lociErr) { console.error('fetch bmp_loci error:', lociErr); continue }
 
       let filledCount = 0
-      for (const locus of lociData || []) {
+      const fillChecks = (lociData || []).map(async (locus) => {
         const { data: inhaltData } = await supabase
           .from('bmp_inhalte')
           .select('id')
@@ -226,8 +227,10 @@ export default function BMPEditor() {
           .eq('session_name', 'Standard')
           .not('information', 'eq', '')
           .limit(1)
-        if (inhaltData && inhaltData.length > 0) filledCount++
-      }
+        return inhaltData && inhaltData.length > 0
+      })
+      const results = await Promise.all(fillChecks)
+      filledCount = results.filter(Boolean).length
       stats[room.id] = filledCount
     }
     setFillStats(stats)
@@ -286,7 +289,15 @@ export default function BMPEditor() {
   async function saveInfo(locusId, value) {
     const existing = inhalte[locusId]
 
-    // Find which room this locus belongs to and update fill stats
+    // Find which room this locus belongs to by checking all loaded rooms
+    let ownerRoomId = null
+    for (const [roomId, roomLoci] of Object.entries(lociByRoom)) {
+      if (roomLoci.some((l) => l.id === locusId)) {
+        ownerRoomId = roomId
+        break
+      }
+    }
+
     const updateFillStat = (roomId) => {
       const loci = lociByRoom[roomId] || []
       let count = 0
@@ -314,7 +325,7 @@ export default function BMPEditor() {
     }
 
     // Update fill stat for the room containing this locus
-    if (expandedRoom) updateFillStat(expandedRoom)
+    if (ownerRoomId) updateFillStat(ownerRoomId)
   }
 
   function handleBlur(locusId) {

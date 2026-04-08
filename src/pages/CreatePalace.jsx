@@ -124,7 +124,7 @@ export default function CreatePalace() {
           {rooms.length > 0 && (
             <div className="space-y-2">
               {rooms.map((room, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-[#0a0a1a]">
+                <div key={`${room}_${i}`} className="flex items-center justify-between p-3 rounded-lg bg-[#0a0a1a]">
                   <span className="text-slate-200 text-sm"><span className="text-purple-400 font-mono mr-2">{i + 1}.</span>{room}</span>
                   <button onClick={() => removeRoom(i)} className="text-red-400 hover:text-red-300 text-xs cursor-pointer">×</button>
                 </div>
@@ -152,7 +152,7 @@ export default function CreatePalace() {
         {/* Room tabs */}
         <div className="flex flex-wrap gap-2">
           {rooms.map((room, i) => (
-            <button key={i} onClick={() => setActiveRoom(i)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${activeRoom === i ? 'bg-purple-600 text-white' : 'bg-[#1e1e3a] text-slate-400 hover:text-slate-200'}`}>
+            <button key={`${room}_${i}`} onClick={() => setActiveRoom(i)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${activeRoom === i ? 'bg-purple-600 text-white' : 'bg-[#1e1e3a] text-slate-400 hover:text-slate-200'}`}>
               {room} ({(lociByRoom[i] || []).length})
             </button>
           ))}
