@@ -26,6 +26,8 @@ import MemoryGame from './pages/MemoryGame'
 import ZeitdruckQuiz from './pages/ZeitdruckQuiz'
 import ArtikelTrainer from './pages/ArtikelTrainer'
 import VerbKasusTrainer from './pages/VerbKasusTrainer'
+import VerbindungswoerterTrainer from './pages/VerbindungswoerterTrainer'
+import KollokationenTrainer from './pages/KollokationenTrainer'
 import Raetsel from './pages/Raetsel'
 import Geographie from './pages/Geographie'
 import Login from './pages/Login'
@@ -70,6 +72,8 @@ export default function App() {
           <Route path="/sprachen/deutsch/lernkarten/practice" element={<DeutschLernkartenPractice />} />
           <Route path="/sprachen/deutsch/artikel" element={<ArtikelTrainer />} />
           <Route path="/sprachen/deutsch/verb-kasus" element={<VerbKasusTrainer />} />
+          <Route path="/sprachen/deutsch/verbindungswoerter" element={<VerbindungswoerterTrainer />} />
+          <Route path="/sprachen/deutsch/kollokationen" element={<KollokationenTrainer />} />
           <Route path="/sprachen/deutsch/c1" element={<DeutschC1 />} />
           <Route path="/sprachen/deutsch/:level/quiz" element={<DeutschC1Quiz />} />
           <Route path="/sprachen/deutsch/:level/spiele" element={<DeutschC1Spiele />} />

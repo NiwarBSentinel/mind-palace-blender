@@ -115,6 +115,22 @@ export default function DeutschDashboard() {
           <h3 className="text-base font-bold text-slate-200 group-hover:text-purple-300 transition mb-1">Verben mit Kasus</h3>
           <p className="text-slate-400 text-xs">Genitiv & Dativ — welchen Kasus verlangt das Verb?</p>
         </div>
+        <div
+          onClick={() => navigate('/sprachen/deutsch/verbindungswoerter')}
+          className="p-5 rounded-xl bg-[#12122a] border border-[#1e1e3a] border-b-2 border-b-amber-500 hover:border-amber-500/50 cursor-pointer transition-all duration-200 hover:bg-[#16163a] group"
+        >
+          <div className="text-2xl mb-2">🔗</div>
+          <h3 className="text-base font-bold text-slate-200 group-hover:text-amber-300 transition mb-1">Verbindungswörter</h3>
+          <p className="text-slate-400 text-xs">Konjunktionen, Subjunktionen & Konjunktionaladverbien</p>
+        </div>
+        <div
+          onClick={() => navigate('/sprachen/deutsch/kollokationen')}
+          className="p-5 rounded-xl bg-[#12122a] border border-[#1e1e3a] border-b-2 border-b-indigo-500 hover:border-indigo-500/50 cursor-pointer transition-all duration-200 hover:bg-[#16163a] group"
+        >
+          <div className="text-2xl mb-2">🧲</div>
+          <h3 className="text-base font-bold text-slate-200 group-hover:text-indigo-300 transition mb-1">Kollokationen</h3>
+          <p className="text-slate-400 text-xs">Feste Wortverbindungen mit der richtigen Adjektivform</p>
+        </div>
       </div>
     </div>
   )
