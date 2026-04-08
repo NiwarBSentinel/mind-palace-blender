@@ -88,17 +88,11 @@ export default function Editor() {
     setUploading(false)
   }
 
-  // Track if a drag actually moved so we don't fire click after drag
-  const didDrag = useRef(false)
-
-  async function addMarkerAt(clientX, clientY) {
-    if (dragging !== null || didDrag.current) return
-    if (!imgRef.current) return
+  async function handleImageClick(e) {
+    if (dragging !== null) return
     const rect = imgRef.current.getBoundingClientRect()
-    if (clientX == null || clientY == null) return
-    const x_percent = ((clientX - rect.left) / rect.width) * 100
-    const y_percent = ((clientY - rect.top) / rect.height) * 100
-    if (x_percent < 0 || x_percent > 100 || y_percent < 0 || y_percent > 100) return
+    const x_percent = ((e.clientX - rect.left) / rect.width) * 100
+    const y_percent = ((e.clientY - rect.top) / rect.height) * 100
     const nextIndex = markers.length > 0 ? Math.max(...markers.map((m) => m.room_index)) + 1 : 1
     if (nextIndex > rooms.length) return
     const { data, error } = await supabase
@@ -109,26 +103,13 @@ export default function Editor() {
     if (!error && data) setMarkers((prev) => [...prev, data])
   }
 
-  function handleImageClick(e) {
-    addMarkerAt(e.clientX, e.clientY)
-  }
-
-  function handleImageTap(e) {
-    // Only handle single-finger taps, not multi-touch
-    if (e.changedTouches?.length !== 1) return
-    const touch = e.changedTouches[0]
-    addMarkerAt(touch.clientX, touch.clientY)
-  }
-
   function handleMarkerPointerDown(e, marker) {
     e.stopPropagation()
     e.preventDefault()
-    didDrag.current = false
     setDragging(marker.id)
+    const rect = imgRef.current.getBoundingClientRect()
 
-    // Recalculate rect on every move so scroll changes don't break positioning
     function getPos(ev) {
-      const rect = imgRef.current.getBoundingClientRect()
       const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX
       const clientY = ev.touches ? ev.touches[0].clientY : ev.clientY
       return {
@@ -139,25 +120,18 @@ export default function Editor() {
 
     function onMove(ev) {
       ev.preventDefault()
-      ev.stopPropagation()
-      didDrag.current = true
       const { x, y } = getPos(ev)
       setMarkers((prev) => prev.map((m) =>
         m.id === marker.id ? { ...m, x_percent: x, y_percent: y } : m
       ))
     }
 
-    function onUp(ev) {
-      ev.preventDefault()
-      ev.stopPropagation()
+    function onUp() {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
       window.removeEventListener('touchmove', onMove)
       window.removeEventListener('touchend', onUp)
-      window.removeEventListener('touchcancel', onUp)
-      document.body.style.overflow = ''
       setDragging(null)
-      // persist
       setMarkers((prev) => {
         const m = prev.find((mk) => mk.id === marker.id)
         if (m) {
@@ -170,18 +144,12 @@ export default function Editor() {
         }
         return prev
       })
-      // reset didDrag after a tick so click handler can check it
-      setTimeout(() => { didDrag.current = false }, 50)
     }
-
-    // Lock page scroll while dragging on touch
-    document.body.style.overflow = 'hidden'
 
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
     window.addEventListener('touchmove', onMove, { passive: false })
-    window.addEventListener('touchend', onUp, { passive: false })
-    window.addEventListener('touchcancel', onUp)
+    window.addEventListener('touchend', onUp)
   }
 
   async function deleteMarker(markerId, e) {
@@ -407,7 +375,6 @@ export default function Editor() {
             dragging={dragging}
             highlightedRoom={highlightedRoom}
             handleImageClick={handleImageClick}
-            handleImageTap={handleImageTap}
             handleMarkerPointerDown={handleMarkerPointerDown}
             handleMarkerClick={handleMarkerClick}
             deleteMarker={deleteMarker}
@@ -691,7 +658,7 @@ function LocusFormComponent({ form, setForm, onSave, onCancel }) {
   )
 }
 
-function ImageMapSection({ palace, markers, rooms, imgRef, uploading, dragging, handleImageClick, handleImageTap, handleMarkerPointerDown, handleMarkerClick, deleteMarker, handleImageUpload }) {
+function ImageMapSection({ palace, markers, rooms, imgRef, uploading, handleImageClick, handleMarkerPointerDown, handleMarkerClick, deleteMarker, handleImageUpload }) {
   return (
     <div>
       <h3 className="text-sm font-semibold text-slate-300 mb-3">Palast-Bild</h3>
@@ -699,9 +666,8 @@ function ImageMapSection({ palace, markers, rooms, imgRef, uploading, dragging, 
         <div className="space-y-2">
           <div
             className="relative rounded-xl overflow-hidden border border-[#1e1e3a] cursor-crosshair select-none"
-            style={{ touchAction: 'none' }}
+            style={{ touchAction: 'pan-x pan-y' }}
             onClick={handleImageClick}
-            onTouchEnd={handleImageTap}
           >
             <img
               ref={imgRef}
@@ -712,48 +678,26 @@ function ImageMapSection({ palace, markers, rooms, imgRef, uploading, dragging, 
             />
             {markers.map((marker) => {
               const room = rooms[marker.room_index - 1]
-              const isActive = dragging === marker.id
               return (
                 <div
                   key={marker.id}
                   className="absolute group/marker"
-                  style={{
-                    left: `${marker.x_percent}%`,
-                    top: `${marker.y_percent}%`,
-                    transform: 'translate(-50%, -50%)',
-                    touchAction: 'none',
-                    zIndex: isActive ? 50 : 10,
-                  }}
+                  style={{ left: `${marker.x_percent}%`, top: `${marker.y_percent}%`, transform: 'translate(-50%, -50%)', touchAction: 'none' }}
+                  onMouseDown={(e) => handleMarkerPointerDown(e, marker)}
+                  onTouchStart={(e) => handleMarkerPointerDown(e, marker)}
+                  onClick={(e) => handleMarkerClick(marker, e)}
                 >
-                  {/* Invisible large touch target (48x48 min for fingers) */}
-                  <div
-                    style={{ position: 'absolute', top: '-16px', left: '-16px', width: '48px', height: '48px', cursor: 'grab' }}
-                    onMouseDown={(e) => handleMarkerPointerDown(e, marker)}
-                    onTouchStart={(e) => handleMarkerPointerDown(e, marker)}
-                    onClick={(e) => handleMarkerClick(marker, e)}
-                  />
-                  {/* Visible marker */}
-                  <div
-                    className="rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold pointer-events-none transition-all duration-150"
-                    style={{
-                      width: isActive ? '44px' : undefined,
-                      height: isActive ? '44px' : undefined,
-                      background: isActive ? 'rgba(147,51,234,0.9)' : 'rgb(147,51,234)',
-                      boxShadow: isActive ? '0 0 20px rgba(147,51,234,0.6)' : undefined,
-                    }}
-                    // Default sizes via className when not active
-                    {...(!isActive && { className: "w-10 h-10 sm:w-7 sm:h-7 rounded-full bg-purple-600 border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold pointer-events-none transition-all duration-150" })}
-                  >
+                  <div className="w-9 h-9 sm:w-7 sm:h-7 rounded-full bg-purple-600 border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold cursor-grab active:cursor-grabbing hover:bg-purple-500 transition">
                     {marker.room_index}
                   </div>
-                  {room && !isActive && (
+                  {room && (
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 rounded bg-[#0a0a1a] border border-[#2a2a4a] text-xs text-slate-200 whitespace-nowrap opacity-0 group-hover/marker:opacity-100 transition pointer-events-none">
                       {room.name}
                     </div>
                   )}
                   <button
                     onClick={(e) => deleteMarker(marker.id, e)}
-                    className="absolute -top-2 -right-2 w-6 h-6 sm:w-5 sm:h-5 rounded-full bg-red-600 text-white text-[10px] sm:text-[9px] flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover/marker:opacity-100 transition cursor-pointer hover:bg-red-500"
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 sm:w-4 sm:h-4 rounded-full bg-red-600 text-white text-[9px] sm:text-[8px] flex items-center justify-center opacity-0 group-hover/marker:opacity-100 transition cursor-pointer hover:bg-red-500"
                   >
                     ✕
                   </button>
@@ -763,7 +707,7 @@ function ImageMapSection({ palace, markers, rooms, imgRef, uploading, dragging, 
           </div>
           <div className="flex items-center justify-between">
             <p className="text-xs text-slate-500">
-              Tippe aufs Bild, um Marker zu setzen. Halte & ziehe zum Verschieben.
+              Tippe aufs Bild, um Marker zu setzen. Marker sind verschiebbar.
             </p>
             <label className="text-xs text-purple-400 hover:text-purple-300 cursor-pointer transition shrink-0 ml-2">
               Bild ändern
