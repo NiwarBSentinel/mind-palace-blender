@@ -102,10 +102,11 @@ export default function Geographie() {
   function getGeoFill(geoName) {
     if (!current) return '#334155'
     if (tab !== 'Karte') return '#334155'
+    // After answer: show correct country in green
     if (showCorrect && geoName === current.name) return '#22c55e'
-    if (clickedGeo === geoName && geoName !== current.name) return '#ef4444'
-    if (clickedGeo === null && geoName === current.name) return '#f97316'
-    if (clickedGeo !== null && geoName === current.name && !showCorrect) return '#f97316'
+    // Wrong click: flash red (before showCorrect reveals green)
+    if (clickedGeo === geoName && geoName !== current.name && !showCorrect) return '#ef4444'
+    // No pre-highlighting — user must find the country blind
     return '#334155'
   }
 
