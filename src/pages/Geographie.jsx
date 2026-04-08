@@ -1,12 +1,19 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps'
 import { laender } from '../data/geographieData'
+import { alleLaender } from '../data/alleLaender'
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
 const ROUND_SIZE = 10
-const TABS = ['Hauptstädte', 'Flaggen', 'Karte']
+const TABS = ['Hauptstädte', 'Flaggen', 'Karte', 'Alle Länder']
 const KONTINENTE = ['Alle Kontinente', 'Europa', 'Asien', 'Afrika', 'Amerika', 'Ozeanien']
+const TIMER_OPTIONS = [
+  { label: '5 Min', seconds: 300 },
+  { label: '10 Min', seconds: 600 },
+  { label: '15 Min', seconds: 900 },
+  { label: 'Unbegrenzt', seconds: 0 },
+]
 
 function shuffle(arr) {
   const a = [...arr]
@@ -35,6 +42,24 @@ export default function Geographie() {
   const [showCorrect, setShowCorrect] = useState(false)
   const [mapZoom, setMapZoom] = useState(1)
   const [mapCenter, setMapCenter] = useState([0, 20])
+
+  // Alle Länder mode state
+  const [alInput, setAlInput] = useState('')
+  const [alFound, setAlFound] = useState(new Set())
+  const [alStarted, setAlStarted] = useState(false)
+  const [alDone, setAlDone] = useState(false)
+  const [alTimerOption, setAlTimerOption] = useState(null)
+  const [alElapsed, setAlElapsed] = useState(0)
+  const alInputRef = useRef(null)
+  const alTimerRef = useRef(null)
+  const alFoundMapNames = useMemo(() => {
+    const names = new Set()
+    alFound.forEach((de) => {
+      const entry = alleLaender.find((l) => l.de === de)
+      if (entry) names.add(entry.name)
+    })
+    return names
+  }, [alFound])
 
   const pool = useMemo(() => {
     return kontinent === 'Alle Kontinente' ? laender : laender.filter((l) => l.kontinent === kontinent)
@@ -112,6 +137,79 @@ export default function Geographie() {
     return '#334155'
   }
 
+  // Alle Länder: start game
+  function alStart(timerOpt) {
+    setAlTimerOption(timerOpt)
+    setAlFound(new Set())
+    setAlInput('')
+    setAlElapsed(0)
+    setAlDone(false)
+    setAlStarted(true)
+    clearInterval(alTimerRef.current)
+    alTimerRef.current = setInterval(() => {
+      setAlElapsed((prev) => {
+        const next = prev + 1
+        if (timerOpt.seconds > 0 && next >= timerOpt.seconds) {
+          clearInterval(alTimerRef.current)
+          setAlDone(true)
+        }
+        return next
+      })
+    }, 1000)
+    setTimeout(() => alInputRef.current?.focus(), 100)
+  }
+
+  function alReset() {
+    clearInterval(alTimerRef.current)
+    setAlStarted(false)
+    setAlDone(false)
+    setAlFound(new Set())
+    setAlInput('')
+    setAlElapsed(0)
+    setAlTimerOption(null)
+  }
+
+  // Check if input matches any country
+  function alHandleInput(val) {
+    setAlInput(val)
+    const lower = val.trim().toLowerCase()
+    if (!lower) return
+    for (const entry of alleLaender) {
+      if (alFound.has(entry.de)) continue
+      const matches = [entry.de, ...entry.aliases]
+      if (matches.some((m) => m.toLowerCase() === lower)) {
+        setAlFound((prev) => new Set([...prev, entry.de]))
+        setAlInput('')
+        // Check if all found
+        if (alFound.size + 1 >= alleLaender.length) {
+          clearInterval(alTimerRef.current)
+          setAlDone(true)
+        }
+        return
+      }
+    }
+  }
+
+  // Cleanup timer
+  useEffect(() => () => clearInterval(alTimerRef.current), [])
+
+  // Reset alleländer when switching tabs
+  useEffect(() => { if (tab !== 'Alle Länder') alReset() }, [tab])
+
+  function getAlGeoFill(geoName) {
+    if (alFoundMapNames.has(geoName)) return '#22c55e'
+    return '#334155'
+  }
+
+  function formatTime(s) {
+    const m = Math.floor(s / 60)
+    const sec = s % 60
+    return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`
+  }
+
+  const alSorted = useMemo(() => [...alFound].sort((a, b) => a.localeCompare(b, 'de')), [alFound])
+  const alMissed = useMemo(() => alleLaender.filter((l) => !alFound.has(l.de)).map((l) => l.de).sort((a, b) => a.localeCompare(b, 'de')), [alFound])
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a0a1a] via-[#0d0d24] to-[#050510] px-4 pt-14 pb-6">
       <div className="max-w-5xl mx-auto">
@@ -137,8 +235,8 @@ export default function Geographie() {
           ))}
         </div>
 
-        {/* Kontinent filter */}
-        <div className="flex flex-wrap gap-2 mb-6">
+        {/* Kontinent filter (not for Alle Länder) */}
+        {tab !== 'Alle Länder' && <div className="flex flex-wrap gap-2 mb-6">
           {KONTINENTE.map((k) => (
             <button
               key={k}
@@ -150,9 +248,9 @@ export default function Geographie() {
               {k}
             </button>
           ))}
-        </div>
+        </div>}
 
-        {questions.length === 0 ? (
+        {tab !== 'Alle Länder' && (questions.length === 0 ? (
           <p className="text-slate-500 text-center py-12">Keine Länder für diesen Filter.</p>
         ) : done ? (
           <div className="bg-[#12122a] border border-[#1e1e3a] rounded-xl p-10 text-center">
@@ -315,6 +413,116 @@ export default function Geographie() {
               </>
             )}
           </div>
+        ))}
+
+        {/* === ALLE LÄNDER === */}
+        {tab === 'Alle Länder' && (
+          <>
+            {!alStarted ? (
+              <div className="bg-[#12122a] border border-[#1e1e3a] rounded-xl p-8 text-center">
+                <div className="text-4xl mb-4">🌍</div>
+                <h2 className="text-xl font-bold text-slate-100 mb-2">Alle Länder tippen</h2>
+                <p className="text-slate-400 text-sm mb-6">Wie viele der {alleLaender.length} Länder kannst du aus dem Kopf?</p>
+                <div className="flex flex-wrap gap-3 justify-center">
+                  {TIMER_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.label}
+                      onClick={() => alStart(opt)}
+                      className="px-5 py-2.5 rounded-lg bg-cyan-600 text-white font-medium hover:bg-cyan-500 transition"
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : alDone ? (
+              <div className="bg-[#12122a] border border-[#1e1e3a] rounded-xl p-8 text-center">
+                <div className="text-5xl mb-4">{alFound.size >= alleLaender.length ? '🎉' : alFound.size >= 100 ? '🌍' : '📚'}</div>
+                <h2 className="text-2xl font-bold text-slate-100 mb-2">{alFound.size} / {alleLaender.length} Länder</h2>
+                <p className="text-slate-400 mb-1">Zeit: {formatTime(alElapsed)}</p>
+                <p className="text-slate-400 mb-6">{alFound.size >= alleLaender.length ? 'Perfekt — alle gefunden!' : alFound.size >= 150 ? 'Beeindruckend!' : alFound.size >= 100 ? 'Gut gemacht!' : 'Weiter üben!'}</p>
+                <button onClick={alReset} className="px-6 py-2.5 rounded-lg bg-cyan-600 text-white font-medium hover:bg-cyan-500 transition mb-6">
+                  Nochmal
+                </button>
+                {alMissed.length > 0 && (
+                  <div className="mt-4 text-left">
+                    <p className="text-sm text-red-400 font-medium mb-2">Fehlende Länder ({alMissed.length}):</p>
+                    <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto">
+                      {alMissed.map((name) => (
+                        <span key={name} className="px-2 py-0.5 rounded text-xs bg-red-500/10 text-red-400">{name}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Header: timer + progress */}
+                <div className="flex items-center justify-between bg-[#12122a] border border-[#1e1e3a] rounded-xl px-5 py-3">
+                  <div className="flex items-center gap-4">
+                    <span className="text-cyan-400 font-mono text-lg font-bold">{formatTime(alElapsed)}</span>
+                    {alTimerOption.seconds > 0 && (
+                      <span className="text-slate-500 text-xs">/ {formatTime(alTimerOption.seconds)}</span>
+                    )}
+                  </div>
+                  <span className="text-slate-300 text-sm font-medium">{alFound.size} / {alleLaender.length} Länder</span>
+                  <button onClick={() => { clearInterval(alTimerRef.current); setAlDone(true) }} className="text-xs text-slate-500 hover:text-red-400 transition">Beenden</button>
+                </div>
+
+                {/* Input */}
+                <input
+                  ref={alInputRef}
+                  type="text"
+                  placeholder="Land eingeben..."
+                  value={alInput}
+                  onChange={(e) => alHandleInput(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 text-lg focus:outline-none focus:border-cyan-500 transition"
+                  autoComplete="off"
+                />
+
+                {/* Map */}
+                <div className="relative rounded-xl overflow-hidden border border-[#1e1e3a] bg-[#0a0a1a]" style={{ height: 350 }}>
+                  <ComposableMap projectionConfig={{ scale: 147 }} style={{ width: '100%', height: '100%' }}>
+                    <ZoomableGroup zoom={mapZoom} center={mapCenter} minZoom={1} maxZoom={8}
+                      onMoveEnd={({ zoom, coordinates }) => { setMapZoom(zoom); setMapCenter(coordinates) }}>
+                      <Geographies geography={GEO_URL}>
+                        {({ geographies }) =>
+                          geographies.map((geo) => (
+                            <Geography
+                              key={geo.rsmKey}
+                              geography={geo}
+                              style={{
+                                default: { fill: getAlGeoFill(geo.properties.name), stroke: '#1e1e3a', strokeWidth: 0.5, outline: 'none' },
+                                hover: { fill: getAlGeoFill(geo.properties.name) === '#22c55e' ? '#22c55e' : '#475569', stroke: '#1e1e3a', strokeWidth: 0.5, outline: 'none' },
+                                pressed: { fill: getAlGeoFill(geo.properties.name), stroke: '#1e1e3a', strokeWidth: 0.5, outline: 'none' },
+                              }}
+                            />
+                          ))
+                        }
+                      </Geographies>
+                    </ZoomableGroup>
+                  </ComposableMap>
+                  <div className="absolute top-3 right-3 flex flex-col gap-1">
+                    <button onClick={() => setMapZoom((z) => Math.min(z * 1.5, 8))} className="w-8 h-8 rounded-lg bg-[#12122a]/90 border border-[#2a2a4a] text-slate-300 hover:text-white hover:bg-[#1e1e3a] text-sm font-bold transition">+</button>
+                    <button onClick={() => setMapZoom((z) => Math.max(z / 1.5, 1))} className="w-8 h-8 rounded-lg bg-[#12122a]/90 border border-[#2a2a4a] text-slate-300 hover:text-white hover:bg-[#1e1e3a] text-sm font-bold transition">−</button>
+                    <button onClick={() => { setMapZoom(1); setMapCenter([0, 20]) }} className="w-8 h-8 rounded-lg bg-[#12122a]/90 border border-[#2a2a4a] text-slate-300 hover:text-white hover:bg-[#1e1e3a] text-xs transition" title="Zurücksetzen">⌂</button>
+                  </div>
+                </div>
+
+                {/* Found countries */}
+                {alSorted.length > 0 && (
+                  <div className="bg-[#12122a] border border-[#1e1e3a] rounded-xl p-4">
+                    <p className="text-xs text-slate-500 mb-2">Gefunden:</p>
+                    <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
+                      {alSorted.map((name) => (
+                        <span key={name} className="px-2 py-0.5 rounded text-xs bg-green-500/10 text-green-400">{name}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
