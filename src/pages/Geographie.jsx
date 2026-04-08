@@ -33,6 +33,8 @@ export default function Geographie() {
   // Karte mode state
   const [clickedGeo, setClickedGeo] = useState(null)
   const [showCorrect, setShowCorrect] = useState(false)
+  const [mapZoom, setMapZoom] = useState(1)
+  const [mapCenter, setMapCenter] = useState([0, 20])
 
   const pool = useMemo(() => {
     return kontinent === 'Alle Kontinente' ? laender : laender.filter((l) => l.kontinent === kontinent)
@@ -250,12 +252,18 @@ export default function Geographie() {
                   <img src={`https://flagcdn.com/w40/${current.flagge}.png`} alt={current.de} style={{width:40,height:'auto',borderRadius:4}} />
                   <h3 className="text-2xl font-bold text-orange-400">{current.de}</h3>
                 </div>
-                <div className="rounded-xl overflow-hidden border border-[#1e1e3a] bg-[#0a0a1a]" style={{ height: 400 }}>
+                <div className="relative rounded-xl overflow-hidden border border-[#1e1e3a] bg-[#0a0a1a]" style={{ height: 400 }}>
                   <ComposableMap
                     projectionConfig={{ scale: 147 }}
                     style={{ width: '100%', height: '100%' }}
                   >
-                    <ZoomableGroup>
+                    <ZoomableGroup
+                      zoom={mapZoom}
+                      center={mapCenter}
+                      minZoom={1}
+                      maxZoom={8}
+                      onMoveEnd={({ zoom, coordinates }) => { setMapZoom(zoom); setMapCenter(coordinates) }}
+                    >
                       <Geographies geography={GEO_URL}>
                         {({ geographies }) =>
                           geographies.map((geo) => (
@@ -274,6 +282,22 @@ export default function Geographie() {
                       </Geographies>
                     </ZoomableGroup>
                   </ComposableMap>
+                  {/* Zoom controls */}
+                  <div className="absolute top-3 right-3 flex flex-col gap-1">
+                    <button
+                      onClick={() => setMapZoom((z) => Math.min(z * 1.5, 8))}
+                      className="w-8 h-8 rounded-lg bg-[#12122a]/90 border border-[#2a2a4a] text-slate-300 hover:text-white hover:bg-[#1e1e3a] text-sm font-bold transition"
+                    >+</button>
+                    <button
+                      onClick={() => setMapZoom((z) => Math.max(z / 1.5, 1))}
+                      className="w-8 h-8 rounded-lg bg-[#12122a]/90 border border-[#2a2a4a] text-slate-300 hover:text-white hover:bg-[#1e1e3a] text-sm font-bold transition"
+                    >−</button>
+                    <button
+                      onClick={() => { setMapZoom(1); setMapCenter([0, 20]) }}
+                      className="w-8 h-8 rounded-lg bg-[#12122a]/90 border border-[#2a2a4a] text-slate-300 hover:text-white hover:bg-[#1e1e3a] text-xs transition"
+                      title="Zurücksetzen"
+                    >⌂</button>
+                  </div>
                 </div>
                 {clickedGeo !== null && (
                   <div className="flex items-center justify-between mt-4">
@@ -286,7 +310,7 @@ export default function Geographie() {
                   </div>
                 )}
                 {clickedGeo === null && (
-                  <p className="text-slate-500 text-xs mt-2">Klicke auf das orange markierte Land oder suche es auf der Karte.</p>
+                  <p className="text-slate-500 text-xs mt-2">Klicke auf das Land auf der Karte. Zoome mit +/− oder Scrollrad.</p>
                 )}
               </>
             )}
