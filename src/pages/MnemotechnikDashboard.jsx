@@ -43,6 +43,16 @@ const modes = [
     statLabel: null,
     color: 'orange',
   },
+  {
+    key: 'vorlagen',
+    path: '/vorlagen',
+    emoji: '📋',
+    title: 'Vorlagen',
+    desc: 'Fertige Palast-Vorlagen kopieren oder eigene teilen',
+    table: 'palace_templates',
+    statLabel: 'Vorlagen',
+    color: 'pink',
+  },
 ]
 
 const colorMap = {
@@ -77,6 +87,14 @@ const colorMap = {
     shadow: 'hover:shadow-orange-500/20',
     stat: 'text-orange-400',
     statBg: 'bg-orange-500/10',
+  },
+  pink: {
+    border: 'border-b-pink-500',
+    hoverBorder: 'hover:border-pink-500/50',
+    hoverText: 'group-hover:text-pink-300',
+    shadow: 'hover:shadow-pink-500/20',
+    stat: 'text-pink-400',
+    statBg: 'bg-pink-500/10',
   },
 }
 

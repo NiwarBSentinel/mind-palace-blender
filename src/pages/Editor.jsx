@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function Editor() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [palace, setPalace] = useState(null)
   const [rooms, setRooms] = useState([])
   const [expandedRoom, setExpandedRoom] = useState(null)
@@ -151,6 +153,60 @@ export default function Editor() {
     }
   }
 
+  const [sharing, setSharing] = useState(false)
+
+  async function shareAsTemplate() {
+    if (!user || !palace) return
+    setSharing(true)
+    // 1. Create template
+    const { data: tmpl, error: tmplErr } = await supabase
+      .from('palace_templates')
+      .insert({
+        created_by: user.id,
+        title: palace.name,
+        description: palace.beschreibung || '',
+        image_url: palace.image_url || '',
+        category: 'Allgemein',
+        copy_count: 0,
+      })
+      .select()
+      .single()
+    if (tmplErr || !tmpl) { console.error('share template error:', tmplErr); setSharing(false); return }
+
+    // 2. Copy rooms and loci
+    for (const room of rooms) {
+      const { data: tRoom } = await supabase
+        .from('template_rooms')
+        .insert({ template_id: tmpl.id, name: room.name, position: room.reihenfolge })
+        .select()
+        .single()
+      if (!tRoom) continue
+
+      // Fetch loci for this room if not already loaded
+      let roomLoci = loci[room.id]
+      if (!roomLoci) {
+        const { data } = await supabase.from('loci').select('*').eq('room_id', room.id).order('position')
+        roomLoci = data || []
+      }
+
+      if (roomLoci.length > 0) {
+        const lociInserts = roomLoci.map((l) => ({
+          room_id: tRoom.id,
+          position: l.position,
+          person: l.person || '',
+          aktion: l.action || '',
+          objekt: l.object || '',
+          major: l.major_zahl || '',
+          notiz: l.notiz || '',
+        }))
+        await supabase.from('template_loci').insert(lociInserts)
+      }
+    }
+
+    setSharing(false)
+    alert('Vorlage wurde veröffentlicht!')
+  }
+
   async function addRoom(e) {
     e.preventDefault()
     if (!newRoomName.trim()) return
@@ -272,12 +328,23 @@ export default function Editor() {
             <p className="text-slate-400 text-sm mt-1">{palace.beschreibung}</p>
           )}
         </div>
-        <button
-          onClick={() => navigate(`/practice/${id}`)}
-          className="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium transition cursor-pointer"
-        >
-          Üben →
-        </button>
+        <div className="flex gap-2">
+          {user && rooms.length > 0 && (
+            <button
+              onClick={shareAsTemplate}
+              disabled={sharing}
+              className="px-4 py-2.5 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] text-sm font-medium transition cursor-pointer disabled:opacity-40"
+            >
+              {sharing ? 'Teile...' : 'Als Vorlage teilen'}
+            </button>
+          )}
+          <button
+            onClick={() => navigate(`/practice/${id}`)}
+            className="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium transition cursor-pointer"
+          >
+            Üben →
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">

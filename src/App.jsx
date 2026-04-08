@@ -38,6 +38,7 @@ import CustomPalaceView from './pages/CustomPalaceView'
 import RoutesDashboard from './pages/RoutesDashboard'
 import RouteEditor from './pages/RouteEditor'
 import MnemotechnikDashboard from './pages/MnemotechnikDashboard'
+import PalaceTemplates from './pages/PalaceTemplates'
 
 export default function App() {
   return (
@@ -50,6 +51,7 @@ export default function App() {
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/dashboard/user" element={<UserDashboard />} />
           <Route path="/mnemotechnik" element={<MnemotechnikDashboard />} />
+          <Route path="/vorlagen" element={<PalaceTemplates />} />
           <Route path="/palaces" element={<PalaceDashboard />} />
           <Route path="/palace/:id" element={<Editor />} />
           <Route path="/practice/:id" element={<Practice />} />
