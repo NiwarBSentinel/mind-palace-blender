@@ -82,8 +82,7 @@ export default function Editor() {
     console.log('Saved image_url:', image_url)
     const { error: dbErr } = await supabase.from('palaces').update({ image_url }).eq('id', id)
     if (dbErr) console.error('save image_url error:', dbErr)
-    // Add cache buster only for display, not stored in DB
-    setPalace((p) => ({ ...p, image_url: image_url + '?t=' + Date.now() }))
+    setPalace((p) => ({ ...p, image_url }))
     setUploading(false)
   }
 
