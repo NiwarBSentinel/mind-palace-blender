@@ -90,9 +90,13 @@ export default function Editor() {
   }
 
   const didDrag = useRef(false)
+  const addingMarker = useRef(false)
 
   async function addMarkerAt(clientX, clientY, ref) {
-    if (dragging !== null || didDrag.current) return
+    if (dragging !== null || didDrag.current || addingMarker.current) return
+    addingMarker.current = true
+    // Reset after a short delay to allow the next interaction
+    setTimeout(() => { addingMarker.current = false }, 300)
     const img = ref?.current
     if (!img) return
     const rect = img.getBoundingClientRect()
