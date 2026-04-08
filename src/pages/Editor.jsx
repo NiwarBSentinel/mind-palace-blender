@@ -91,14 +91,14 @@ export default function Editor() {
   // Track if a drag actually moved so we don't fire click after drag
   const didDrag = useRef(false)
 
-  async function handleImageClick(e) {
+  async function addMarkerAt(clientX, clientY) {
     if (dragging !== null || didDrag.current) return
+    if (!imgRef.current) return
     const rect = imgRef.current.getBoundingClientRect()
-    const clientX = e.clientX ?? e.changedTouches?.[0]?.clientX
-    const clientY = e.clientY ?? e.changedTouches?.[0]?.clientY
     if (clientX == null || clientY == null) return
     const x_percent = ((clientX - rect.left) / rect.width) * 100
     const y_percent = ((clientY - rect.top) / rect.height) * 100
+    if (x_percent < 0 || x_percent > 100 || y_percent < 0 || y_percent > 100) return
     const nextIndex = markers.length > 0 ? Math.max(...markers.map((m) => m.room_index)) + 1 : 1
     if (nextIndex > rooms.length) return
     const { data, error } = await supabase
@@ -107,6 +107,17 @@ export default function Editor() {
       .select()
       .single()
     if (!error && data) setMarkers((prev) => [...prev, data])
+  }
+
+  function handleImageClick(e) {
+    addMarkerAt(e.clientX, e.clientY)
+  }
+
+  function handleImageTap(e) {
+    // Only handle single-finger taps, not multi-touch
+    if (e.changedTouches?.length !== 1) return
+    const touch = e.changedTouches[0]
+    addMarkerAt(touch.clientX, touch.clientY)
   }
 
   function handleMarkerPointerDown(e, marker) {
@@ -396,6 +407,7 @@ export default function Editor() {
             dragging={dragging}
             highlightedRoom={highlightedRoom}
             handleImageClick={handleImageClick}
+            handleImageTap={handleImageTap}
             handleMarkerPointerDown={handleMarkerPointerDown}
             handleMarkerClick={handleMarkerClick}
             deleteMarker={deleteMarker}
@@ -679,7 +691,7 @@ function LocusFormComponent({ form, setForm, onSave, onCancel }) {
   )
 }
 
-function ImageMapSection({ palace, markers, rooms, imgRef, uploading, dragging, handleImageClick, handleMarkerPointerDown, handleMarkerClick, deleteMarker, handleImageUpload }) {
+function ImageMapSection({ palace, markers, rooms, imgRef, uploading, dragging, handleImageClick, handleImageTap, handleMarkerPointerDown, handleMarkerClick, deleteMarker, handleImageUpload }) {
   return (
     <div>
       <h3 className="text-sm font-semibold text-slate-300 mb-3">Palast-Bild</h3>
@@ -689,6 +701,7 @@ function ImageMapSection({ palace, markers, rooms, imgRef, uploading, dragging, 
             className="relative rounded-xl overflow-hidden border border-[#1e1e3a] cursor-crosshair select-none"
             style={{ touchAction: 'none' }}
             onClick={handleImageClick}
+            onTouchEnd={handleImageTap}
           >
             <img
               ref={imgRef}
