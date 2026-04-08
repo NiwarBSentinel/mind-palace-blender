@@ -203,7 +203,7 @@ export default function Editor() {
       ) : (
         <div className="space-y-3">
           {rooms.map((room) => (
-            <div key={room.id} className="rounded-xl bg-[#12122a] border border-[#1e1e3a] overflow-hidden">
+            <div key={room.id} className="rounded-xl bg-[#12122a] border border-[#1e1e3a] overflow-hidden group/room">
               <div
                 onClick={() => toggleRoom(room.id)}
                 className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#16163a] transition"
@@ -223,12 +223,15 @@ export default function Editor() {
                       className="px-2 py-1 rounded bg-[#0a0a1a] border border-purple-500/50 text-slate-200 text-sm focus:outline-none focus:border-purple-500 transition"
                     />
                   ) : (
-                    <span
-                      className="text-slate-200 font-medium hover:text-purple-300 transition"
-                      onClick={(e) => startEditRoom(room, e)}
-                      title="Klicken zum Umbenennen"
-                    >
-                      {room.name}
+                    <span className="flex items-center gap-2">
+                      <span className="text-slate-200 font-medium">{room.name}</span>
+                      <button
+                        onClick={(e) => startEditRoom(room, e)}
+                        className="text-slate-500 hover:text-purple-300 text-xs transition cursor-pointer opacity-0 group-hover/room:opacity-100"
+                        title="Umbenennen"
+                      >
+                        ✏️
+                      </button>
                     </span>
                   )}
                   <span className="text-slate-500 text-sm">
