@@ -13,8 +13,10 @@ export default function Editor() {
   const [loading, setLoading] = useState(true)
   const [editingLocus, setEditingLocus] = useState(null)
   const [locusForm, setLocusForm] = useState({
-    position: '', person: '', action: '', object: '', major_zahl: '', notiz: ''
+    position: '', person: '', action: '', object: '', major_zahl: '', major_zahl_2: '', notiz: ''
   })
+  const [editingRoomId, setEditingRoomId] = useState(null)
+  const [editingRoomName, setEditingRoomName] = useState('')
 
   useEffect(() => {
     fetchPalace()
@@ -80,6 +82,19 @@ export default function Editor() {
     }
   }
 
+  function startEditRoom(room, e) {
+    e.stopPropagation()
+    setEditingRoomId(room.id)
+    setEditingRoomName(room.name)
+  }
+
+  async function saveRoomName(roomId) {
+    if (!editingRoomName.trim()) { setEditingRoomId(null); return }
+    await supabase.from('rooms').update({ name: editingRoomName.trim() }).eq('id', roomId)
+    setEditingRoomId(null)
+    await fetchRooms()
+  }
+
   function startAddLocus(roomId) {
     const roomLoci = loci[roomId] || []
     const nextPos = roomLoci.length > 0
@@ -87,7 +102,7 @@ export default function Editor() {
       : 1
     setEditingLocus({ roomId, isNew: true })
     setLocusForm({
-      position: String(nextPos), person: '', action: '', object: '', major_zahl: '', notiz: ''
+      position: String(nextPos), person: '', action: '', object: '', major_zahl: '', major_zahl_2: '', notiz: ''
     })
   }
 
@@ -99,6 +114,7 @@ export default function Editor() {
       action: locus.action || '',
       object: locus.object || '',
       major_zahl: locus.major_zahl || '',
+      major_zahl_2: locus.major_zahl_2 || '',
       notiz: locus.notiz || '',
     })
   }
@@ -111,6 +127,7 @@ export default function Editor() {
       action: locusForm.action,
       object: locusForm.object,
       major_zahl: locusForm.major_zahl,
+      major_zahl_2: locusForm.major_zahl_2,
       notiz: locusForm.notiz,
     }
 
@@ -194,7 +211,26 @@ export default function Editor() {
                 <div className="flex items-center gap-3">
                   <span className="text-purple-400 text-sm font-mono w-6">{room.reihenfolge}</span>
                   <span className={`transition text-sm ${expandedRoom === room.id ? 'rotate-90' : ''}`}>▶</span>
-                  <span className="text-slate-200 font-medium">{room.name}</span>
+                  {editingRoomId === room.id ? (
+                    <input
+                      type="text"
+                      value={editingRoomName}
+                      onChange={(e) => setEditingRoomName(e.target.value)}
+                      onBlur={() => saveRoomName(room.id)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') saveRoomName(room.id); if (e.key === 'Escape') setEditingRoomId(null) }}
+                      onClick={(e) => e.stopPropagation()}
+                      autoFocus
+                      className="px-2 py-1 rounded bg-[#0a0a1a] border border-purple-500/50 text-slate-200 text-sm focus:outline-none focus:border-purple-500 transition"
+                    />
+                  ) : (
+                    <span
+                      className="text-slate-200 font-medium hover:text-purple-300 transition"
+                      onClick={(e) => startEditRoom(room, e)}
+                      title="Klicken zum Umbenennen"
+                    >
+                      {room.name}
+                    </span>
+                  )}
                   <span className="text-slate-500 text-sm">
                     {loci[room.id] ? `${loci[room.id].length} Loci` : ''}
                   </span>
@@ -226,48 +262,56 @@ export default function Editor() {
                       ) : (
                         <div
                           key={locus.id}
-                          className="flex items-start justify-between p-3 rounded-lg bg-[#0a0a1a] group"
+                          className="p-3 rounded-lg bg-[#0a0a1a] group"
                         >
-                          <div className="flex-1 grid grid-cols-6 gap-2 text-sm">
-                            <div>
-                              <span className="text-slate-500 text-xs">Pos</span>
-                              <div className="text-purple-300 font-bold">{locus.position}</div>
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 grid grid-cols-6 gap-2 text-sm">
+                              <div>
+                                <span className="text-slate-500 text-xs">Pos</span>
+                                <div className="text-purple-300 font-bold">{locus.position}</div>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 text-xs">Person</span>
+                                <div className="text-slate-200">{locus.person || '–'}</div>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 text-xs">Aktion</span>
+                                <div className="text-slate-200">{locus.action || '–'}</div>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 text-xs">Objekt</span>
+                                <div className="text-slate-200">{locus.object || '–'}</div>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 text-xs">Major 1</span>
+                                <div className="text-blue-300 font-mono">{locus.major_zahl || '–'}</div>
+                              </div>
+                              <div>
+                                <span className="text-slate-500 text-xs">Major 2</span>
+                                <div className="text-blue-300 font-mono">{locus.major_zahl_2 || '–'}</div>
+                              </div>
                             </div>
-                            <div>
-                              <span className="text-slate-500 text-xs">Person</span>
-                              <div className="text-slate-200">{locus.person || '–'}</div>
+                            <div className="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 transition">
+                              <button
+                                onClick={() => startEditLocus(locus, room.id)}
+                                className="text-xs px-2 py-1 rounded text-blue-400 hover:bg-blue-500/10 transition cursor-pointer"
+                              >
+                                Bearbeiten
+                              </button>
+                              <button
+                                onClick={() => deleteLocus(locus.id, room.id)}
+                                className="text-xs px-2 py-1 rounded text-red-400 hover:bg-red-500/10 transition cursor-pointer"
+                              >
+                                Löschen
+                              </button>
                             </div>
-                            <div>
-                              <span className="text-slate-500 text-xs">Aktion</span>
-                              <div className="text-slate-200">{locus.action || '–'}</div>
-                            </div>
-                            <div>
-                              <span className="text-slate-500 text-xs">Objekt</span>
-                              <div className="text-slate-200">{locus.object || '–'}</div>
-                            </div>
-                            <div>
-                              <span className="text-slate-500 text-xs">Major</span>
-                              <div className="text-blue-300 font-mono">{locus.major_zahl || '–'}</div>
-                            </div>
-                            <div>
+                          </div>
+                          {locus.notiz && (
+                            <div className="mt-2 pt-2 border-t border-[#1e1e3a]">
                               <span className="text-slate-500 text-xs">Notiz</span>
-                              <div className="text-slate-400 truncate">{locus.notiz || '–'}</div>
+                              <div className="text-slate-400 text-sm whitespace-pre-wrap">{locus.notiz}</div>
                             </div>
-                          </div>
-                          <div className="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 transition">
-                            <button
-                              onClick={() => startEditLocus(locus, room.id)}
-                              className="text-xs px-2 py-1 rounded text-blue-400 hover:bg-blue-500/10 transition cursor-pointer"
-                            >
-                              Bearbeiten
-                            </button>
-                            <button
-                              onClick={() => deleteLocus(locus.id, room.id)}
-                              className="text-xs px-2 py-1 rounded text-red-400 hover:bg-red-500/10 transition cursor-pointer"
-                            >
-                              Löschen
-                            </button>
-                          </div>
+                          )}
                         </div>
                       )
                     )}
@@ -301,6 +345,11 @@ export default function Editor() {
 }
 
 function LocusFormComponent({ form, setForm, onSave, onCancel }) {
+  function autoResize(e) {
+    e.target.style.height = 'auto'
+    e.target.style.height = e.target.scrollHeight + 'px'
+  }
+
   return (
     <form onSubmit={onSave} className="p-3 rounded-lg bg-[#0a0a1a] border border-purple-500/20 space-y-3">
       <div className="grid grid-cols-3 gap-2">
@@ -336,19 +385,27 @@ function LocusFormComponent({ form, setForm, onSave, onCancel }) {
         />
         <input
           type="text"
-          placeholder="Major-Zahl"
+          placeholder="Major 1"
           value={form.major_zahl}
           onChange={(e) => setForm({ ...form, major_zahl: e.target.value })}
           className="px-3 py-2 rounded bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500 transition"
         />
         <input
           type="text"
-          placeholder="Notiz"
-          value={form.notiz}
-          onChange={(e) => setForm({ ...form, notiz: e.target.value })}
+          placeholder="Major 2"
+          value={form.major_zahl_2}
+          onChange={(e) => setForm({ ...form, major_zahl_2: e.target.value })}
           className="px-3 py-2 rounded bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500 transition"
         />
       </div>
+      <textarea
+        placeholder="Notiz"
+        value={form.notiz}
+        onChange={(e) => { setForm({ ...form, notiz: e.target.value }); autoResize(e) }}
+        onFocus={autoResize}
+        rows={2}
+        className="w-full px-3 py-2 rounded bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500 transition resize-none"
+      />
       <div className="flex gap-2 justify-end">
         <button
           type="button"
