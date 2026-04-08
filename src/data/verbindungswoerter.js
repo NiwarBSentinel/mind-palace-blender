@@ -47,4 +47,102 @@ export const verbindungswoerter = [
   {satz:"Er spricht drei Sprachen. ___ beherrscht er Programmiersprachen.", antwort:"Außerdem", optionen:["Außerdem","Deshalb","Weil","Damit"], typ:"Konjunktionaladverb", erklaerung:"\"Außerdem\" fügt weitere Fähigkeiten hinzu — Position 1 mit Inversion: \"beherrscht er\"."},
   {satz:"Das Hotel war ausgebucht. ___ mussten wir ein anderes suchen.", antwort:"Daher", optionen:["Daher","Obwohl","Denn","Weil"], typ:"Konjunktionaladverb", erklaerung:"\"Daher\" zeigt die logische Konsequenz — Inversion: \"mussten wir\"."},
   {satz:"Sie hat hart trainiert. ___ hat sie den Marathon geschafft.", antwort:"Deshalb", optionen:["Deshalb","Obwohl","Weil","Aber"], typ:"Konjunktionaladverb", erklaerung:"\"Deshalb\" drückt die Folge des Trainings aus — Position 1 mit Inversion: \"hat sie\"."},
+
+  // ─── WEITERE KONJUNKTIONEN ──────────────────────────────────────────────────
+
+  {satz:"Er mag Tee, ___ seine Frau trinkt lieber Kaffee.", antwort:"aber", optionen:["aber","deshalb","weil","trotzdem"], typ:"Konjunktion", erklaerung:"\"aber\" drückt einen Gegensatz aus — Position 0, keine Wortstellungsänderung."},
+  {satz:"Wir können kochen, ___ wir können Pizza bestellen.", antwort:"oder", optionen:["oder","sondern","dennoch","damit"], typ:"Konjunktion", erklaerung:"\"oder\" bietet eine Alternative — Konjunktion, Hauptsatz-Wortstellung bleibt."},
+  {satz:"Ich habe Hunger, ___ ich esse etwas.", antwort:"und", optionen:["und","deshalb","weil","außerdem"], typ:"Konjunktion", erklaerung:"\"und\" verbindet zwei Hauptsätze — keine Wortstellungsänderung."},
+  {satz:"Er fährt nicht mit dem Bus, ___ er geht zu Fuß.", antwort:"sondern", optionen:["sondern","aber","trotzdem","weil"], typ:"Konjunktion", erklaerung:"\"sondern\" korrigiert nach Verneinung — Position 0, Hauptsatz-Wortstellung."},
+  {satz:"Sie bleibt heute zu Hause, ___ sie hat Kopfschmerzen.", antwort:"denn", optionen:["denn","weil","deshalb","obwohl"], typ:"Konjunktion", erklaerung:"\"denn\" gibt den Grund an — Konjunktion, Subjekt + Verb im Hauptsatz."},
+  {satz:"Er spricht leise, ___ er will niemanden stören.", antwort:"denn", optionen:["denn","deshalb","damit","weil"], typ:"Konjunktion", erklaerung:"\"denn\" begründet im Hauptsatz — keine Wortstellungsänderung."},
+  {satz:"Wir gehen ins Museum ___ danach in ein Café.", antwort:"und", optionen:["und","außerdem","deshalb","trotzdem"], typ:"Konjunktion", erklaerung:"\"und\" verbindet zwei Aktivitäten — Konjunktion, Position 0."},
+  {satz:"Er hat nicht gelogen, ___ er hat die Wahrheit gesagt.", antwort:"sondern", optionen:["sondern","aber","dennoch","denn"], typ:"Konjunktion", erklaerung:"\"sondern\" korrigiert die verneinte Aussage — Position 0."},
+  {satz:"Möchtest du Tee ___ lieber Saft?", antwort:"oder", optionen:["oder","und","sondern","denn"], typ:"Konjunktion", erklaerung:"\"oder\" stellt eine Wahlmöglichkeit dar — Konjunktion, keine Inversion."},
+  {satz:"Das Buch ist interessant, ___ es ist auch sehr lang.", antwort:"aber", optionen:["aber","deshalb","trotzdem","weil"], typ:"Konjunktion", erklaerung:"\"aber\" zeigt einen Einschränkung — Position 0, Hauptsatz bleibt unverändert."},
+  {satz:"Er hat kein Auto, ___ er hat auch keinen Führerschein.", antwort:"und", optionen:["und","denn","weil","deshalb"], typ:"Konjunktion", erklaerung:"\"und\" reiht zwei Fakten aneinander — Position 0."},
+  {satz:"Ich kaufe das Kleid nicht, ___ ich kaufe die Hose.", antwort:"sondern", optionen:["sondern","oder","aber","denn"], typ:"Konjunktion", erklaerung:"\"sondern\" ersetzt die verneinte Option — Konjunktion, Position 0."},
+  {satz:"Wir bleiben drinnen, ___ es ist zu kalt draußen.", antwort:"denn", optionen:["denn","weil","deshalb","obwohl"], typ:"Konjunktion", erklaerung:"\"denn\" liefert den Grund — Konjunktion, Hauptsatz-Wortstellung."},
+  {satz:"Sie liest gern Romane, ___ er bevorzugt Sachbücher.", antwort:"aber", optionen:["aber","trotzdem","deshalb","weil"], typ:"Konjunktion", erklaerung:"\"aber\" stellt einen Kontrast her — Position 0, keine Inversion."},
+
+  // ─── WEITERE SUBJUNKTIONEN ──────────────────────────────────────────────────
+
+  {satz:"Er geht zum Arzt, ___ er starke Schmerzen hat.", antwort:"weil", optionen:["weil","denn","deshalb","trotzdem"], typ:"Subjunktion", erklaerung:"\"weil\" leitet einen kausalen Nebensatz ein — \"hat\" steht am Ende."},
+  {satz:"___ sie müde war, arbeitete sie weiter.", antwort:"Obwohl", optionen:["Obwohl","Trotzdem","Aber","Dennoch"], typ:"Subjunktion", erklaerung:"\"Obwohl\" leitet einen konzessiven Nebensatz ein — Verb \"war\" am Ende."},
+  {satz:"Ich weiß, ___ er morgen nicht kommen kann.", antwort:"dass", optionen:["dass","weil","ob","deshalb"], typ:"Subjunktion", erklaerung:"\"dass\" leitet einen Inhaltssatz ein — \"kann\" steht am Ende des Nebensatzes."},
+  {satz:"___ er nach Hause kam, war es schon dunkel.", antwort:"Als", optionen:["Als","Wenn","Weil","Deshalb"], typ:"Subjunktion", erklaerung:"\"Als\" für einmaliges Ereignis in der Vergangenheit — \"kam\" am Ende."},
+  {satz:"___ du willst, können wir morgen anfangen.", antwort:"Wenn", optionen:["Wenn","Weil","Als","Daher"], typ:"Subjunktion", erklaerung:"\"Wenn\" drückt eine Bedingung aus — \"willst\" am Ende des Nebensatzes."},
+  {satz:"Er lernt fleißig, ___ er die Prüfung bestehen will.", antwort:"weil", optionen:["weil","denn","deshalb","damit"], typ:"Subjunktion", erklaerung:"\"weil\" gibt den Grund an — \"will\" steht am Ende des Nebensatzes."},
+  {satz:"Sie spricht leise, ___ das Baby nicht aufwacht.", antwort:"damit", optionen:["damit","weil","deshalb","denn"], typ:"Subjunktion", erklaerung:"\"damit\" drückt einen Zweck aus — \"aufwacht\" am Ende des Nebensatzes."},
+  {satz:"Ich frage mich, ___ er noch kommt.", antwort:"ob", optionen:["ob","dass","wenn","weil"], typ:"Subjunktion", erklaerung:"\"ob\" leitet eine indirekte Frage ein — \"kommt\" am Ende."},
+  {satz:"___ wir angekommen waren, begann das Konzert.", antwort:"Nachdem", optionen:["Nachdem","Deshalb","Trotzdem","Dennoch"], typ:"Subjunktion", erklaerung:"\"Nachdem\" leitet einen temporalen Nebensatz ein — \"waren\" am Ende."},
+  {satz:"Er wartet draußen, ___ seine Freundin fertig ist.", antwort:"bis", optionen:["bis","weil","deshalb","obwohl"], typ:"Subjunktion", erklaerung:"\"bis\" markiert einen Zeitpunkt — \"ist\" am Ende des Nebensatzes."},
+  {satz:"___ er krank ist, geht er trotzdem arbeiten.", antwort:"Obwohl", optionen:["Obwohl","Trotzdem","Deshalb","Weil"], typ:"Subjunktion", erklaerung:"\"Obwohl\" leitet einen konzessiven Nebensatz ein — \"ist\" am Ende."},
+  {satz:"Sie war traurig, ___ ihr Freund weggezogen ist.", antwort:"weil", optionen:["weil","deshalb","denn","trotzdem"], typ:"Subjunktion", erklaerung:"\"weil\" gibt den Grund — \"ist\" steht am Ende des Nebensatzes."},
+  {satz:"Er hat gesagt, ___ er uns helfen wird.", antwort:"dass", optionen:["dass","ob","weil","wenn"], typ:"Subjunktion", erklaerung:"\"dass\" leitet den Inhaltssatz ein — \"wird\" steht am Ende."},
+  {satz:"___ ich ein Kind war, spielte ich oft im Park.", antwort:"Als", optionen:["Als","Wenn","Weil","Damit"], typ:"Subjunktion", erklaerung:"\"Als\" für einen Zeitraum in der Vergangenheit — \"war\" am Ende."},
+  {satz:"___ es morgen regnet, bleiben wir zu Hause.", antwort:"Wenn", optionen:["Wenn","Als","Weil","Deshalb"], typ:"Subjunktion", erklaerung:"\"Wenn\" für zukünftige Bedingung — \"regnet\" am Ende."},
+  {satz:"Wir essen erst, ___ alle da sind.", antwort:"wenn", optionen:["wenn","bis","weil","denn"], typ:"Subjunktion", erklaerung:"\"wenn\" drückt eine Bedingung aus — \"sind\" am Ende des Nebensatzes."},
+  {satz:"Er schläft schlecht, ___ er zu viel Kaffee trinkt.", antwort:"weil", optionen:["weil","deshalb","denn","trotzdem"], typ:"Subjunktion", erklaerung:"\"weil\" gibt den kausalen Grund — \"trinkt\" steht am Ende."},
+  {satz:"Ich rufe dich an, ___ ich Neuigkeiten habe.", antwort:"wenn", optionen:["wenn","weil","deshalb","damit"], typ:"Subjunktion", erklaerung:"\"wenn\" drückt eine Bedingung aus — \"habe\" am Ende."},
+  {satz:"Sie lernt Spanisch, ___ sie in Madrid studieren möchte.", antwort:"weil", optionen:["weil","denn","deshalb","obwohl"], typ:"Subjunktion", erklaerung:"\"weil\" leitet den Grund ein — \"möchte\" am Ende des Nebensatzes."},
+  {satz:"Er macht das Licht aus, ___ er das Zimmer verlässt.", antwort:"bevor", optionen:["bevor","nachdem","weil","deshalb"], typ:"Subjunktion", erklaerung:"\"bevor\" leitet einen temporalen Nebensatz ein — \"verlässt\" am Ende."},
+  {satz:"___ du fertig bist, kannst du gehen.", antwort:"Wenn", optionen:["Wenn","Weil","Deshalb","Trotzdem"], typ:"Subjunktion", erklaerung:"\"Wenn\" drückt eine Bedingung aus — \"bist\" am Ende des Nebensatzes."},
+  {satz:"Ich bin froh, ___ du gekommen bist.", antwort:"dass", optionen:["dass","weil","ob","wenn"], typ:"Subjunktion", erklaerung:"\"dass\" leitet einen Inhaltssatz ein — \"bist\" am Ende."},
+  {satz:"___ der Film zu Ende war, gingen wir nach Hause.", antwort:"Nachdem", optionen:["Nachdem","Deshalb","Außerdem","Trotzdem"], typ:"Subjunktion", erklaerung:"\"Nachdem\" leitet einen temporalen Nebensatz ein — \"war\" am Ende."},
+  {satz:"Er ist umgezogen, ___ er einen neuen Job gefunden hat.", antwort:"weil", optionen:["weil","deshalb","denn","trotzdem"], typ:"Subjunktion", erklaerung:"\"weil\" gibt den Grund — \"hat\" steht am Ende des Nebensatzes."},
+  {satz:"Sie macht Sport, ___ sie gesund bleiben will.", antwort:"weil", optionen:["weil","damit","denn","deshalb"], typ:"Subjunktion", erklaerung:"\"weil\" leitet den Grund ein — \"will\" am Ende. (\"damit\" wäre auch möglich für Zweck.)"},
+
+  // ─── WEITERE KONJUNKTIONALADVERBIEN ─────────────────────────────────────────
+
+  {satz:"Er hat viel gelernt. ___ hat er die Prüfung bestanden.", antwort:"Deshalb", optionen:["Deshalb","Weil","Denn","Obwohl"], typ:"Konjunktionaladverb", erklaerung:"\"Deshalb\" steht auf Position 1 — Inversion: \"hat er\"."},
+  {satz:"Das Konzert war ausverkauft. ___ konnten wir keine Karten bekommen.", antwort:"Daher", optionen:["Daher","Weil","Denn","Obwohl"], typ:"Konjunktionaladverb", erklaerung:"\"Daher\" zeigt die Konsequenz — Inversion: \"konnten wir\"."},
+  {satz:"Sie hatte Fieber. ___ ging sie zur Schule.", antwort:"Trotzdem", optionen:["Trotzdem","Weil","Deshalb","Denn"], typ:"Konjunktionaladverb", erklaerung:"\"Trotzdem\" zeigt Handeln trotz Hindernis — Inversion: \"ging sie\"."},
+  {satz:"Er spielt Gitarre. ___ singt er in einer Band.", antwort:"Außerdem", optionen:["Außerdem","Deshalb","Weil","Denn"], typ:"Konjunktionaladverb", erklaerung:"\"Außerdem\" ergänzt eine weitere Information — Inversion: \"singt er\"."},
+  {satz:"Die Straße war gesperrt. ___ nahmen wir einen Umweg.", antwort:"Deshalb", optionen:["Deshalb","Obwohl","Weil","Denn"], typ:"Konjunktionaladverb", erklaerung:"\"Deshalb\" gibt die Folge an — Position 1 mit Inversion: \"nahmen wir\"."},
+  {satz:"Das Essen war kalt. ___ schmeckte es gut.", antwort:"Dennoch", optionen:["Dennoch","Deshalb","Weil","Denn"], typ:"Konjunktionaladverb", erklaerung:"\"Dennoch\" drückt einen Widerspruch aus — Inversion: \"schmeckte es\"."},
+  {satz:"Er hat wenig Geld. ___ kauft er sich ein neues Handy.", antwort:"Trotzdem", optionen:["Trotzdem","Deshalb","Weil","Denn"], typ:"Konjunktionaladverb", erklaerung:"\"Trotzdem\" zeigt widersprüchliches Handeln — Inversion: \"kauft er\"."},
+  {satz:"Sie hat Geburtstag. ___ haben wir eine Party organisiert.", antwort:"Deshalb", optionen:["Deshalb","Trotzdem","Weil","Obwohl"], typ:"Konjunktionaladverb", erklaerung:"\"Deshalb\" gibt den Grund für die Folge — Inversion: \"haben wir\"."},
+  {satz:"Er ist Vegetarier. ___ isst er kein Fleisch.", antwort:"Daher", optionen:["Daher","Trotzdem","Weil","Obwohl"], typ:"Konjunktionaladverb", erklaerung:"\"Daher\" zeigt die logische Folge — Inversion: \"isst er\"."},
+  {satz:"Die Prüfung war leicht. ___ haben einige Studenten nicht bestanden.", antwort:"Dennoch", optionen:["Dennoch","Deshalb","Weil","Daher"], typ:"Konjunktionaladverb", erklaerung:"\"Dennoch\" zeigt ein unerwartetes Ergebnis — Inversion: \"haben einige\"."},
+  {satz:"Er kann gut kochen. ___ backt er gern Kuchen.", antwort:"Außerdem", optionen:["Außerdem","Deshalb","Weil","Denn"], typ:"Konjunktionaladverb", erklaerung:"\"Außerdem\" fügt eine weitere Fähigkeit hinzu — Inversion: \"backt er\"."},
+  {satz:"Es war schon spät. ___ machten wir uns auf den Heimweg.", antwort:"Daher", optionen:["Daher","Trotzdem","Weil","Obwohl"], typ:"Konjunktionaladverb", erklaerung:"\"Daher\" gibt die logische Konsequenz — Inversion: \"machten wir\"."},
+  {satz:"Der Film hatte schlechte Kritiken. ___ wollte ich ihn sehen.", antwort:"Trotzdem", optionen:["Trotzdem","Deshalb","Daher","Weil"], typ:"Konjunktionaladverb", erklaerung:"\"Trotzdem\" zeigt Handeln trotz negativer Bewertung — Inversion: \"wollte ich\"."},
+  {satz:"Sie spricht fließend Deutsch. ___ beherrscht sie Englisch perfekt.", antwort:"Außerdem", optionen:["Außerdem","Deshalb","Daher","Weil"], typ:"Konjunktionaladverb", erklaerung:"\"Außerdem\" ergänzt eine weitere Kompetenz — Inversion: \"beherrscht sie\"."},
+  {satz:"Das Wetter war herrlich. ___ verbrachten wir den Tag am See.", antwort:"Deshalb", optionen:["Deshalb","Trotzdem","Dennoch","Weil"], typ:"Konjunktionaladverb", erklaerung:"\"Deshalb\" zeigt die Folge des guten Wetters — Inversion: \"verbrachten wir\"."},
+  {satz:"Die Aufgabe war kompliziert. ___ löste sie sie in wenigen Minuten.", antwort:"Dennoch", optionen:["Dennoch","Deshalb","Daher","Weil"], typ:"Konjunktionaladverb", erklaerung:"\"Dennoch\" zeigt ein unerwartetes Ergebnis — Inversion: \"löste sie\"."},
+  {satz:"Er hat sich verletzt. ___ spielt er im Finale mit.", antwort:"Trotzdem", optionen:["Trotzdem","Deshalb","Daher","Weil"], typ:"Konjunktionaladverb", erklaerung:"\"Trotzdem\" zeigt Handeln trotz Verletzung — Inversion: \"spielt er\"."},
+  {satz:"Der Bus kam nicht. ___ mussten wir ein Taxi nehmen.", antwort:"Daher", optionen:["Daher","Trotzdem","Obwohl","Weil"], typ:"Konjunktionaladverb", erklaerung:"\"Daher\" zeigt die Konsequenz — Inversion: \"mussten wir\"."},
+  {satz:"Er arbeitet viel. ___ verdient er gut.", antwort:"Deshalb", optionen:["Deshalb","Trotzdem","Obwohl","Weil"], typ:"Konjunktionaladverb", erklaerung:"\"Deshalb\" gibt die Folge — Inversion: \"verdient er\"."},
+  {satz:"Sie war nicht eingeladen. ___ kam sie zur Party.", antwort:"Trotzdem", optionen:["Trotzdem","Deshalb","Daher","Weil"], typ:"Konjunktionaladverb", erklaerung:"\"Trotzdem\" zeigt widersprüchliches Handeln — Inversion: \"kam sie\"."},
+  {satz:"Das Projekt war erfolgreich. ___ bekamen alle einen Bonus.", antwort:"Deshalb", optionen:["Deshalb","Dennoch","Trotzdem","Weil"], typ:"Konjunktionaladverb", erklaerung:"\"Deshalb\" zeigt die Belohnung als Folge — Inversion: \"bekamen alle\"."},
+  {satz:"Er hat Höhenangst. ___ ist er auf den Berg gestiegen.", antwort:"Trotzdem", optionen:["Trotzdem","Deshalb","Daher","Weil"], typ:"Konjunktionaladverb", erklaerung:"\"Trotzdem\" zeigt Überwindung — Inversion: \"ist er\"."},
+
+  // ─── NOCH MEHR KONJUNKTIONEN ────────────────────────────────────────────────
+
+  {satz:"Wir fahren ans Meer, ___ wir lieben den Strand.", antwort:"denn", optionen:["denn","weil","deshalb","obwohl"], typ:"Konjunktion", erklaerung:"\"denn\" gibt den Grund im Hauptsatz an — keine Wortstellungsänderung."},
+  {satz:"Er hat nicht angerufen, ___ er hat auch nicht geschrieben.", antwort:"und", optionen:["und","außerdem","deshalb","trotzdem"], typ:"Konjunktion", erklaerung:"\"und\" reiht zwei gleichwertige Aussagen aneinander — Position 0."},
+  {satz:"Das Hotel war schön, ___ die Lage war schlecht.", antwort:"aber", optionen:["aber","trotzdem","obwohl","dennoch"], typ:"Konjunktion", erklaerung:"\"aber\" drückt einen Einwand aus — Konjunktion, keine Inversion."},
+  {satz:"Sie isst kein Fleisch, ___ sie isst Fisch.", antwort:"aber", optionen:["aber","sondern","trotzdem","denn"], typ:"Konjunktion", erklaerung:"\"aber\" zeigt einen Gegensatz ohne Verneinung — Position 0."},
+  {satz:"Er schreibt nicht mit der Hand, ___ er tippt am Computer.", antwort:"sondern", optionen:["sondern","aber","oder","denn"], typ:"Konjunktion", erklaerung:"\"sondern\" korrigiert die verneinte Aussage — Position 0."},
+  {satz:"Ruf mich an ___ schick mir eine Nachricht.", antwort:"oder", optionen:["oder","und","sondern","denn"], typ:"Konjunktion", erklaerung:"\"oder\" bietet eine Alternative — Konjunktion, keine Wortstellungsänderung."},
+
+  // ─── NOCH MEHR SUBJUNKTIONEN ────────────────────────────────────────────────
+
+  {satz:"Er geht nicht raus, ___ es zu kalt ist.", antwort:"weil", optionen:["weil","denn","deshalb","trotzdem"], typ:"Subjunktion", erklaerung:"\"weil\" leitet den Grund als Nebensatz ein — \"ist\" am Ende."},
+  {satz:"___ sie den Brief gelesen hatte, weinte sie.", antwort:"Nachdem", optionen:["Nachdem","Deshalb","Trotzdem","Außerdem"], typ:"Subjunktion", erklaerung:"\"Nachdem\" für zeitliche Abfolge — \"hatte\" am Ende des Nebensatzes."},
+  {satz:"Ich weiß nicht, ___ sie kommt oder nicht.", antwort:"ob", optionen:["ob","dass","wenn","weil"], typ:"Subjunktion", erklaerung:"\"ob\" leitet eine indirekte Ja/Nein-Frage ein — Verb am Ende."},
+  {satz:"___ du Lust hast, gehen wir schwimmen.", antwort:"Wenn", optionen:["Wenn","Weil","Als","Deshalb"], typ:"Subjunktion", erklaerung:"\"Wenn\" drückt eine Bedingung aus — \"hast\" am Ende."},
+  {satz:"Er putzt die Wohnung, ___ seine Eltern kommen.", antwort:"bevor", optionen:["bevor","nachdem","weil","deshalb"], typ:"Subjunktion", erklaerung:"\"bevor\" leitet einen temporalen Nebensatz ein — \"kommen\" am Ende."},
+  {satz:"Sie spart Geld, ___ sie in den Urlaub fahren kann.", antwort:"damit", optionen:["damit","weil","deshalb","denn"], typ:"Subjunktion", erklaerung:"\"damit\" drückt einen Zweck aus — \"kann\" am Ende des Nebensatzes."},
+  {satz:"___ er viel arbeitet, hat er wenig Freizeit.", antwort:"Weil", optionen:["Weil","Deshalb","Trotzdem","Daher"], typ:"Subjunktion", erklaerung:"\"Weil\" leitet den Grund ein — \"arbeitet\" am Ende des Nebensatzes."},
+
+  // ─── NOCH MEHR KONJUNKTIONALADVERBIEN ───────────────────────────────────────
+
+  {satz:"Er verdient viel Geld. ___ ist er unglücklich.", antwort:"Trotzdem", optionen:["Trotzdem","Deshalb","Weil","Denn"], typ:"Konjunktionaladverb", erklaerung:"\"Trotzdem\" zeigt Widerspruch — Inversion: \"ist er\"."},
+  {satz:"Die Firma wächst schnell. ___ werden neue Mitarbeiter eingestellt.", antwort:"Daher", optionen:["Daher","Trotzdem","Weil","Obwohl"], typ:"Konjunktionaladverb", erklaerung:"\"Daher\" gibt die logische Folge — Inversion: \"werden neue\"."},
+  {satz:"Er liest viel. ___ schreibt er selbst Geschichten.", antwort:"Außerdem", optionen:["Außerdem","Deshalb","Weil","Damit"], typ:"Konjunktionaladverb", erklaerung:"\"Außerdem\" ergänzt eine weitere Aktivität — Inversion: \"schreibt er\"."},
+  {satz:"Das Experiment scheiterte. ___ gaben die Forscher nicht auf.", antwort:"Dennoch", optionen:["Dennoch","Deshalb","Daher","Weil"], typ:"Konjunktionaladverb", erklaerung:"\"Dennoch\" drückt Beharrlichkeit trotz Misserfolg aus — Inversion: \"gaben die\"."},
+  {satz:"Sie hat die Stelle bekommen. ___ zieht sie nach Berlin.", antwort:"Deshalb", optionen:["Deshalb","Trotzdem","Dennoch","Obwohl"], typ:"Konjunktionaladverb", erklaerung:"\"Deshalb\" zeigt die Folge — Inversion: \"zieht sie\"."},
+  {satz:"Er war erschöpft. ___ lief er die letzten Kilometer.", antwort:"Dennoch", optionen:["Dennoch","Deshalb","Daher","Weil"], typ:"Konjunktionaladverb", erklaerung:"\"Dennoch\" zeigt Durchhalten trotz Erschöpfung — Inversion: \"lief er\"."},
 ]
