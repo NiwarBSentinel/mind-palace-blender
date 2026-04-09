@@ -73,6 +73,8 @@ export default function Editor() {
   async function handleImageUpload(e) {
     const file = e.target.files?.[0]
     if (!file) return
+    // Reset input so the same file can be re-selected
+    e.target.value = ''
     setUploading(true)
     // Use a fixed filename per palace to avoid orphaned files
     const path = `${id}`
@@ -81,8 +83,8 @@ export default function Editor() {
       .upload(path, file, { upsert: true, contentType: file.type })
     if (upErr) { console.error('upload error:', upErr); setUploading(false); return }
     const { data: urlData } = supabase.storage.from('palace-images').getPublicUrl(path)
-    const image_url = urlData.publicUrl
-    console.log('Saved image_url:', image_url)
+    // Append cache-buster so browser loads the new image
+    const image_url = urlData.publicUrl + '?t=' + Date.now()
     const { error: dbErr } = await supabase.from('palaces').update({ image_url }).eq('id', id)
     if (dbErr) console.error('save image_url error:', dbErr)
     setPalace((p) => ({ ...p, image_url }))
