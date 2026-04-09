@@ -76,15 +76,28 @@ export default function Editor() {
     // Reset input so the same file can be re-selected
     e.target.value = ''
     setUploading(true)
-    // Use a fixed filename per palace to avoid orphaned files
-    const path = `${id}`
+
+    // Delete old file if it exists (ignore errors)
+    if (palace?.image_url) {
+      try {
+        const oldUrl = new URL(palace.image_url)
+        const parts = oldUrl.pathname.split('/palace-images/')
+        if (parts[1]) {
+          const oldPath = decodeURIComponent(parts[1].split('?')[0])
+          await supabase.storage.from('palace-images').remove([oldPath])
+        }
+      } catch (_) { /* ignore */ }
+    }
+
+    // Use unique filename per upload to avoid CDN cache issues
+    const ext = file.name.split('.').pop() || 'jpg'
+    const path = `${id}_${Date.now()}.${ext}`
     const { error: upErr } = await supabase.storage
       .from('palace-images')
-      .upload(path, file, { upsert: true, contentType: file.type })
+      .upload(path, file, { contentType: file.type })
     if (upErr) { console.error('upload error:', upErr); setUploading(false); return }
     const { data: urlData } = supabase.storage.from('palace-images').getPublicUrl(path)
-    // Append cache-buster so browser loads the new image
-    const image_url = urlData.publicUrl + '?t=' + Date.now()
+    const image_url = urlData.publicUrl
     const { error: dbErr } = await supabase.from('palaces').update({ image_url }).eq('id', id)
     if (dbErr) console.error('save image_url error:', dbErr)
     setPalace((p) => ({ ...p, image_url }))
