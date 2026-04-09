@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { C1_WOERTER } from '../data/c1WordsFull'
+import { C1_WOERTER_EXTENDED } from '../data/c1WordsExtended'
+
+const alleWoerter = [...C1_WOERTER, ...C1_WOERTER_EXTENDED]
 import { useAuth } from '../contexts/AuthContext'
 import { loadSRSData, saveSRSWord, saveSRSLocal } from '../lib/srsStorage'
 
@@ -91,11 +94,11 @@ export default function DeutschC1() {
     }
   }, [user])
 
-  const dueCount = C1_WOERTER.filter((w) => isDue(srsData[w.wort])).length
-  const learnedCount = C1_WOERTER.filter((w) => srsData[w.wort]?.repetitions > 0).length
+  const dueCount = alleWoerter.filter((w) => isDue(srsData[w.wort])).length
+  const learnedCount = alleWoerter.filter((w) => srsData[w.wort]?.repetitions > 0).length
 
   function startPractice() {
-    const due = C1_WOERTER.filter((w) => isDue(srsData[w.wort]))
+    const due = alleWoerter.filter((w) => isDue(srsData[w.wort]))
     if (due.length === 0) return
     setPracticeCards(shuffle(due))
     setCurrentIdx(0)
@@ -151,11 +154,11 @@ export default function DeutschC1() {
   // Filter for browse mode
   const searchLower = search.toLowerCase()
   const filtered = search
-    ? C1_WOERTER.filter((w) =>
+    ? alleWoerter.filter((w) =>
         w.wort.toLowerCase().includes(searchLower) ||
         w.definition.toLowerCase().includes(searchLower)
       )
-    : C1_WOERTER
+    : alleWoerter
 
   // Practice mode - active card
   const current = practiceCards[currentIdx]
@@ -179,7 +182,7 @@ export default function DeutschC1() {
         Wortschatz systematisch lernen
       </p>
       <p className="text-center text-slate-500 text-sm mb-8">
-        {C1_WOERTER.length} Wörter · {learnedCount} gelernt · {dueCount} heute fällig
+        {alleWoerter.length} Wörter · {learnedCount} gelernt · {dueCount} heute fällig
       </p>
 
       {/* Tab selector */}
@@ -280,7 +283,7 @@ export default function DeutschC1() {
             <div className="p-12 rounded-xl bg-[#12122a] border border-[#1e1e3a] text-center">
               <div className="text-5xl mb-4">✅</div>
               <h2 className="text-2xl font-bold text-slate-200 mb-2">Alle Wörter für heute erledigt!</h2>
-              <p className="text-slate-400 mb-6">{learnedCount} / {C1_WOERTER.length} Wörter gelernt</p>
+              <p className="text-slate-400 mb-6">{learnedCount} / {alleWoerter.length} Wörter gelernt</p>
               <button
                 onClick={() => setTab('lernen')}
                 className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium transition cursor-pointer"
