@@ -3,13 +3,16 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { isDue, getDueCount } from '../lib/srs'
 import { C1_WOERTER } from '../data/c1WordsFull'
+import { C1_WOERTER_EXTENDED } from '../data/c1WordsExtended'
+
+const ALL_C1 = [...C1_WOERTER, ...C1_WOERTER_EXTENDED]
 import { useAuth } from '../contexts/AuthContext'
 
 function findSimilarC1Words(word) {
   const clean = word.replace(/^(die|der|das)\s+/, '').toLowerCase()
   const prefix = clean.substring(0, 3)
   const len = clean.length
-  return C1_WOERTER
+  return ALL_C1
     .filter((w) => {
       if (w.wort === word) return false
       const other = w.wort.replace(/^(die|der|das)\s+/, '').toLowerCase()
@@ -137,7 +140,7 @@ export default function DeutschLernkarten() {
     const isC1 = (card.kategorie || '').toLowerCase().includes('deutsch c1') || (card.kategorie || '').toLowerCase() === 'deutsch c1'
     if (!isC1) return
 
-    const match = C1_WOERTER.find((w) => w.wort === card.frage) || null
+    const match = ALL_C1.find((w) => w.wort === card.frage) || null
     setC1Match(match)
     setC1Loading(true)
 
