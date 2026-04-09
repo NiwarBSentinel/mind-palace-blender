@@ -170,7 +170,7 @@ export default function RouteEditor() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a0a1a] via-[#0d0d24] to-[#050510] px-4 pt-14 pb-6">
+    <div className="min-h-screen bg-gradient-to-b from-[#0a0a1a] via-[#0d0d24] to-[#050510] px-4 pb-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-4">
           <button onClick={() => navigate('/routes')} className="text-slate-400 hover:text-slate-200 text-sm transition">

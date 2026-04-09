@@ -127,7 +127,7 @@ export default function PalaceTemplates() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a0a1a] via-[#0d0d24] to-[#050510] px-4 pt-14 pb-8">
+    <div className="min-h-screen bg-gradient-to-b from-[#0a0a1a] via-[#0d0d24] to-[#050510] px-4 pb-8">
       <div className="max-w-5xl mx-auto">
         <button onClick={() => navigate('/mnemotechnik')} className="text-slate-400 hover:text-slate-200 text-sm mb-6 inline-block transition">
           ← Zurück

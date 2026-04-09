@@ -1,6 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
-import UserMenu from './components/UserMenu'
+import Header from './components/Header'
 import Dashboard from './pages/Dashboard'
 import PalaceDashboard from './pages/PalaceDashboard'
 import Editor from './pages/Editor'
@@ -44,7 +44,8 @@ export default function App() {
   return (
     <AuthProvider>
       <div className="min-h-screen bg-[#0a0a1a]">
-        <UserMenu />
+        <Header />
+        <div className="pt-14">
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/login" element={<Login />} />
@@ -85,6 +86,7 @@ export default function App() {
           <Route path="/sprachen/deutsch/:level/zeitdruck" element={<ZeitdruckQuiz />} />
           <Route path="/sprachen/deutsch/:level" element={<GoetheLevel />} />
         </Routes>
+        </div>
       </div>
     </AuthProvider>
   )
