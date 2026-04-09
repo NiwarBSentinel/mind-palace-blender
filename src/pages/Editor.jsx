@@ -703,6 +703,8 @@ function ImageMapSection({ palace, markers, rooms, imgRef, uploading, dragging, 
             onTouchEnd={(e) => {
               // Only fire tap if it was a single-finger touch and no drag happened
               if (dragging !== null) return
+              // Don't place marker if user tapped outside the image (e.g. on a label/button)
+              if (e.target !== imgRef.current) return
               handleTap(e)
             }}
           >
@@ -710,7 +712,7 @@ function ImageMapSection({ palace, markers, rooms, imgRef, uploading, dragging, 
               ref={imgRef}
               src={palace.image_url}
               alt="Palace"
-              className="w-full block"
+              className="w-full block pointer-events-auto"
               draggable={false}
             />
             {markers.map((marker) => {
@@ -757,12 +759,16 @@ function ImageMapSection({ palace, markers, rooms, imgRef, uploading, dragging, 
               )
             })}
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mt-2">
             <p className="text-xs text-slate-500">
               Tippe aufs Bild, um Marker zu setzen. Halte & ziehe zum Verschieben.
             </p>
-            <label className="text-xs text-purple-400 hover:text-purple-300 cursor-pointer transition shrink-0 ml-2">
-              Bild ändern
+            <label
+              className="text-xs text-purple-400 hover:text-purple-300 cursor-pointer transition shrink-0 ml-2 px-3 py-2 rounded-lg bg-purple-500/10 border border-purple-500/20 active:bg-purple-500/20"
+              onClick={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
+            >
+              📷 Bild ändern
               <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
             </label>
           </div>
