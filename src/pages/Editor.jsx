@@ -447,6 +447,28 @@ export default function Editor() {
     await fetchMarkers()
   }
 
+  async function moveRoom(roomId, direction, e) {
+    e.stopPropagation()
+    const idx = rooms.findIndex((r) => r.id === roomId)
+    if (idx < 0) return
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+    if (swapIdx < 0 || swapIdx >= rooms.length) return
+    const a = rooms[idx]
+    const b = rooms[swapIdx]
+    // Swap reihenfolge in DB
+    await Promise.all([
+      supabase.from('rooms').update({ reihenfolge: b.reihenfolge }).eq('id', a.id),
+      supabase.from('rooms').update({ reihenfolge: a.reihenfolge }).eq('id', b.id),
+    ])
+    // Also update palace_markers room_index if they reference these rooms
+    const markerA = markers.find((m) => m.room_index === a.reihenfolge)
+    const markerB = markers.find((m) => m.room_index === b.reihenfolge)
+    if (markerA) await supabase.from('palace_markers').update({ room_index: b.reihenfolge }).eq('id', markerA.id)
+    if (markerB) await supabase.from('palace_markers').update({ room_index: a.reihenfolge }).eq('id', markerB.id)
+    await fetchRooms()
+    await fetchMarkers()
+  }
+
   async function toggleRoom(roomId) {
     setExpandedRooms((prev) => {
       const next = new Set(prev)
@@ -704,12 +726,30 @@ export default function Editor() {
                       </span>
                     </div>
                     {editMode && (
-                      <button
-                        onClick={(e) => deleteRoom(room.id, e)}
-                        className="text-sm text-red-400 hover:bg-red-500/10 px-2 py-1 rounded transition cursor-pointer"
-                      >
-                        Löschen
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={(e) => moveRoom(room.id, 'up', e)}
+                          disabled={room.reihenfolge <= 1}
+                          className="text-sm text-slate-400 hover:text-purple-300 hover:bg-purple-500/10 px-1.5 py-1 rounded transition cursor-pointer disabled:opacity-20 disabled:cursor-default"
+                          title="Nach oben"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          onClick={(e) => moveRoom(room.id, 'down', e)}
+                          disabled={room.reihenfolge >= rooms.length}
+                          className="text-sm text-slate-400 hover:text-purple-300 hover:bg-purple-500/10 px-1.5 py-1 rounded transition cursor-pointer disabled:opacity-20 disabled:cursor-default"
+                          title="Nach unten"
+                        >
+                          ▼
+                        </button>
+                        <button
+                          onClick={(e) => deleteRoom(room.id, e)}
+                          className="text-sm text-red-400 hover:bg-red-500/10 px-2 py-1 rounded transition cursor-pointer ml-1"
+                        >
+                          Löschen
+                        </button>
+                      </div>
                     )}
                   </div>
 
