@@ -374,44 +374,75 @@ export default function Editor() {
     await fetchLoci(roomId)
   }
 
-  // Bulk import
-  const [importRoom, setImportRoom] = useState(null)
+  // Global bulk import
+  const [showImport, setShowImport] = useState(false)
   const [importText, setImportText] = useState('')
   const [importing, setImporting] = useState(false)
+  const [importResult, setImportResult] = useState(null)
 
-  async function handleBulkImport(roomId) {
+  async function handleGlobalImport() {
     if (!importText.trim()) return
     setImporting(true)
-    const existingLoci = loci[roomId] || []
-    let nextPos = existingLoci.length > 0 ? Math.max(...existingLoci.map((l) => l.position)) + 1 : 1
+    setImportResult(null)
 
     const lines = importText.split('\n').map((l) => l.trim()).filter(Boolean)
-    const rows = []
+    let currentRoomName = null
+    const roomMap = {} // roomName -> [loci lines]
 
     for (const line of lines) {
-      // Support: "Person | Aktion | Objekt" or "Person; Aktion; Objekt" or "Person, Aktion, Objekt" or just "Person"
-      const sep = line.includes('|') ? '|' : line.includes(';') ? ';' : line.includes('\t') ? '\t' : ','
-      const parts = line.split(sep).map((p) => p.trim())
-      rows.push({
-        room_id: roomId,
-        position: nextPos++,
-        person: parts[0] || '',
-        action: parts[1] || '',
-        object: parts[2] || '',
-        major_zahl: parts[3] || '',
-        major_zahl_2: parts[4] || '',
-        notiz: parts[5] || '',
-      })
+      // Lines starting with # or ## are room headers
+      if (line.startsWith('#')) {
+        currentRoomName = line.replace(/^#+\s*/, '').trim()
+        if (currentRoomName && !roomMap[currentRoomName]) roomMap[currentRoomName] = []
+      } else if (currentRoomName) {
+        roomMap[currentRoomName].push(line)
+      }
     }
 
-    if (rows.length > 0) {
-      const { error } = await supabase.from('loci').insert(rows)
-      if (error) console.error('bulk import error:', error)
+    const roomNames = Object.keys(roomMap)
+    if (roomNames.length === 0) {
+      setImportResult({ error: 'Keine Räume gefunden. Nutze # Raumname als Überschrift.' })
+      setImporting(false)
+      return
     }
 
-    await fetchLoci(roomId)
-    setImportText('')
-    setImportRoom(null)
+    let totalRooms = 0
+    let totalLoci = 0
+
+    for (const roomName of roomNames) {
+      const reihenfolge = rooms.length + totalRooms + 1
+      const { data: roomData, error: roomErr } = await supabase
+        .from('rooms')
+        .insert({ palace_id: id, name: roomName, reihenfolge })
+        .select()
+        .single()
+      if (roomErr || !roomData) { console.error('room insert error:', roomErr); continue }
+      totalRooms++
+
+      const lociLines = roomMap[roomName]
+      if (lociLines.length > 0) {
+        const rows = lociLines.map((line, i) => {
+          const sep = line.includes('|') ? '|' : line.includes(';') ? ';' : line.includes('\t') ? '\t' : ','
+          const parts = line.split(sep).map((p) => p.trim())
+          return {
+            room_id: roomData.id,
+            position: i + 1,
+            person: parts[0] || '',
+            action: parts[1] || '',
+            object: parts[2] || '',
+            major_zahl: parts[3] || '',
+            major_zahl_2: parts[4] || '',
+            notiz: parts[5] || '',
+          }
+        })
+        const { error: lociErr } = await supabase.from('loci').insert(rows)
+        if (lociErr) console.error('loci insert error:', lociErr)
+        else totalLoci += rows.length
+      }
+    }
+
+    await fetchRooms()
+    setImportResult({ rooms: totalRooms, loci: totalLoci })
     setImporting(false)
   }
 
@@ -436,7 +467,13 @@ export default function Editor() {
             <p className="text-slate-400 text-sm mt-1">{palace.beschreibung}</p>
           )}
         </div>
-        <div className="flex gap-2 shrink-0">
+        <div className="flex gap-2 shrink-0 flex-wrap">
+          <button
+            onClick={() => setShowImport(!showImport)}
+            className="px-4 py-2.5 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] text-sm font-medium transition cursor-pointer border border-[#2a2a4a] hover:border-blue-500/40"
+          >
+            📋 Import
+          </button>
           {user && rooms.length > 0 && (
             <button
               onClick={shareAsTemplate}
@@ -454,6 +491,69 @@ export default function Editor() {
           </button>
         </div>
       </div>
+
+      {/* Global bulk import panel */}
+      {showImport && (
+        <div className="mb-8 p-5 rounded-xl bg-[#0a0a1a] border border-blue-500/20 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold text-blue-300">📋 Räume & Loci importieren</h3>
+            <button onClick={() => { setShowImport(false); setImportText(''); setImportResult(null) }} className="text-slate-500 hover:text-slate-300 text-xl cursor-pointer leading-none">×</button>
+          </div>
+
+          <div className="p-3 rounded-lg bg-[#12122a] border border-[#2a2a4a]">
+            <p className="text-xs text-slate-400 mb-2 font-medium">Format:</p>
+            <pre className="text-xs text-slate-500 font-mono leading-relaxed whitespace-pre-wrap">{`# Wohnzimmer
+Einstein | schreibt | Formel
+Mona Lisa | lächelt | Rahmen
+Sherlock | untersucht | Lupe
+
+# Küche
+Napoleon | kocht | Suppe
+Cleopatra | schneidet | Brot`}</pre>
+            <p className="text-xs text-slate-500 mt-2">
+              <code className="text-blue-400">#</code> = neuer Raum · Felder mit <code className="text-blue-400">|</code> oder <code className="text-blue-400">;</code> oder <code className="text-blue-400">,</code> trennen
+              <br/>Reihenfolge: Person | Aktion | Objekt | Major1 | Major2 | Notiz
+            </p>
+          </div>
+
+          <textarea
+            value={importText}
+            onChange={(e) => setImportText(e.target.value)}
+            placeholder={"# Raumname\nPerson | Aktion | Objekt\nPerson | Aktion | Objekt\n\n# Zweiter Raum\nPerson | Aktion | Objekt"}
+            rows={10}
+            className="w-full px-4 py-3 rounded-lg bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-600 text-sm focus:outline-none focus:border-blue-500 transition resize-y font-mono"
+          />
+
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-slate-500">
+              {(() => {
+                const lines = importText.split('\n').map(l => l.trim()).filter(Boolean)
+                const roomCount = lines.filter(l => l.startsWith('#')).length
+                const lociCount = lines.filter(l => !l.startsWith('#')).length
+                return `${roomCount} Räume · ${lociCount} Loci`
+              })()}
+            </span>
+            <button
+              onClick={handleGlobalImport}
+              disabled={importing || !importText.trim()}
+              className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-sm font-medium transition cursor-pointer"
+            >
+              {importing ? 'Importiere...' : 'Alles importieren'}
+            </button>
+          </div>
+
+          {importResult && !importResult.error && (
+            <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-300 text-sm font-medium">
+              ✅ {importResult.rooms} Räume und {importResult.loci} Loci erfolgreich importiert!
+            </div>
+          )}
+          {importResult?.error && (
+            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-sm">
+              ❌ {importResult.error}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Mobile: Image map first */}
@@ -629,52 +729,12 @@ export default function Editor() {
                         </div>
                       )}
                       {!(editingLocus && editingLocus.isNew && editingLocus.roomId === room.id) && (
-                        <div className="mt-3 flex gap-2">
-                          <button
-                            onClick={() => startAddLocus(room.id)}
-                            className="flex-1 py-2 rounded-lg border border-dashed border-[#2a2a4a] text-slate-400 hover:text-purple-300 hover:border-purple-500/30 transition text-sm cursor-pointer"
-                          >
-                            + Locus hinzufügen
-                          </button>
-                          <button
-                            onClick={() => setImportRoom(importRoom === room.id ? null : room.id)}
-                            className="px-4 py-2 rounded-lg border border-dashed border-[#2a2a4a] text-slate-400 hover:text-blue-300 hover:border-blue-500/30 transition text-sm cursor-pointer"
-                          >
-                            📋 Import
-                          </button>
-                        </div>
-                      )}
-
-                      {importRoom === room.id && (
-                        <div className="mt-3 p-4 rounded-lg bg-[#0a0a1a] border border-blue-500/20 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h4 className="text-sm font-semibold text-blue-300">Mehrere Loci importieren</h4>
-                            <button onClick={() => { setImportRoom(null); setImportText('') }} className="text-slate-500 hover:text-slate-300 text-lg cursor-pointer">×</button>
-                          </div>
-                          <p className="text-xs text-slate-500">
-                            Ein Locus pro Zeile. Felder mit <code className="text-blue-400">|</code> oder <code className="text-blue-400">;</code> oder <code className="text-blue-400">,</code> trennen:<br/>
-                            <span className="text-slate-400">Person | Aktion | Objekt | Major1 | Major2 | Notiz</span>
-                          </p>
-                          <textarea
-                            value={importText}
-                            onChange={(e) => setImportText(e.target.value)}
-                            placeholder={"Einstein | schreibt | Formel\nMona Lisa | lächelt | Rahmen\nSherlock | untersucht | Lupe"}
-                            rows={6}
-                            className="w-full px-3 py-2 rounded-lg bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-600 text-sm focus:outline-none focus:border-blue-500 transition resize-none font-mono"
-                          />
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-slate-500">
-                              {importText.trim() ? importText.split('\n').filter(l => l.trim()).length : 0} Einträge
-                            </span>
-                            <button
-                              onClick={() => handleBulkImport(room.id)}
-                              disabled={importing || !importText.trim()}
-                              className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-sm font-medium transition cursor-pointer"
-                            >
-                              {importing ? 'Importiere...' : 'Importieren'}
-                            </button>
-                          </div>
-                        </div>
+                        <button
+                          onClick={() => startAddLocus(room.id)}
+                          className="mt-3 w-full py-2 rounded-lg border border-dashed border-[#2a2a4a] text-slate-400 hover:text-purple-300 hover:border-purple-500/30 transition text-sm cursor-pointer"
+                        >
+                          + Locus hinzufügen
+                        </button>
                       )}
                     </div>
                   )}
