@@ -11,6 +11,8 @@ export default function PalaceDashboard() {
   const [creating, setCreating] = useState(false)
   const [showImport, setShowImport] = useState(false)
   const [importPalaceId, setImportPalaceId] = useState(null)
+  const [importNewName, setImportNewName] = useState('')
+  const [creatingImportPalace, setCreatingImportPalace] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -48,6 +50,22 @@ export default function PalaceDashboard() {
     await supabase.from('rooms').delete().eq('palace_id', id)
     await supabase.from('palaces').delete().eq('id', id)
     await fetchPalaces()
+  }
+
+  async function handleCreateImportPalace() {
+    if (!importNewName.trim()) return
+    setCreatingImportPalace(true)
+    const { data, error } = await supabase
+      .from('palaces')
+      .insert({ name: importNewName.trim() })
+      .select()
+      .single()
+    if (!error && data) {
+      await fetchPalaces()
+      setImportPalaceId(data.id)
+      setImportNewName('')
+    }
+    setCreatingImportPalace(false)
   }
 
   return (
@@ -112,19 +130,42 @@ export default function PalaceDashboard() {
                 {palaces.map((p) => (
                   <button
                     key={p.id}
-                    onClick={() => setImportPalaceId(p.id)}
+                    onClick={() => { setImportPalaceId(p.id); setImportNewName('') }}
                     className={`px-4 py-2 rounded-lg text-sm transition cursor-pointer ${importPalaceId === p.id ? 'bg-purple-600 text-white' : 'bg-[#0a0a1a] border border-[#2a2a4a] text-slate-400 hover:border-purple-500/50'}`}
                   >
                     {p.name}
                   </button>
                 ))}
-                {palaces.length === 0 && (
-                  <p className="text-xs text-slate-500">Erstelle zuerst einen Palast oben.</p>
-                )}
+                <button
+                  onClick={() => { setImportPalaceId('__new__'); setImportNewName('') }}
+                  className={`px-4 py-2 rounded-lg text-sm transition cursor-pointer ${importPalaceId === '__new__' ? 'bg-green-600 text-white' : 'bg-[#0a0a1a] border border-dashed border-green-500/30 text-green-400 hover:border-green-500/50'}`}
+                >
+                  + Neuer Palast
+                </button>
               </div>
+              {importPalaceId === '__new__' && (
+                <div className="flex gap-2 mt-2">
+                  <input
+                    type="text"
+                    placeholder="Name des neuen Palastes"
+                    value={importNewName}
+                    onChange={(e) => setImportNewName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleCreateImportPalace() }}
+                    autoFocus
+                    className="flex-1 px-4 py-2.5 rounded-lg bg-[#0a0a1a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 focus:outline-none focus:border-green-500 transition text-sm"
+                  />
+                  <button
+                    onClick={handleCreateImportPalace}
+                    disabled={creatingImportPalace || !importNewName.trim()}
+                    className="px-5 py-2.5 rounded-lg bg-green-600 hover:bg-green-500 disabled:opacity-40 text-white text-sm font-medium transition cursor-pointer"
+                  >
+                    {creatingImportPalace ? '...' : 'Erstellen'}
+                  </button>
+                </div>
+              )}
             </div>
             {/* Step 2: Import panel */}
-            {importPalaceId && (
+            {importPalaceId && importPalaceId !== '__new__' && (
               <BulkImport
                 palaceId={importPalaceId}
                 existingRoomCount={0}
