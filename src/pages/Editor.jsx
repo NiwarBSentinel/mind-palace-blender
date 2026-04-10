@@ -785,7 +785,7 @@ export default function Editor() {
                         >
                           + Locus hinzufügen
                         </button>
-                      )
+                      )}
                     </div>
                   )}
                 </div>
