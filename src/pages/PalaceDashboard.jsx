@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import BulkImport from '../components/BulkImport'
 
 export default function PalaceDashboard() {
   const [palaces, setPalaces] = useState([])
@@ -8,6 +9,8 @@ export default function PalaceDashboard() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [creating, setCreating] = useState(false)
+  const [showImport, setShowImport] = useState(false)
+  const [importPalaceId, setImportPalaceId] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -63,7 +66,7 @@ export default function PalaceDashboard() {
         Erstelle und verwalte deine Gedächtnispaläste
       </p>
 
-      <form onSubmit={createPalace} className="mb-10 p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a]">
+      <form onSubmit={createPalace} className="mb-6 p-6 rounded-xl bg-[#12122a] border border-[#1e1e3a]">
         <h2 className="text-lg font-semibold text-slate-200 mb-4">Neuer Palast</h2>
         <div className="flex flex-col gap-3">
           <input
@@ -80,15 +83,57 @@ export default function PalaceDashboard() {
             onChange={(e) => setDescription(e.target.value)}
             className="px-4 py-2.5 rounded-lg bg-[#0a0a1a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
           />
-          <button
-            type="submit"
-            disabled={creating || !name.trim()}
-            className="px-6 py-2.5 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-medium transition cursor-pointer"
-          >
-            {creating ? 'Erstelle...' : 'Palast erstellen'}
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={creating || !name.trim()}
+              className="flex-1 px-6 py-2.5 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-medium transition cursor-pointer"
+            >
+              {creating ? 'Erstelle...' : 'Palast erstellen'}
+            </button>
+          </div>
         </div>
       </form>
+
+      {/* Bulk import section */}
+      <div className="mb-10">
+        <button
+          onClick={() => { setShowImport(!showImport); setImportPalaceId(null) }}
+          className="w-full py-3 rounded-xl border border-dashed border-[#2a2a4a] text-slate-400 hover:text-blue-300 hover:border-blue-500/30 transition text-sm cursor-pointer flex items-center justify-center gap-2 mb-4"
+        >
+          📋 Räume & Loci per Text oder Excel importieren
+        </button>
+        {showImport && (
+          <div className="space-y-4">
+            {/* Step 1: Pick or create palace */}
+            <div className="p-4 rounded-xl bg-[#12122a] border border-[#1e1e3a] space-y-3">
+              <p className="text-sm font-medium text-slate-300">In welchen Palast importieren?</p>
+              <div className="flex flex-wrap gap-2">
+                {palaces.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setImportPalaceId(p.id)}
+                    className={`px-4 py-2 rounded-lg text-sm transition cursor-pointer ${importPalaceId === p.id ? 'bg-purple-600 text-white' : 'bg-[#0a0a1a] border border-[#2a2a4a] text-slate-400 hover:border-purple-500/50'}`}
+                  >
+                    {p.name}
+                  </button>
+                ))}
+                {palaces.length === 0 && (
+                  <p className="text-xs text-slate-500">Erstelle zuerst einen Palast oben.</p>
+                )}
+              </div>
+            </div>
+            {/* Step 2: Import panel */}
+            {importPalaceId && (
+              <BulkImport
+                palaceId={importPalaceId}
+                existingRoomCount={0}
+                onDone={() => fetchPalaces()}
+              />
+            )}
+          </div>
+        )}
+      </div>
 
       {loading ? (
         <p className="text-center text-slate-400">Lade Paläste...</p>

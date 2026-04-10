@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
-import * as XLSX from 'xlsx'
+import BulkImport from '../components/BulkImport'
 
 export default function Editor() {
   const { id } = useParams()
@@ -377,118 +377,6 @@ export default function Editor() {
 
   // Global bulk import
   const [showImport, setShowImport] = useState(false)
-  const [importTab, setImportTab] = useState('text') // 'text' | 'excel'
-  const [importText, setImportText] = useState('')
-  const [importing, setImporting] = useState(false)
-  const [importResult, setImportResult] = useState(null)
-
-  async function handleGlobalImport() {
-    if (!importText.trim()) return
-    setImporting(true)
-    setImportResult(null)
-
-    const lines = importText.split('\n').map((l) => l.trim()).filter(Boolean)
-    let currentRoomName = null
-    const roomMap = {} // roomName -> [loci lines]
-
-    for (const line of lines) {
-      // Lines starting with # or ## are room headers
-      if (line.startsWith('#')) {
-        currentRoomName = line.replace(/^#+\s*/, '').trim()
-        if (currentRoomName && !roomMap[currentRoomName]) roomMap[currentRoomName] = []
-      } else if (currentRoomName) {
-        roomMap[currentRoomName].push(line)
-      }
-    }
-
-    const roomNames = Object.keys(roomMap)
-    if (roomNames.length === 0) {
-      setImportResult({ error: 'Keine Räume gefunden. Nutze # Raumname als Überschrift.' })
-      setImporting(false)
-      return
-    }
-
-    let totalRooms = 0
-    let totalLoci = 0
-
-    for (const roomName of roomNames) {
-      const reihenfolge = rooms.length + totalRooms + 1
-      const { data: roomData, error: roomErr } = await supabase
-        .from('rooms')
-        .insert({ palace_id: id, name: roomName, reihenfolge })
-        .select()
-        .single()
-      if (roomErr || !roomData) { console.error('room insert error:', roomErr); continue }
-      totalRooms++
-
-      const lociLines = roomMap[roomName]
-      if (lociLines.length > 0) {
-        const rows = lociLines.map((line, i) => {
-          const sep = line.includes('|') ? '|' : line.includes(';') ? ';' : line.includes('\t') ? '\t' : ','
-          const parts = line.split(sep).map((p) => p.trim())
-          return {
-            room_id: roomData.id,
-            position: i + 1,
-            person: parts[0] || '',
-            action: parts[1] || '',
-            object: parts[2] || '',
-            major_zahl: parts[3] || '',
-            major_zahl_2: parts[4] || '',
-            notiz: parts[5] || '',
-          }
-        })
-        const { error: lociErr } = await supabase.from('loci').insert(rows)
-        if (lociErr) console.error('loci insert error:', lociErr)
-        else totalLoci += rows.length
-      }
-    }
-
-    await fetchRooms()
-    setImportResult({ rooms: totalRooms, loci: totalLoci })
-    setImporting(false)
-  }
-
-  function handleExcelFile(e) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    e.target.value = ''
-    const reader = new FileReader()
-    reader.onload = (evt) => {
-      try {
-        const wb = XLSX.read(evt.target.result, { type: 'array' })
-        const lines = []
-        for (const name of wb.SheetNames) {
-          const ws = wb.Sheets[name]
-          const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' })
-          // Use sheet name as room, or first row if it looks like a header
-          let roomName = name
-          let startRow = 0
-          // Check if first cell of first row looks like a room header (no pipes, short text)
-          if (rows.length > 0) {
-            const first = String(rows[0][0] || '').trim().toLowerCase()
-            const knownHeaders = ['raum', 'room', 'person', 'zimmer', 'name']
-            if (knownHeaders.some(h => first === h || first.startsWith(h))) {
-              // First row is a header row — skip it
-              startRow = 1
-            }
-          }
-          lines.push(`# ${roomName}`)
-          for (let i = startRow; i < rows.length; i++) {
-            const cells = rows[i].map(c => String(c || '').trim()).filter(Boolean)
-            if (cells.length > 0) lines.push(cells.join(' | '))
-          }
-          lines.push('')
-        }
-        setImportText(lines.join('\n').trim())
-        setImportTab('text')
-        setImportResult(null)
-      } catch (err) {
-        console.error('Excel parse error:', err)
-        setImportResult({ error: 'Datei konnte nicht gelesen werden. Ist es eine gültige Excel/CSV-Datei?' })
-      }
-    }
-    reader.readAsArrayBuffer(file)
-  }
 
   if (loading) {
     return <div className="max-w-4xl mx-auto px-4 py-8 text-center text-slate-400">Lade...</div>
@@ -538,108 +426,12 @@ export default function Editor() {
 
       {/* Global bulk import panel */}
       {showImport && (
-        <div className="mb-8 p-5 rounded-xl bg-[#0a0a1a] border border-blue-500/20 space-y-4">
-          <div className="flex items-center justify-between">
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-bold text-blue-300">📋 Räume & Loci importieren</h3>
-            <button onClick={() => { setShowImport(false); setImportText(''); setImportResult(null) }} className="text-slate-500 hover:text-slate-300 text-xl cursor-pointer leading-none">×</button>
+            <button onClick={() => setShowImport(false)} className="text-slate-500 hover:text-slate-300 text-xl cursor-pointer leading-none">×</button>
           </div>
-
-          {/* Import tabs */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setImportTab('text')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer ${importTab === 'text' ? 'bg-blue-600 text-white' : 'bg-[#12122a] border border-[#2a2a4a] text-slate-400 hover:border-blue-500/50'}`}
-            >
-              ✏️ Text eingeben
-            </button>
-            <button
-              onClick={() => setImportTab('excel')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer ${importTab === 'excel' ? 'bg-green-600 text-white' : 'bg-[#12122a] border border-[#2a2a4a] text-slate-400 hover:border-green-500/50'}`}
-            >
-              📊 Excel / CSV hochladen
-            </button>
-          </div>
-
-          {/* Excel upload tab */}
-          {importTab === 'excel' && (
-            <div className="space-y-4">
-              <div className="p-4 rounded-lg bg-[#12122a] border border-[#2a2a4a] space-y-3">
-                <p className="text-sm text-slate-300 font-medium">Excel- oder CSV-Datei hochladen</p>
-                <p className="text-xs text-slate-500">
-                  Jedes <strong className="text-green-400">Tabellenblatt</strong> wird ein Raum. Die Spalten werden zu: Person, Aktion, Objekt, Major1, Major2, Notiz.
-                  <br/>Headerzeilen (Person, Raum, Name...) werden automatisch übersprungen.
-                </p>
-                <label className="flex items-center justify-center gap-3 p-6 rounded-lg border-2 border-dashed border-[#2a2a4a] hover:border-green-500/40 cursor-pointer transition group">
-                  <span className="text-3xl opacity-50 group-hover:opacity-80 transition">📊</span>
-                  <div>
-                    <p className="text-sm text-slate-300 group-hover:text-green-300 transition font-medium">Datei auswählen</p>
-                    <p className="text-xs text-slate-500">.xlsx, .xls oder .csv</p>
-                  </div>
-                  <input type="file" accept=".xlsx,.xls,.csv" onChange={handleExcelFile} className="hidden" />
-                </label>
-              </div>
-              {importText && (
-                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-300 text-sm">
-                  ✅ Datei gelesen — wechsle zum Textfeld um die Vorschau zu sehen und zu importieren.
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Text input tab */}
-          {importTab === 'text' && (
-            <div className="space-y-4">
-              <div className="p-3 rounded-lg bg-[#12122a] border border-[#2a2a4a]">
-                <p className="text-xs text-slate-400 mb-2 font-medium">Format:</p>
-                <pre className="text-xs text-slate-500 font-mono leading-relaxed whitespace-pre-wrap">{`# Wohnzimmer
-Einstein | schreibt | Formel
-Mona Lisa | lächelt | Rahmen
-
-# Küche
-Napoleon | kocht | Suppe`}</pre>
-                <p className="text-xs text-slate-500 mt-2">
-                  <code className="text-blue-400">#</code> = neuer Raum · Spalten: Person | Aktion | Objekt | Major1 | Major2 | Notiz
-                </p>
-              </div>
-
-              <textarea
-                value={importText}
-                onChange={(e) => setImportText(e.target.value)}
-                placeholder={"# Raumname\nPerson | Aktion | Objekt\nPerson | Aktion | Objekt\n\n# Zweiter Raum\nPerson | Aktion | Objekt"}
-                rows={10}
-                className="w-full px-4 py-3 rounded-lg bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-600 text-sm focus:outline-none focus:border-blue-500 transition resize-y font-mono"
-              />
-
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-500">
-                  {(() => {
-                    const lines = importText.split('\n').map(l => l.trim()).filter(Boolean)
-                    const roomCount = lines.filter(l => l.startsWith('#')).length
-                    const lociCount = lines.filter(l => !l.startsWith('#')).length
-                    return `${roomCount} Räume · ${lociCount} Loci`
-                  })()}
-                </span>
-                <button
-                  onClick={handleGlobalImport}
-                  disabled={importing || !importText.trim()}
-                  className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-sm font-medium transition cursor-pointer"
-                >
-                  {importing ? 'Importiere...' : 'Alles importieren'}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {importResult && !importResult.error && (
-            <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-300 text-sm font-medium">
-              ✅ {importResult.rooms} Räume und {importResult.loci} Loci erfolgreich importiert!
-            </div>
-          )}
-          {importResult?.error && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-sm">
-              ❌ {importResult.error}
-            </div>
-          )}
+          <BulkImport palaceId={id} existingRoomCount={rooms.length} onDone={() => fetchRooms()} />
         </div>
       )}
 
