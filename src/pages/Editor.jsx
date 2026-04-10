@@ -9,7 +9,7 @@ export default function Editor() {
   const { user } = useAuth()
   const [palace, setPalace] = useState(null)
   const [rooms, setRooms] = useState([])
-  const [expandedRoom, setExpandedRoom] = useState(null)
+  const [expandedRooms, setExpandedRooms] = useState(new Set())
   const [loci, setLoci] = useState({})
   const [newRoomName, setNewRoomName] = useState('')
   const [loading, setLoading] = useState(true)
@@ -210,7 +210,7 @@ export default function Editor() {
     const room = rooms[marker.room_index - 1]
     if (room) {
       setHighlightedRoom(room.id)
-      setExpandedRoom(room.id)
+      setExpandedRooms((prev) => { const next = new Set(prev); next.add(room.id); return next })
       if (!loci[room.id]) fetchLoci(room.id)
       setTimeout(() => setHighlightedRoom(null), 2000)
     }
@@ -289,17 +289,21 @@ export default function Editor() {
     if (!confirm('Raum und alle Loci löschen?')) return
     await supabase.from('loci').delete().eq('room_id', roomId)
     await supabase.from('rooms').delete().eq('id', roomId)
-    if (expandedRoom === roomId) setExpandedRoom(null)
+    setExpandedRooms((prev) => { const next = new Set(prev); next.delete(roomId); return next })
     await fetchRooms()
   }
 
   async function toggleRoom(roomId) {
-    if (expandedRoom === roomId) {
-      setExpandedRoom(null)
-    } else {
-      setExpandedRoom(roomId)
-      if (!loci[roomId]) await fetchLoci(roomId)
-    }
+    setExpandedRooms((prev) => {
+      const next = new Set(prev)
+      if (next.has(roomId)) {
+        next.delete(roomId)
+      } else {
+        next.add(roomId)
+        if (!loci[roomId]) fetchLoci(roomId)
+      }
+      return next
+    })
   }
 
   function startEditRoom(room, e) {
@@ -463,7 +467,7 @@ export default function Editor() {
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-purple-400 text-sm font-mono w-6">{room.reihenfolge}</span>
-                      <span className={`transition text-sm ${expandedRoom === room.id ? 'rotate-90' : ''}`}>▶</span>
+                      <span className={`transition text-sm ${expandedRooms.has(room.id) ? 'rotate-90' : ''}`}>▶</span>
                       {editingRoomId === room.id ? (
                         <input
                           type="text"
@@ -499,7 +503,7 @@ export default function Editor() {
                     </button>
                   </div>
 
-                  {expandedRoom === room.id && (
+                  {expandedRooms.has(room.id) && (
                     <div className="border-t border-[#1e1e3a] p-4">
                       {(loci[room.id] || []).length === 0 && !editingLocus && (
                         <p className="text-slate-500 text-sm text-center py-2">Keine Loci vorhanden.</p>
@@ -573,7 +577,7 @@ export default function Editor() {
                         )}
                       </div>
 
-                      {editingLocus && editingLocus.isNew && editingLocus.roomId === room.id ? (
+                      {editingLocus && editingLocus.isNew && editingLocus.roomId === room.id && (
                         <div className="mt-3">
                           <LocusFormComponent
                             form={locusForm}
@@ -582,7 +586,8 @@ export default function Editor() {
                             onCancel={() => setEditingLocus(null)}
                           />
                         </div>
-                      ) : (
+                      )}
+                      {!(editingLocus && editingLocus.isNew && editingLocus.roomId === room.id) && (
                         <button
                           onClick={() => startAddLocus(room.id)}
                           className="mt-3 w-full py-2 rounded-lg border border-dashed border-[#2a2a4a] text-slate-400 hover:text-purple-300 hover:border-purple-500/30 transition text-sm cursor-pointer"
