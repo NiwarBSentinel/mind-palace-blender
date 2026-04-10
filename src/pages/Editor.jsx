@@ -106,7 +106,12 @@ export default function Editor() {
     if (upErr) { console.error('room image upload error:', upErr); setRoomUploading(null); return }
     const { data: urlData } = supabase.storage.from('room-images').getPublicUrl(path)
     const image_url = urlData.publicUrl
-    await supabase.from('rooms').update({ image_url }).eq('id', roomId)
+    const { error: dbErr } = await supabase.from('rooms').update({ image_url }).eq('id', roomId)
+    if (dbErr) {
+      console.error('save room image_url error:', dbErr)
+      // Fallback: try using rpc or raw update if RLS blocks
+      alert('Bild hochgeladen, aber Speichern in DB fehlgeschlagen: ' + dbErr.message)
+    }
     setRooms((prev) => prev.map((r) => r.id === roomId ? { ...r, image_url } : r))
     setRoomUploading(null)
   }
