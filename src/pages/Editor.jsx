@@ -436,10 +436,14 @@ export default function Editor() {
   async function deleteRoom(roomId, e) {
     e.stopPropagation()
     if (!confirm('Raum und alle Loci löschen?')) return
+    // DB cascades delete room_markers when loci are deleted
     await supabase.from('loci').delete().eq('room_id', roomId)
     await supabase.from('rooms').delete().eq('id', roomId)
     setExpandedRooms((prev) => { const next = new Set(prev); next.delete(roomId); return next })
+    setRoomMarkers((prev) => { const next = { ...prev }; delete next[roomId]; return next })
+    if (selectedRoomId === roomId) setSelectedRoomId(null)
     await fetchRooms()
+    await fetchMarkers()
   }
 
   async function toggleRoom(roomId) {
@@ -527,7 +531,12 @@ export default function Editor() {
 
   async function deleteLocus(locusId, roomId) {
     if (!confirm('Locus löschen?')) return
+    // DB cascade deletes room_markers for this locus, but update local state too
     await supabase.from('loci').delete().eq('id', locusId)
+    setRoomMarkers((prev) => ({
+      ...prev,
+      [roomId]: (prev[roomId] || []).filter((m) => m.locus_id !== locusId)
+    }))
     await fetchLoci(roomId)
   }
 
@@ -616,7 +625,6 @@ export default function Editor() {
               onUpload={(e) => handleRoomImageUpload(selectedRoomId, e)}
               onAddMarker={(cx, cy, imgEl) => addRoomMarkerAt(selectedRoomId, cx, cy, imgEl)}
               onDragMarker={(marker, e, imgEl) => handleRoomMarkerDrag(selectedRoomId, marker, e, imgEl)}
-              onDeleteMarker={(markerId, e) => deleteRoomMarker(selectedRoomId, markerId, e)}
               onClose={() => setSelectedRoomId(null)}
             />
           )}
@@ -806,7 +814,6 @@ export default function Editor() {
               dragging={dragging}
               createHandlers={() => createHandlers(imgRef)}
               handleMarkerClick={handleMarkerClick}
-              deleteMarker={deleteMarker}
               handleImageUpload={handleImageUpload}
             />
             {selectedRoomId && (
@@ -819,8 +826,7 @@ export default function Editor() {
                 onUpload={(e) => handleRoomImageUpload(selectedRoomId, e)}
                 onAddMarker={(cx, cy, imgEl) => addRoomMarkerAt(selectedRoomId, cx, cy, imgEl)}
                 onDragMarker={(marker, e, imgEl) => handleRoomMarkerDrag(selectedRoomId, marker, e, imgEl)}
-                onDeleteMarker={(markerId, e) => deleteRoomMarker(selectedRoomId, markerId, e)}
-                onClose={() => setSelectedRoomId(null)}
+                  onClose={() => setSelectedRoomId(null)}
               />
             )}
           </div>
@@ -911,7 +917,7 @@ function LocusFormComponent({ form, setForm, onSave, onCancel }) {
   )
 }
 
-function ImageMapSection({ palace, markers, rooms, imgRef, uploading, dragging, createHandlers, handleMarkerClick, deleteMarker, handleImageUpload }) {
+function ImageMapSection({ palace, markers, rooms, imgRef, uploading, dragging, createHandlers, handleMarkerClick, handleImageUpload }) {
   const { handleClick, handleTap, handlePointerDown } = createHandlers()
 
   return (
@@ -972,12 +978,6 @@ function ImageMapSection({ palace, markers, rooms, imgRef, uploading, dragging, 
                       {room.name}
                     </div>
                   )}
-                  <button
-                    onClick={(e) => deleteMarker(marker.id, e)}
-                    className="absolute -top-2 -right-2 w-6 h-6 sm:w-5 sm:h-5 rounded-full bg-red-600 text-white text-[10px] sm:text-[9px] flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover/marker:opacity-100 transition cursor-pointer hover:bg-red-500"
-                  >
-                    ✕
-                  </button>
                 </div>
               )
             })}
@@ -1010,7 +1010,7 @@ function ImageMapSection({ palace, markers, rooms, imgRef, uploading, dragging, 
   )
 }
 
-function RoomImagePanel({ room, roomLoci, markers, dragging, uploading, onUpload, onAddMarker, onDragMarker, onDeleteMarker, onClose }) {
+function RoomImagePanel({ room, roomLoci, markers, dragging, uploading, onUpload, onAddMarker, onDragMarker, onClose }) {
   const imgRef = useRef(null)
 
   if (!room) return null
@@ -1098,12 +1098,6 @@ function RoomImagePanel({ room, roomLoci, markers, dragging, uploading, onUpload
                         {name}
                       </div>
                     )}
-                    <button
-                      onClick={(e) => onDeleteMarker(marker.id, e)}
-                      className="absolute -top-1.5 -right-1.5 w-5 h-5 sm:w-4 sm:h-4 rounded-full bg-red-600 text-white text-[8px] flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover/rm:opacity-100 transition cursor-pointer"
-                    >
-                      ✕
-                    </button>
                   </div>
                 )
               })}
