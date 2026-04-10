@@ -132,12 +132,34 @@ export default function Editor() {
     const x_percent = ((clientX - rect.left) / rect.width) * 100
     const y_percent = ((clientY - rect.top) / rect.height) * 100
     if (x_percent < 0 || x_percent > 100 || y_percent < 0 || y_percent > 100) return
-    // Find next unassigned locus
-    const roomLoci = loci[roomId] || []
+
+    // Make sure loci are loaded
+    let roomLoci = loci[roomId]
+    if (!roomLoci) {
+      const { data } = await supabase.from('loci').select('*').eq('room_id', roomId).order('position')
+      roomLoci = data || []
+      setLoci((prev) => ({ ...prev, [roomId]: roomLoci }))
+    }
+
     const existingMarkers = roomMarkers[roomId] || []
     const assignedIds = new Set(existingMarkers.map((m) => m.locus_id))
-    const nextLocus = roomLoci.find((l) => !assignedIds.has(l.id))
-    if (!nextLocus) return // all loci already have markers
+    let nextLocus = roomLoci.find((l) => !assignedIds.has(l.id))
+
+    // If no unassigned locus, auto-create one
+    if (!nextLocus) {
+      const nextPos = roomLoci.length > 0 ? Math.max(...roomLoci.map((l) => l.position)) + 1 : 1
+      const { data: newLocus, error: locErr } = await supabase
+        .from('loci')
+        .insert({ room_id: roomId, position: nextPos, person: '', action: '', object: '', major_zahl: '', major_zahl_2: '', notiz: '' })
+        .select()
+        .single()
+      if (locErr || !newLocus) { console.error('auto-create locus error:', locErr); return }
+      nextLocus = newLocus
+      // Update local loci state
+      const updatedLoci = [...roomLoci, newLocus]
+      setLoci((prev) => ({ ...prev, [roomId]: updatedLoci }))
+    }
+
     const { data, error } = await supabase
       .from('room_markers')
       .insert({ room_id: roomId, locus_id: nextLocus.id, x_percent, y_percent })
