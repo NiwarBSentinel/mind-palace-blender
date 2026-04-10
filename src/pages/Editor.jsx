@@ -21,13 +21,19 @@ export default function Editor() {
   const [editingRoomId, setEditingRoomId] = useState(null)
   const [editingRoomName, setEditingRoomName] = useState('')
 
-  // Image map state
+  // Palace image map state
   const [markers, setMarkers] = useState([])
   const [uploading, setUploading] = useState(false)
   const [highlightedRoom, setHighlightedRoom] = useState(null)
   const [dragging, setDragging] = useState(null)
   const imgRef = useRef(null)
   const imgRefMobile = useRef(null)
+
+  // Room image map state
+  const [roomMarkers, setRoomMarkers] = useState({}) // { roomId: [markers] }
+  const [roomImgRefs, setRoomImgRefs] = useState({})
+  const [roomDragging, setRoomDragging] = useState(null)
+  const [roomUploading, setRoomUploading] = useState(null)
 
   useEffect(() => {
     fetchPalace()
@@ -69,6 +75,135 @@ export default function Editor() {
       .eq('palace_id', id)
       .order('room_index')
     setMarkers(data || [])
+  }
+
+  // ── Room image functions ──
+  async function fetchRoomMarkers(roomId) {
+    const { data } = await supabase
+      .from('room_markers')
+      .select('*')
+      .eq('room_id', roomId)
+    setRoomMarkers((prev) => ({ ...prev, [roomId]: data || [] }))
+  }
+
+  async function handleRoomImageUpload(roomId, e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    setRoomUploading(roomId)
+    const room = rooms.find((r) => r.id === roomId)
+    // Delete old
+    if (room?.image_url) {
+      try {
+        const oldUrl = new URL(room.image_url)
+        const parts = oldUrl.pathname.split('/room-images/')
+        if (parts[1]) await supabase.storage.from('room-images').remove([decodeURIComponent(parts[1].split('?')[0])])
+      } catch (_) {}
+    }
+    const ext = file.name.split('.').pop() || 'jpg'
+    const path = `${roomId}_${Date.now()}.${ext}`
+    const { error: upErr } = await supabase.storage.from('room-images').upload(path, file, { contentType: file.type })
+    if (upErr) { console.error('room image upload error:', upErr); setRoomUploading(null); return }
+    const { data: urlData } = supabase.storage.from('room-images').getPublicUrl(path)
+    const image_url = urlData.publicUrl
+    await supabase.from('rooms').update({ image_url }).eq('id', roomId)
+    setRooms((prev) => prev.map((r) => r.id === roomId ? { ...r, image_url } : r))
+    setRoomUploading(null)
+  }
+
+  function getRoomImgRef(roomId) {
+    if (!roomImgRefs[roomId]) {
+      const ref = { current: null }
+      setRoomImgRefs((prev) => ({ ...prev, [roomId]: ref }))
+      return ref
+    }
+    return roomImgRefs[roomId]
+  }
+
+  const roomDidDrag = useRef(false)
+  const roomAddingMarker = useRef(false)
+
+  async function addRoomMarkerAt(roomId, clientX, clientY, imgEl) {
+    if (roomDragging !== null || roomDidDrag.current || roomAddingMarker.current) return
+    if (!imgEl) return
+    roomAddingMarker.current = true
+    setTimeout(() => { roomAddingMarker.current = false }, 300)
+    const rect = imgEl.getBoundingClientRect()
+    const x_percent = ((clientX - rect.left) / rect.width) * 100
+    const y_percent = ((clientY - rect.top) / rect.height) * 100
+    if (x_percent < 0 || x_percent > 100 || y_percent < 0 || y_percent > 100) return
+    // Find next unassigned locus
+    const roomLoci = loci[roomId] || []
+    const existingMarkers = roomMarkers[roomId] || []
+    const assignedIds = new Set(existingMarkers.map((m) => m.locus_id))
+    const nextLocus = roomLoci.find((l) => !assignedIds.has(l.id))
+    if (!nextLocus) return // all loci already have markers
+    const { data, error } = await supabase
+      .from('room_markers')
+      .insert({ room_id: roomId, locus_id: nextLocus.id, x_percent, y_percent })
+      .select()
+      .single()
+    if (!error && data) setRoomMarkers((prev) => ({ ...prev, [roomId]: [...(prev[roomId] || []), data] }))
+  }
+
+  function handleRoomMarkerDrag(roomId, marker, e, imgEl) {
+    e.stopPropagation()
+    e.preventDefault()
+    roomDidDrag.current = false
+    setRoomDragging(marker.id)
+
+    function getPos(ev) {
+      if (!imgEl) return { x: 0, y: 0 }
+      const rect = imgEl.getBoundingClientRect()
+      const cx = ev.touches ? ev.touches[0].clientX : ev.clientX
+      const cy = ev.touches ? ev.touches[0].clientY : ev.clientY
+      return {
+        x: Math.max(0, Math.min(100, ((cx - rect.left) / rect.width) * 100)),
+        y: Math.max(0, Math.min(100, ((cy - rect.top) / rect.height) * 100)),
+      }
+    }
+
+    function onMove(ev) {
+      ev.preventDefault()
+      roomDidDrag.current = true
+      const { x, y } = getPos(ev)
+      setRoomMarkers((prev) => ({
+        ...prev,
+        [roomId]: (prev[roomId] || []).map((m) => m.id === marker.id ? { ...m, x_percent: x, y_percent: y } : m)
+      }))
+    }
+
+    function onUp() {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+      window.removeEventListener('touchmove', onMove)
+      window.removeEventListener('touchend', onUp)
+      window.removeEventListener('touchcancel', onUp)
+      document.body.style.overflow = ''
+      setRoomDragging(null)
+      setRoomMarkers((prev) => {
+        const m = (prev[roomId] || []).find((mk) => mk.id === marker.id)
+        if (m) {
+          supabase.from('room_markers').update({ x_percent: m.x_percent, y_percent: m.y_percent }).eq('id', m.id)
+            .then(({ error }) => { if (error) console.error('update room marker error:', error) })
+        }
+        return prev
+      })
+      setTimeout(() => { roomDidDrag.current = false }, 50)
+    }
+
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    window.addEventListener('touchmove', onMove, { passive: false })
+    window.addEventListener('touchend', onUp)
+    window.addEventListener('touchcancel', onUp)
+  }
+
+  async function deleteRoomMarker(roomId, markerId, e) {
+    e.stopPropagation()
+    await supabase.from('room_markers').delete().eq('id', markerId)
+    setRoomMarkers((prev) => ({ ...prev, [roomId]: (prev[roomId] || []).filter((m) => m.id !== markerId) }))
   }
 
   async function handleImageUpload(e) {
@@ -302,6 +437,7 @@ export default function Editor() {
       } else {
         next.add(roomId)
         if (!loci[roomId]) fetchLoci(roomId)
+        if (!roomMarkers[roomId]) fetchRoomMarkers(roomId)
       }
       return next
     })
@@ -616,6 +752,19 @@ export default function Editor() {
                           + Locus hinzufügen
                         </button>
                       )}
+
+                      {/* Room image map */}
+                      <RoomImageMap
+                        room={room}
+                        roomLoci={loci[room.id] || []}
+                        markers={roomMarkers[room.id] || []}
+                        dragging={roomDragging}
+                        uploading={roomUploading === room.id}
+                        onUpload={(e) => handleRoomImageUpload(room.id, e)}
+                        onAddMarker={(cx, cy, imgEl) => addRoomMarkerAt(room.id, cx, cy, imgEl)}
+                        onDragMarker={(marker, e, imgEl) => handleRoomMarkerDrag(room.id, marker, e, imgEl)}
+                        onDeleteMarker={(markerId, e) => deleteRoomMarker(room.id, markerId, e)}
+                      />
                     </div>
                   )}
                 </div>
@@ -820,6 +969,127 @@ function ImageMapSection({ palace, markers, rooms, imgRef, uploading, dragging, 
           </p>
           <p className="text-slate-600 text-xs">Grundriss, Spielkarte, Foto...</p>
           <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploading} />
+        </label>
+      )}
+    </div>
+  )
+}
+
+function RoomImageMap({ room, roomLoci, markers, dragging, uploading, onUpload, onAddMarker, onDragMarker, onDeleteMarker }) {
+  const imgRef = useRef(null)
+
+  function handleClick(e) {
+    if (!imgRef.current) return
+    onAddMarker(e.clientX, e.clientY, imgRef.current)
+  }
+
+  function handleTap(e) {
+    if (e.changedTouches?.length !== 1) return
+    if (!imgRef.current) return
+    const t = e.changedTouches[0]
+    onAddMarker(t.clientX, t.clientY, imgRef.current)
+  }
+
+  // Find locus label for a marker
+  function getLocusLabel(marker) {
+    const locus = roomLoci.find((l) => l.id === marker.locus_id)
+    if (!locus) return '?'
+    return locus.position || '?'
+  }
+
+  function getLocusName(marker) {
+    const locus = roomLoci.find((l) => l.id === marker.locus_id)
+    if (!locus) return null
+    return locus.person || locus.action || locus.object || `Locus ${locus.position}`
+  }
+
+  const unassignedCount = roomLoci.length - markers.length
+
+  return (
+    <div className="mt-4 pt-4 border-t border-[#1e1e3a]">
+      <h4 className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Raum-Bild</h4>
+      {room.image_url ? (
+        <div className="space-y-2">
+          <div
+            className="relative rounded-lg overflow-hidden border border-[#2a2a4a] cursor-crosshair select-none"
+            style={{ touchAction: 'none' }}
+            onClick={handleClick}
+            onTouchEnd={(e) => {
+              if (dragging !== null) return
+              if (e.target !== imgRef.current) return
+              handleTap(e)
+            }}
+          >
+            <img
+              ref={imgRef}
+              src={room.image_url}
+              alt={room.name}
+              className="w-full block pointer-events-auto"
+              draggable={false}
+            />
+            {markers.map((marker) => {
+              const isActive = dragging === marker.id
+              const label = getLocusLabel(marker)
+              const name = getLocusName(marker)
+              return (
+                <div
+                  key={marker.id}
+                  className="absolute group/rm"
+                  style={{
+                    left: `${marker.x_percent}%`,
+                    top: `${marker.y_percent}%`,
+                    transform: 'translate(-50%, -50%)',
+                    touchAction: 'none',
+                    zIndex: isActive ? 50 : 10,
+                  }}
+                >
+                  <div
+                    style={{ position: 'absolute', top: '-20px', left: '-20px', width: '56px', height: '56px', cursor: 'grab' }}
+                    onMouseDown={(e) => onDragMarker(marker, e, imgRef.current)}
+                    onTouchStart={(e) => onDragMarker(marker, e, imgRef.current)}
+                  />
+                  <div
+                    className={`rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white text-[10px] font-bold pointer-events-none transition-all duration-150 ${isActive ? 'w-9 h-9 bg-blue-500 scale-110' : 'w-7 h-7 sm:w-6 sm:h-6 bg-blue-600'}`}
+                    style={isActive ? { boxShadow: '0 0 16px rgba(59,130,246,0.6)' } : undefined}
+                  >
+                    {label}
+                  </div>
+                  {name && !isActive && (
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-0.5 rounded bg-[#0a0a1a] border border-[#2a2a4a] text-[10px] text-slate-200 whitespace-nowrap opacity-0 group-hover/rm:opacity-100 transition pointer-events-none">
+                      {name}
+                    </div>
+                  )}
+                  <button
+                    onClick={(e) => onDeleteMarker(marker.id, e)}
+                    className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-600 text-white text-[7px] flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover/rm:opacity-100 transition cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] text-slate-500">
+              {unassignedCount > 0 ? `Tippe aufs Bild — ${unassignedCount} Loci ohne Marker` : 'Alle Loci haben Marker'}
+            </p>
+            <label
+              className="text-[10px] text-blue-400 hover:text-blue-300 cursor-pointer transition px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20 active:bg-blue-500/20"
+              onClick={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
+            >
+              📷 Bild ändern
+              <input type="file" accept="image/*" onChange={onUpload} className="hidden" />
+            </label>
+          </div>
+        </div>
+      ) : (
+        <label className="block rounded-lg border-2 border-dashed border-[#2a2a4a] hover:border-blue-500/30 p-5 text-center cursor-pointer transition group">
+          <div className="text-2xl mb-1 opacity-30 group-hover:opacity-60 transition">🏠</div>
+          <p className="text-slate-500 text-xs group-hover:text-slate-400 transition">
+            {uploading ? 'Wird hochgeladen...' : 'Raum-Bild hochladen'}
+          </p>
+          <input type="file" accept="image/*" onChange={onUpload} className="hidden" disabled={uploading} />
         </label>
       )}
     </div>
