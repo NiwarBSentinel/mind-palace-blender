@@ -115,22 +115,15 @@ export default function Editor() {
   const roomAddingMarker = useRef(false)
 
   async function addRoomMarkerAt(roomId, clientX, clientY, imgEl) {
-    console.log('addRoomMarkerAt called:', { roomId, clientX, clientY, imgEl: !!imgEl, roomDragging, didDrag: roomDidDrag.current, adding: roomAddingMarker.current })
-    if (roomDragging !== null || roomDidDrag.current || roomAddingMarker.current) {
-      console.log('addRoomMarkerAt blocked by guard')
-      return
-    }
-    if (!imgEl) { console.log('addRoomMarkerAt: no imgEl'); return }
-    if (!roomId) { console.log('addRoomMarkerAt: no roomId'); return }
+    if (roomDragging !== null || roomDidDrag.current || roomAddingMarker.current) return
+    if (!imgEl || !roomId) return
     roomAddingMarker.current = true
     try {
       const rect = imgEl.getBoundingClientRect()
       const x_percent = ((clientX - rect.left) / rect.width) * 100
       const y_percent = ((clientY - rect.top) / rect.height) * 100
-      console.log('addRoomMarkerAt coords:', { x_percent, y_percent })
       if (x_percent < 0 || x_percent > 100 || y_percent < 0 || y_percent > 100) return
 
-      // Make sure loci are loaded
       let roomLoci = loci[roomId]
       if (!roomLoci) {
         const { data } = await supabase.from('loci').select('*').eq('room_id', roomId).order('position')
@@ -141,34 +134,25 @@ export default function Editor() {
       const existingMarkers = roomMarkers[roomId] || []
       const assignedIds = new Set(existingMarkers.map((m) => m.locus_id))
       let nextLocus = roomLoci.find((l) => !assignedIds.has(l.id))
-      console.log('addRoomMarkerAt:', { lociCount: roomLoci.length, markersCount: existingMarkers.length, nextLocus: nextLocus?.id })
 
-      // If no unassigned locus, auto-create one
       if (!nextLocus) {
         const nextPos = roomLoci.length > 0 ? Math.max(...roomLoci.map((l) => l.position)) + 1 : 1
-        console.log('Auto-creating locus at position', nextPos)
         const { data: newLocus, error: locErr } = await supabase
           .from('loci')
           .insert({ room_id: roomId, position: nextPos, person: '', action: '', object: '', major_zahl: '', major_zahl_2: '', notiz: '' })
           .select()
           .single()
-        if (locErr || !newLocus) { console.error('auto-create locus error:', locErr); return }
+        if (locErr || !newLocus) return
         nextLocus = newLocus
-        const updatedLoci = [...roomLoci, newLocus]
-        setLoci((prev) => ({ ...prev, [roomId]: updatedLoci }))
+        setLoci((prev) => ({ ...prev, [roomId]: [...(prev[roomId] || []), newLocus] }))
       }
 
-      console.log('Inserting room_marker for locus', nextLocus.id)
       const { data, error } = await supabase
         .from('room_markers')
         .insert({ room_id: roomId, locus_id: nextLocus.id, x_percent, y_percent })
         .select()
         .single()
-      if (error) console.error('insert room_marker error:', error)
-      if (!error && data) {
-        console.log('Room marker created:', data.id)
-        setRoomMarkers((prev) => ({ ...prev, [roomId]: [...(prev[roomId] || []), data] }))
-      }
+      if (!error && data) setRoomMarkers((prev) => ({ ...prev, [roomId]: [...(prev[roomId] || []), data] }))
     } finally {
       setTimeout(() => { roomAddingMarker.current = false }, 300)
     }
@@ -1031,19 +1015,15 @@ function RoomImagePanel({ room, roomLoci, markers, dragging, uploading, onUpload
   if (!room) return null
 
   function handleClick(e) {
-    const img = imgRef.current
-    if (!img) { console.log('RoomImagePanel: imgRef is null on click'); return }
-    console.log('RoomImagePanel: click at', e.clientX, e.clientY)
-    onAddMarker(e.clientX, e.clientY, img)
+    if (!imgRef.current) return
+    onAddMarker(e.clientX, e.clientY, imgRef.current)
   }
 
   function handleTap(e) {
     if (e.changedTouches?.length !== 1) return
-    const img = imgRef.current
-    if (!img) { console.log('RoomImagePanel: imgRef is null on tap'); return }
+    if (!imgRef.current) return
     const t = e.changedTouches[0]
-    console.log('RoomImagePanel: tap at', t.clientX, t.clientY)
-    onAddMarker(t.clientX, t.clientY, img)
+    onAddMarker(t.clientX, t.clientY, imgRef.current)
   }
 
   function getLocusLabel(marker) {
