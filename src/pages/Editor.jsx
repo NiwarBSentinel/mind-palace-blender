@@ -684,7 +684,7 @@ export default function Editor() {
             </p>
           ) : (
             <div className="space-y-3">
-              {rooms.map((room) => (
+              {rooms.map((room, roomIdx) => (
                 <div
                   key={room.id}
                   className={`rounded-xl bg-[#12122a] border overflow-hidden group/room transition-colors ${highlightedRoom === room.id ? 'border-purple-500 bg-purple-500/5' : 'border-[#1e1e3a]'}`}
@@ -729,7 +729,7 @@ export default function Editor() {
                       <div className="flex items-center gap-1">
                         <button
                           onClick={(e) => moveRoom(room.id, 'up', e)}
-                          disabled={room.reihenfolge <= 1}
+                          disabled={roomIdx === 0}
                           className="text-sm text-slate-400 hover:text-purple-300 hover:bg-purple-500/10 px-1.5 py-1 rounded transition cursor-pointer disabled:opacity-20 disabled:cursor-default"
                           title="Nach oben"
                         >
@@ -737,7 +737,7 @@ export default function Editor() {
                         </button>
                         <button
                           onClick={(e) => moveRoom(room.id, 'down', e)}
-                          disabled={room.reihenfolge >= rooms.length}
+                          disabled={roomIdx === rooms.length - 1}
                           className="text-sm text-slate-400 hover:text-purple-300 hover:bg-purple-500/10 px-1.5 py-1 rounded transition cursor-pointer disabled:opacity-20 disabled:cursor-default"
                           title="Nach unten"
                         >
