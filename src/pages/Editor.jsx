@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import * as XLSX from 'xlsx'
 
 export default function Editor() {
   const { id } = useParams()
@@ -376,6 +377,7 @@ export default function Editor() {
 
   // Global bulk import
   const [showImport, setShowImport] = useState(false)
+  const [importTab, setImportTab] = useState('text') // 'text' | 'excel'
   const [importText, setImportText] = useState('')
   const [importing, setImporting] = useState(false)
   const [importResult, setImportResult] = useState(null)
@@ -446,6 +448,48 @@ export default function Editor() {
     setImporting(false)
   }
 
+  function handleExcelFile(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    const reader = new FileReader()
+    reader.onload = (evt) => {
+      try {
+        const wb = XLSX.read(evt.target.result, { type: 'array' })
+        const lines = []
+        for (const name of wb.SheetNames) {
+          const ws = wb.Sheets[name]
+          const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' })
+          // Use sheet name as room, or first row if it looks like a header
+          let roomName = name
+          let startRow = 0
+          // Check if first cell of first row looks like a room header (no pipes, short text)
+          if (rows.length > 0) {
+            const first = String(rows[0][0] || '').trim().toLowerCase()
+            const knownHeaders = ['raum', 'room', 'person', 'zimmer', 'name']
+            if (knownHeaders.some(h => first === h || first.startsWith(h))) {
+              // First row is a header row — skip it
+              startRow = 1
+            }
+          }
+          lines.push(`# ${roomName}`)
+          for (let i = startRow; i < rows.length; i++) {
+            const cells = rows[i].map(c => String(c || '').trim()).filter(Boolean)
+            if (cells.length > 0) lines.push(cells.join(' | '))
+          }
+          lines.push('')
+        }
+        setImportText(lines.join('\n').trim())
+        setImportTab('text')
+        setImportResult(null)
+      } catch (err) {
+        console.error('Excel parse error:', err)
+        setImportResult({ error: 'Datei konnte nicht gelesen werden. Ist es eine gültige Excel/CSV-Datei?' })
+      }
+    }
+    reader.readAsArrayBuffer(file)
+  }
+
   if (loading) {
     return <div className="max-w-4xl mx-auto px-4 py-8 text-center text-slate-400">Lade...</div>
   }
@@ -500,47 +544,91 @@ export default function Editor() {
             <button onClick={() => { setShowImport(false); setImportText(''); setImportResult(null) }} className="text-slate-500 hover:text-slate-300 text-xl cursor-pointer leading-none">×</button>
           </div>
 
-          <div className="p-3 rounded-lg bg-[#12122a] border border-[#2a2a4a]">
-            <p className="text-xs text-slate-400 mb-2 font-medium">Format:</p>
-            <pre className="text-xs text-slate-500 font-mono leading-relaxed whitespace-pre-wrap">{`# Wohnzimmer
-Einstein | schreibt | Formel
-Mona Lisa | lächelt | Rahmen
-Sherlock | untersucht | Lupe
-
-# Küche
-Napoleon | kocht | Suppe
-Cleopatra | schneidet | Brot`}</pre>
-            <p className="text-xs text-slate-500 mt-2">
-              <code className="text-blue-400">#</code> = neuer Raum · Felder mit <code className="text-blue-400">|</code> oder <code className="text-blue-400">;</code> oder <code className="text-blue-400">,</code> trennen
-              <br/>Reihenfolge: Person | Aktion | Objekt | Major1 | Major2 | Notiz
-            </p>
-          </div>
-
-          <textarea
-            value={importText}
-            onChange={(e) => setImportText(e.target.value)}
-            placeholder={"# Raumname\nPerson | Aktion | Objekt\nPerson | Aktion | Objekt\n\n# Zweiter Raum\nPerson | Aktion | Objekt"}
-            rows={10}
-            className="w-full px-4 py-3 rounded-lg bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-600 text-sm focus:outline-none focus:border-blue-500 transition resize-y font-mono"
-          />
-
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-500">
-              {(() => {
-                const lines = importText.split('\n').map(l => l.trim()).filter(Boolean)
-                const roomCount = lines.filter(l => l.startsWith('#')).length
-                const lociCount = lines.filter(l => !l.startsWith('#')).length
-                return `${roomCount} Räume · ${lociCount} Loci`
-              })()}
-            </span>
+          {/* Import tabs */}
+          <div className="flex gap-2">
             <button
-              onClick={handleGlobalImport}
-              disabled={importing || !importText.trim()}
-              className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-sm font-medium transition cursor-pointer"
+              onClick={() => setImportTab('text')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer ${importTab === 'text' ? 'bg-blue-600 text-white' : 'bg-[#12122a] border border-[#2a2a4a] text-slate-400 hover:border-blue-500/50'}`}
             >
-              {importing ? 'Importiere...' : 'Alles importieren'}
+              ✏️ Text eingeben
+            </button>
+            <button
+              onClick={() => setImportTab('excel')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer ${importTab === 'excel' ? 'bg-green-600 text-white' : 'bg-[#12122a] border border-[#2a2a4a] text-slate-400 hover:border-green-500/50'}`}
+            >
+              📊 Excel / CSV hochladen
             </button>
           </div>
+
+          {/* Excel upload tab */}
+          {importTab === 'excel' && (
+            <div className="space-y-4">
+              <div className="p-4 rounded-lg bg-[#12122a] border border-[#2a2a4a] space-y-3">
+                <p className="text-sm text-slate-300 font-medium">Excel- oder CSV-Datei hochladen</p>
+                <p className="text-xs text-slate-500">
+                  Jedes <strong className="text-green-400">Tabellenblatt</strong> wird ein Raum. Die Spalten werden zu: Person, Aktion, Objekt, Major1, Major2, Notiz.
+                  <br/>Headerzeilen (Person, Raum, Name...) werden automatisch übersprungen.
+                </p>
+                <label className="flex items-center justify-center gap-3 p-6 rounded-lg border-2 border-dashed border-[#2a2a4a] hover:border-green-500/40 cursor-pointer transition group">
+                  <span className="text-3xl opacity-50 group-hover:opacity-80 transition">📊</span>
+                  <div>
+                    <p className="text-sm text-slate-300 group-hover:text-green-300 transition font-medium">Datei auswählen</p>
+                    <p className="text-xs text-slate-500">.xlsx, .xls oder .csv</p>
+                  </div>
+                  <input type="file" accept=".xlsx,.xls,.csv" onChange={handleExcelFile} className="hidden" />
+                </label>
+              </div>
+              {importText && (
+                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-300 text-sm">
+                  ✅ Datei gelesen — wechsle zum Textfeld um die Vorschau zu sehen und zu importieren.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Text input tab */}
+          {importTab === 'text' && (
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg bg-[#12122a] border border-[#2a2a4a]">
+                <p className="text-xs text-slate-400 mb-2 font-medium">Format:</p>
+                <pre className="text-xs text-slate-500 font-mono leading-relaxed whitespace-pre-wrap">{`# Wohnzimmer
+Einstein | schreibt | Formel
+Mona Lisa | lächelt | Rahmen
+
+# Küche
+Napoleon | kocht | Suppe`}</pre>
+                <p className="text-xs text-slate-500 mt-2">
+                  <code className="text-blue-400">#</code> = neuer Raum · Spalten: Person | Aktion | Objekt | Major1 | Major2 | Notiz
+                </p>
+              </div>
+
+              <textarea
+                value={importText}
+                onChange={(e) => setImportText(e.target.value)}
+                placeholder={"# Raumname\nPerson | Aktion | Objekt\nPerson | Aktion | Objekt\n\n# Zweiter Raum\nPerson | Aktion | Objekt"}
+                rows={10}
+                className="w-full px-4 py-3 rounded-lg bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-600 text-sm focus:outline-none focus:border-blue-500 transition resize-y font-mono"
+              />
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-500">
+                  {(() => {
+                    const lines = importText.split('\n').map(l => l.trim()).filter(Boolean)
+                    const roomCount = lines.filter(l => l.startsWith('#')).length
+                    const lociCount = lines.filter(l => !l.startsWith('#')).length
+                    return `${roomCount} Räume · ${lociCount} Loci`
+                  })()}
+                </span>
+                <button
+                  onClick={handleGlobalImport}
+                  disabled={importing || !importText.trim()}
+                  className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-sm font-medium transition cursor-pointer"
+                >
+                  {importing ? 'Importiere...' : 'Alles importieren'}
+                </button>
+              </div>
+            </div>
+          )}
 
           {importResult && !importResult.error && (
             <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-300 text-sm font-medium">
