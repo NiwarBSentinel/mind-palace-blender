@@ -30,8 +30,8 @@ export default function Editor() {
   const imgRefMobile = useRef(null)
 
   // Room image map state
-  const [roomMarkers, setRoomMarkers] = useState({}) // { roomId: [markers] }
-  const [roomImgRefs, setRoomImgRefs] = useState({})
+  const [selectedRoomId, setSelectedRoomId] = useState(null)
+  const [roomMarkers, setRoomMarkers] = useState({})
   const [roomDragging, setRoomDragging] = useState(null)
   const [roomUploading, setRoomUploading] = useState(null)
 
@@ -109,15 +109,6 @@ export default function Editor() {
     await supabase.from('rooms').update({ image_url }).eq('id', roomId)
     setRooms((prev) => prev.map((r) => r.id === roomId ? { ...r, image_url } : r))
     setRoomUploading(null)
-  }
-
-  function getRoomImgRef(roomId) {
-    if (!roomImgRefs[roomId]) {
-      const ref = { current: null }
-      setRoomImgRefs((prev) => ({ ...prev, [roomId]: ref }))
-      return ref
-    }
-    return roomImgRefs[roomId]
   }
 
   const roomDidDrag = useRef(false)
@@ -369,7 +360,7 @@ export default function Editor() {
     if (room) {
       setHighlightedRoom(room.id)
       setExpandedRooms((prev) => { const next = new Set(prev); next.add(room.id); return next })
-      if (!loci[room.id]) fetchLoci(room.id)
+      selectRoom(room.id)
       setTimeout(() => setHighlightedRoom(null), 2000)
     }
   }
@@ -459,10 +450,17 @@ export default function Editor() {
       } else {
         next.add(roomId)
         if (!loci[roomId]) fetchLoci(roomId)
-        if (!roomMarkers[roomId]) fetchRoomMarkers(roomId)
       }
       return next
     })
+    // Always select the room for the room image panel
+    selectRoom(roomId)
+  }
+
+  function selectRoom(roomId) {
+    setSelectedRoomId(roomId)
+    if (!loci[roomId]) fetchLoci(roomId)
+    if (!roomMarkers[roomId]) fetchRoomMarkers(roomId)
   }
 
   function startEditRoom(room, e) {
@@ -595,7 +593,7 @@ export default function Editor() {
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Mobile: Image map first */}
-        <div className="lg:hidden">
+        <div className="lg:hidden space-y-4">
           <ImageMapSection
             palace={palace}
             markers={markers}
@@ -608,6 +606,20 @@ export default function Editor() {
             deleteMarker={deleteMarker}
             handleImageUpload={handleImageUpload}
           />
+          {selectedRoomId && (
+            <RoomImagePanel
+              room={rooms.find((r) => r.id === selectedRoomId)}
+              roomLoci={loci[selectedRoomId] || []}
+              markers={roomMarkers[selectedRoomId] || []}
+              dragging={roomDragging}
+              uploading={roomUploading === selectedRoomId}
+              onUpload={(e) => handleRoomImageUpload(selectedRoomId, e)}
+              onAddMarker={(cx, cy, imgEl) => addRoomMarkerAt(selectedRoomId, cx, cy, imgEl)}
+              onDragMarker={(marker, e, imgEl) => handleRoomMarkerDrag(selectedRoomId, marker, e, imgEl)}
+              onDeleteMarker={(markerId, e) => deleteRoomMarker(selectedRoomId, markerId, e)}
+              onClose={() => setSelectedRoomId(null)}
+            />
+          )}
         </div>
 
         {/* Left: Room list (60%) */}
@@ -773,20 +785,7 @@ export default function Editor() {
                         >
                           + Locus hinzufügen
                         </button>
-                      )}
-
-                      {/* Room image map */}
-                      <RoomImageMap
-                        room={room}
-                        roomLoci={loci[room.id] || []}
-                        markers={roomMarkers[room.id] || []}
-                        dragging={roomDragging}
-                        uploading={roomUploading === room.id}
-                        onUpload={(e) => handleRoomImageUpload(room.id, e)}
-                        onAddMarker={(cx, cy, imgEl) => addRoomMarkerAt(room.id, cx, cy, imgEl)}
-                        onDragMarker={(marker, e, imgEl) => handleRoomMarkerDrag(room.id, marker, e, imgEl)}
-                        onDeleteMarker={(markerId, e) => deleteRoomMarker(room.id, markerId, e)}
-                      />
+                      )
                     </div>
                   )}
                 </div>
@@ -797,7 +796,7 @@ export default function Editor() {
 
         {/* Right: Image map (40%) – desktop only */}
         <div className="hidden lg:block lg:col-span-2">
-          <div className="sticky top-16">
+          <div className="sticky top-16 space-y-4">
             <ImageMapSection
               palace={palace}
               markers={markers}
@@ -810,6 +809,20 @@ export default function Editor() {
               deleteMarker={deleteMarker}
               handleImageUpload={handleImageUpload}
             />
+            {selectedRoomId && (
+              <RoomImagePanel
+                room={rooms.find((r) => r.id === selectedRoomId)}
+                roomLoci={loci[selectedRoomId] || []}
+                markers={roomMarkers[selectedRoomId] || []}
+                dragging={roomDragging}
+                uploading={roomUploading === selectedRoomId}
+                onUpload={(e) => handleRoomImageUpload(selectedRoomId, e)}
+                onAddMarker={(cx, cy, imgEl) => addRoomMarkerAt(selectedRoomId, cx, cy, imgEl)}
+                onDragMarker={(marker, e, imgEl) => handleRoomMarkerDrag(selectedRoomId, marker, e, imgEl)}
+                onDeleteMarker={(markerId, e) => deleteRoomMarker(selectedRoomId, markerId, e)}
+                onClose={() => setSelectedRoomId(null)}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -997,8 +1010,10 @@ function ImageMapSection({ palace, markers, rooms, imgRef, uploading, dragging, 
   )
 }
 
-function RoomImageMap({ room, roomLoci, markers, dragging, uploading, onUpload, onAddMarker, onDragMarker, onDeleteMarker }) {
+function RoomImagePanel({ room, roomLoci, markers, dragging, uploading, onUpload, onAddMarker, onDragMarker, onDeleteMarker, onClose }) {
   const imgRef = useRef(null)
+
+  if (!room) return null
 
   function handleClick(e) {
     if (!imgRef.current) return
@@ -1012,11 +1027,9 @@ function RoomImageMap({ room, roomLoci, markers, dragging, uploading, onUpload, 
     onAddMarker(t.clientX, t.clientY, imgRef.current)
   }
 
-  // Find locus label for a marker
   function getLocusLabel(marker) {
     const locus = roomLoci.find((l) => l.id === marker.locus_id)
-    if (!locus) return '?'
-    return locus.position || '?'
+    return locus?.position || '?'
   }
 
   function getLocusName(marker) {
@@ -1025,95 +1038,101 @@ function RoomImageMap({ room, roomLoci, markers, dragging, uploading, onUpload, 
     return locus.person || locus.action || locus.object || `Locus ${locus.position}`
   }
 
-  const unassignedCount = roomLoci.length - markers.length
+  const unassignedCount = Math.max(0, roomLoci.length - markers.length)
 
   return (
-    <div className="mt-4 pt-4 border-t border-[#1e1e3a]">
-      <h4 className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Raum-Bild</h4>
-      {room.image_url ? (
-        <div className="space-y-2">
-          <div
-            className="relative rounded-lg overflow-hidden border border-[#2a2a4a] cursor-crosshair select-none"
-            style={{ touchAction: 'none' }}
-            onClick={handleClick}
-            onTouchEnd={(e) => {
-              if (dragging !== null) return
-              if (e.target !== imgRef.current) return
-              handleTap(e)
-            }}
-          >
-            <img
-              ref={imgRef}
-              src={room.image_url}
-              alt={room.name}
-              className="w-full block pointer-events-auto"
-              draggable={false}
-            />
-            {markers.map((marker) => {
-              const isActive = dragging === marker.id
-              const label = getLocusLabel(marker)
-              const name = getLocusName(marker)
-              return (
-                <div
-                  key={marker.id}
-                  className="absolute group/rm"
-                  style={{
-                    left: `${marker.x_percent}%`,
-                    top: `${marker.y_percent}%`,
-                    transform: 'translate(-50%, -50%)',
-                    touchAction: 'none',
-                    zIndex: isActive ? 50 : 10,
-                  }}
-                >
-                  <div
-                    style={{ position: 'absolute', top: '-20px', left: '-20px', width: '56px', height: '56px', cursor: 'grab' }}
-                    onMouseDown={(e) => onDragMarker(marker, e, imgRef.current)}
-                    onTouchStart={(e) => onDragMarker(marker, e, imgRef.current)}
-                  />
-                  <div
-                    className={`rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white text-[10px] font-bold pointer-events-none transition-all duration-150 ${isActive ? 'w-9 h-9 bg-blue-500 scale-110' : 'w-7 h-7 sm:w-6 sm:h-6 bg-blue-600'}`}
-                    style={isActive ? { boxShadow: '0 0 16px rgba(59,130,246,0.6)' } : undefined}
-                  >
-                    {label}
-                  </div>
-                  {name && !isActive && (
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-0.5 rounded bg-[#0a0a1a] border border-[#2a2a4a] text-[10px] text-slate-200 whitespace-nowrap opacity-0 group-hover/rm:opacity-100 transition pointer-events-none">
-                      {name}
-                    </div>
-                  )}
-                  <button
-                    onClick={(e) => onDeleteMarker(marker.id, e)}
-                    className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-600 text-white text-[7px] flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover/rm:opacity-100 transition cursor-pointer"
-                  >
-                    ✕
-                  </button>
-                </div>
-              )
-            })}
-          </div>
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] text-slate-500">
-              {unassignedCount > 0 ? `Tippe aufs Bild — ${unassignedCount} Loci ohne Marker` : 'Alle Loci haben Marker'}
-            </p>
-            <label
-              className="text-[10px] text-blue-400 hover:text-blue-300 cursor-pointer transition px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20 active:bg-blue-500/20"
-              onClick={(e) => e.stopPropagation()}
-              onTouchEnd={(e) => e.stopPropagation()}
+    <div className="rounded-xl bg-[#0a0a1a] border border-blue-500/20 overflow-hidden">
+      <div className="flex items-center justify-between px-3 py-2 bg-blue-500/5 border-b border-blue-500/10">
+        <h4 className="text-sm font-semibold text-blue-300 truncate">🏠 {room.name}</h4>
+        <button onClick={onClose} className="text-slate-500 hover:text-slate-300 text-lg cursor-pointer leading-none ml-2">×</button>
+      </div>
+      <div className="p-3">
+        {room.image_url ? (
+          <div className="space-y-2">
+            <div
+              className="relative rounded-lg overflow-hidden border border-[#2a2a4a] cursor-crosshair select-none"
+              style={{ touchAction: 'none' }}
+              onClick={handleClick}
+              onTouchEnd={(e) => {
+                if (dragging !== null) return
+                if (e.target !== imgRef.current) return
+                handleTap(e)
+              }}
             >
-              📷 Bild ändern
-              <input type="file" accept="image/*" onChange={onUpload} className="hidden" />
-            </label>
+              <img
+                ref={imgRef}
+                src={room.image_url}
+                alt={room.name}
+                className="w-full block pointer-events-auto"
+                draggable={false}
+              />
+              {markers.map((marker) => {
+                const isActive = dragging === marker.id
+                const label = getLocusLabel(marker)
+                const name = getLocusName(marker)
+                return (
+                  <div
+                    key={marker.id}
+                    className="absolute group/rm"
+                    style={{
+                      left: `${marker.x_percent}%`,
+                      top: `${marker.y_percent}%`,
+                      transform: 'translate(-50%, -50%)',
+                      touchAction: 'none',
+                      zIndex: isActive ? 50 : 10,
+                    }}
+                  >
+                    <div
+                      style={{ position: 'absolute', top: '-20px', left: '-20px', width: '56px', height: '56px', cursor: 'grab' }}
+                      onMouseDown={(e) => onDragMarker(marker, e, imgRef.current)}
+                      onTouchStart={(e) => onDragMarker(marker, e, imgRef.current)}
+                    />
+                    <div
+                      className={`rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white text-[10px] font-bold pointer-events-none transition-all duration-150 ${isActive ? 'w-9 h-9 bg-blue-500 scale-110' : 'w-8 h-8 sm:w-6 sm:h-6 bg-blue-600'}`}
+                      style={isActive ? { boxShadow: '0 0 16px rgba(59,130,246,0.6)' } : undefined}
+                    >
+                      {label}
+                    </div>
+                    {name && !isActive && (
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-0.5 rounded bg-[#0a0a1a] border border-[#2a2a4a] text-[10px] text-slate-200 whitespace-nowrap opacity-0 group-hover/rm:opacity-100 transition pointer-events-none">
+                        {name}
+                      </div>
+                    )}
+                    <button
+                      onClick={(e) => onDeleteMarker(marker.id, e)}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 sm:w-4 sm:h-4 rounded-full bg-red-600 text-white text-[8px] flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover/rm:opacity-100 transition cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] text-slate-500">
+                {unassignedCount > 0 ? `Tippe aufs Bild — ${unassignedCount} Loci ohne Marker` : roomLoci.length > 0 ? 'Alle Loci platziert ✓' : 'Tippe aufs Bild um Loci zu erstellen'}
+              </p>
+              <label
+                className="text-[10px] text-blue-400 hover:text-blue-300 cursor-pointer transition px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20 active:bg-blue-500/20"
+                onClick={(e) => e.stopPropagation()}
+                onTouchEnd={(e) => e.stopPropagation()}
+              >
+                📷 Ändern
+                <input type="file" accept="image/*" onChange={onUpload} className="hidden" />
+              </label>
+            </div>
           </div>
-        </div>
-      ) : (
-        <label className="block rounded-lg border-2 border-dashed border-[#2a2a4a] hover:border-blue-500/30 p-5 text-center cursor-pointer transition group">
-          <div className="text-2xl mb-1 opacity-30 group-hover:opacity-60 transition">🏠</div>
-          <p className="text-slate-500 text-xs group-hover:text-slate-400 transition">
-            {uploading ? 'Wird hochgeladen...' : 'Raum-Bild hochladen'}
-          </p>
-          <input type="file" accept="image/*" onChange={onUpload} className="hidden" disabled={uploading} />
-        </label>
-      )}
+        ) : (
+          <label className="block rounded-lg border-2 border-dashed border-[#2a2a4a] hover:border-blue-500/30 p-5 text-center cursor-pointer transition group">
+            <div className="text-2xl mb-1 opacity-30 group-hover:opacity-60 transition">🏠</div>
+            <p className="text-slate-500 text-xs group-hover:text-slate-400 transition">
+              {uploading ? 'Wird hochgeladen...' : 'Raum-Bild hochladen'}
+            </p>
+            <p className="text-slate-600 text-[10px] mt-1">Foto, Grundriss, Zeichnung...</p>
+            <input type="file" accept="image/*" onChange={onUpload} className="hidden" disabled={uploading} />
+          </label>
+        )}
+      </div>
     </div>
   )
 }
