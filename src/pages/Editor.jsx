@@ -22,6 +22,7 @@ export default function Editor() {
   const [editingRoomName, setEditingRoomName] = useState('')
 
   // Palace image map state
+  const [editMode, setEditMode] = useState(false)
   const [markers, setMarkers] = useState([])
   const [uploading, setUploading] = useState(false)
   const [highlightedRoom, setHighlightedRoom] = useState(null)
@@ -566,6 +567,12 @@ export default function Editor() {
         </div>
         <div className="flex gap-2 shrink-0 flex-wrap">
           <button
+            onClick={() => setEditMode(!editMode)}
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition cursor-pointer border ${editMode ? 'bg-red-600/20 text-red-300 border-red-500/40' : 'bg-[#1e1e3a] text-slate-300 border-[#2a2a4a] hover:bg-[#2a2a4a] hover:border-red-500/40'}`}
+          >
+            {editMode ? '✓ Fertig' : '✏️ Bearbeiten'}
+          </button>
+          <button
             onClick={() => setShowImport(!showImport)}
             className="px-4 py-2.5 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] text-sm font-medium transition cursor-pointer border border-[#2a2a4a] hover:border-blue-500/40"
           >
@@ -681,25 +688,29 @@ export default function Editor() {
                       ) : (
                         <span className="flex items-center gap-2">
                           <span className="text-slate-200 font-medium">{room.name}</span>
-                          <button
-                            onClick={(e) => startEditRoom(room, e)}
-                            className="text-slate-500 hover:text-purple-300 text-xs transition cursor-pointer opacity-0 group-hover/room:opacity-100"
-                            title="Umbenennen"
-                          >
-                            ✏️
-                          </button>
+                          {editMode && (
+                            <button
+                              onClick={(e) => startEditRoom(room, e)}
+                              className="text-slate-500 hover:text-purple-300 text-xs transition cursor-pointer opacity-0 group-hover/room:opacity-100"
+                              title="Umbenennen"
+                            >
+                              ✏️
+                            </button>
+                          )}
                         </span>
                       )}
                       <span className="text-slate-500 text-sm">
                         {loci[room.id] ? `${loci[room.id].length} Loci` : ''}
                       </span>
                     </div>
-                    <button
-                      onClick={(e) => deleteRoom(room.id, e)}
-                      className="text-sm text-red-400 hover:bg-red-500/10 px-2 py-1 rounded transition cursor-pointer"
-                    >
-                      Löschen
-                    </button>
+                    {editMode && (
+                      <button
+                        onClick={(e) => deleteRoom(room.id, e)}
+                        className="text-sm text-red-400 hover:bg-red-500/10 px-2 py-1 rounded transition cursor-pointer"
+                      >
+                        Löschen
+                      </button>
+                    )}
                   </div>
 
                   {expandedRooms.has(room.id) && (
@@ -750,20 +761,22 @@ export default function Editor() {
                                     <div className="text-blue-300 font-mono">{locus.major_zahl_2 || '–'}</div>
                                   </div>
                                 </div>
-                                <div className="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 transition">
-                                  <button
-                                    onClick={() => startEditLocus(locus, room.id)}
-                                    className="text-xs px-2 py-1 rounded text-blue-400 hover:bg-blue-500/10 transition cursor-pointer"
-                                  >
-                                    Bearbeiten
-                                  </button>
-                                  <button
-                                    onClick={() => deleteLocus(locus.id, room.id)}
-                                    className="text-xs px-2 py-1 rounded text-red-400 hover:bg-red-500/10 transition cursor-pointer"
-                                  >
-                                    Löschen
-                                  </button>
-                                </div>
+                                {editMode && (
+                                  <div className="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 transition">
+                                    <button
+                                      onClick={() => startEditLocus(locus, room.id)}
+                                      className="text-xs px-2 py-1 rounded text-blue-400 hover:bg-blue-500/10 transition cursor-pointer"
+                                    >
+                                      Bearbeiten
+                                    </button>
+                                    <button
+                                      onClick={() => deleteLocus(locus.id, room.id)}
+                                      className="text-xs px-2 py-1 rounded text-red-400 hover:bg-red-500/10 transition cursor-pointer"
+                                    >
+                                      Löschen
+                                    </button>
+                                  </div>
+                                )}
                               </div>
                               {locus.notiz && (
                                 <div className="mt-2 pt-2 border-t border-[#1e1e3a]">
