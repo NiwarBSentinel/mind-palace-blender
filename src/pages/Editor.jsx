@@ -374,6 +374,47 @@ export default function Editor() {
     await fetchLoci(roomId)
   }
 
+  // Bulk import
+  const [importRoom, setImportRoom] = useState(null)
+  const [importText, setImportText] = useState('')
+  const [importing, setImporting] = useState(false)
+
+  async function handleBulkImport(roomId) {
+    if (!importText.trim()) return
+    setImporting(true)
+    const existingLoci = loci[roomId] || []
+    let nextPos = existingLoci.length > 0 ? Math.max(...existingLoci.map((l) => l.position)) + 1 : 1
+
+    const lines = importText.split('\n').map((l) => l.trim()).filter(Boolean)
+    const rows = []
+
+    for (const line of lines) {
+      // Support: "Person | Aktion | Objekt" or "Person; Aktion; Objekt" or "Person, Aktion, Objekt" or just "Person"
+      const sep = line.includes('|') ? '|' : line.includes(';') ? ';' : line.includes('\t') ? '\t' : ','
+      const parts = line.split(sep).map((p) => p.trim())
+      rows.push({
+        room_id: roomId,
+        position: nextPos++,
+        person: parts[0] || '',
+        action: parts[1] || '',
+        object: parts[2] || '',
+        major_zahl: parts[3] || '',
+        major_zahl_2: parts[4] || '',
+        notiz: parts[5] || '',
+      })
+    }
+
+    if (rows.length > 0) {
+      const { error } = await supabase.from('loci').insert(rows)
+      if (error) console.error('bulk import error:', error)
+    }
+
+    await fetchLoci(roomId)
+    setImportText('')
+    setImportRoom(null)
+    setImporting(false)
+  }
+
   if (loading) {
     return <div className="max-w-4xl mx-auto px-4 py-8 text-center text-slate-400">Lade...</div>
   }
@@ -588,12 +629,52 @@ export default function Editor() {
                         </div>
                       )}
                       {!(editingLocus && editingLocus.isNew && editingLocus.roomId === room.id) && (
-                        <button
-                          onClick={() => startAddLocus(room.id)}
-                          className="mt-3 w-full py-2 rounded-lg border border-dashed border-[#2a2a4a] text-slate-400 hover:text-purple-300 hover:border-purple-500/30 transition text-sm cursor-pointer"
-                        >
-                          + Locus hinzufügen
-                        </button>
+                        <div className="mt-3 flex gap-2">
+                          <button
+                            onClick={() => startAddLocus(room.id)}
+                            className="flex-1 py-2 rounded-lg border border-dashed border-[#2a2a4a] text-slate-400 hover:text-purple-300 hover:border-purple-500/30 transition text-sm cursor-pointer"
+                          >
+                            + Locus hinzufügen
+                          </button>
+                          <button
+                            onClick={() => setImportRoom(importRoom === room.id ? null : room.id)}
+                            className="px-4 py-2 rounded-lg border border-dashed border-[#2a2a4a] text-slate-400 hover:text-blue-300 hover:border-blue-500/30 transition text-sm cursor-pointer"
+                          >
+                            📋 Import
+                          </button>
+                        </div>
+                      )}
+
+                      {importRoom === room.id && (
+                        <div className="mt-3 p-4 rounded-lg bg-[#0a0a1a] border border-blue-500/20 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-semibold text-blue-300">Mehrere Loci importieren</h4>
+                            <button onClick={() => { setImportRoom(null); setImportText('') }} className="text-slate-500 hover:text-slate-300 text-lg cursor-pointer">×</button>
+                          </div>
+                          <p className="text-xs text-slate-500">
+                            Ein Locus pro Zeile. Felder mit <code className="text-blue-400">|</code> oder <code className="text-blue-400">;</code> oder <code className="text-blue-400">,</code> trennen:<br/>
+                            <span className="text-slate-400">Person | Aktion | Objekt | Major1 | Major2 | Notiz</span>
+                          </p>
+                          <textarea
+                            value={importText}
+                            onChange={(e) => setImportText(e.target.value)}
+                            placeholder={"Einstein | schreibt | Formel\nMona Lisa | lächelt | Rahmen\nSherlock | untersucht | Lupe"}
+                            rows={6}
+                            className="w-full px-3 py-2 rounded-lg bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-600 text-sm focus:outline-none focus:border-blue-500 transition resize-none font-mono"
+                          />
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-slate-500">
+                              {importText.trim() ? importText.split('\n').filter(l => l.trim()).length : 0} Einträge
+                            </span>
+                            <button
+                              onClick={() => handleBulkImport(room.id)}
+                              disabled={importing || !importText.trim()}
+                              className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-sm font-medium transition cursor-pointer"
+                            >
+                              {importing ? 'Importiere...' : 'Importieren'}
+                            </button>
+                          </div>
+                        </div>
                       )}
                     </div>
                   )}
