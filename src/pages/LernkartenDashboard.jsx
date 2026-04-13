@@ -135,12 +135,21 @@ export default function LernkartenDashboard() {
           </h1>
         </div>
         {!showForm && (
-          <button
-            onClick={openNew}
-            className="px-5 py-2.5 rounded-lg bg-green-600 hover:bg-green-500 text-white font-medium transition cursor-pointer"
-          >
-            Neue Karte
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => navigate('/lernkarten/voci')}
+              className="px-4 py-2.5 rounded-lg bg-[#12122a] border border-green-500/30 text-green-300 hover:bg-green-500/10 font-medium transition cursor-pointer text-sm"
+              title="Wortpaare aus einem Foto erkennen"
+            >
+              📷 Voci aus Bild
+            </button>
+            <button
+              onClick={openNew}
+              className="px-5 py-2.5 rounded-lg bg-green-600 hover:bg-green-500 text-white font-medium transition cursor-pointer"
+            >
+              Neue Karte
+            </button>
+          </div>
         )}
       </div>
 

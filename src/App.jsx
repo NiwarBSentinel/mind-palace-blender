@@ -10,6 +10,7 @@ import BMPEditor from './pages/BMPEditor'
 import BMPPractice from './pages/BMPPractice'
 import LernkartenDashboard from './pages/LernkartenDashboard'
 import LernkartenPractice from './pages/LernkartenPractice'
+import VociImport from './pages/VociImport'
 import PegList from './pages/PegList'
 import Trivia from './pages/Trivia'
 import DeutschC1 from './pages/DeutschC1'
@@ -64,6 +65,7 @@ export default function App() {
           <Route path="/bmp/:personId" element={<BMPEditor />} />
           <Route path="/bmp/:personId/practice" element={<BMPPractice />} />
           <Route path="/lernkarten" element={<LernkartenDashboard />} />
+          <Route path="/lernkarten/voci" element={<VociImport />} />
           <Route path="/lernkarten/practice" element={<LernkartenPractice />} />
           <Route path="/peglist" element={<PegList />} />
           <Route path="/trivia" element={<Trivia />} />
