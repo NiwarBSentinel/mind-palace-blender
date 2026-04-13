@@ -16,7 +16,7 @@ export default function Editor() {
   const [loading, setLoading] = useState(true)
   const [editingLocus, setEditingLocus] = useState(null)
   const [locusForm, setLocusForm] = useState({
-    position: '', person: '', action: '', object: '', major_zahl: '', major_zahl_2: '', notiz: ''
+    position: '', lerninhalt: '', vorstellung: ''
   })
   const [editingRoomId, setEditingRoomId] = useState(null)
   const [editingRoomName, setEditingRoomName] = useState('')
@@ -141,7 +141,7 @@ export default function Editor() {
         const nextPos = roomLoci.length > 0 ? Math.max(...roomLoci.map((l) => l.position)) + 1 : 1
         const { data: newLocus, error: locErr } = await supabase
           .from('loci')
-          .insert({ room_id: roomId, position: nextPos, person: '', action: '', object: '', major_zahl: '', major_zahl_2: '', notiz: '' })
+          .insert({ room_id: roomId, position: nextPos, lerninhalt: '', vorstellung: '' })
           .select()
           .single()
         if (locErr || !newLocus) return
@@ -406,11 +406,12 @@ export default function Editor() {
         const lociInserts = roomLoci.map((l) => ({
           room_id: tRoom.id,
           position: l.position,
-          person: l.person || '',
-          aktion: l.action || '',
-          objekt: l.object || '',
-          major: l.major_zahl || '',
-          notiz: l.notiz || '',
+          // New simplified fields — also mirrored into legacy columns so older template consumers keep working.
+          person: l.lerninhalt || l.person || '',
+          aktion: '',
+          objekt: '',
+          major: '',
+          notiz: l.vorstellung || l.notiz || '',
         }))
         await supabase.from('template_loci').insert(lociInserts)
       }
@@ -510,7 +511,7 @@ export default function Editor() {
       : 1
     setEditingLocus({ roomId, isNew: true })
     setLocusForm({
-      position: String(nextPos), person: '', action: '', object: '', major_zahl: '', major_zahl_2: '', notiz: ''
+      position: String(nextPos), lerninhalt: '', vorstellung: ''
     })
   }
 
@@ -518,12 +519,8 @@ export default function Editor() {
     setEditingLocus({ id: locus.id, roomId, isNew: false })
     setLocusForm({
       position: String(locus.position || ''),
-      person: locus.person || '',
-      action: locus.action || '',
-      object: locus.object || '',
-      major_zahl: locus.major_zahl || '',
-      major_zahl_2: locus.major_zahl_2 || '',
-      notiz: locus.notiz || '',
+      lerninhalt: locus.lerninhalt || '',
+      vorstellung: locus.vorstellung || '',
     })
   }
 
@@ -531,12 +528,8 @@ export default function Editor() {
     e.preventDefault()
     const payload = {
       position: parseInt(locusForm.position) || 0,
-      person: locusForm.person,
-      action: locusForm.action,
-      object: locusForm.object,
-      major_zahl: locusForm.major_zahl,
-      major_zahl_2: locusForm.major_zahl_2,
-      notiz: locusForm.notiz,
+      lerninhalt: locusForm.lerninhalt,
+      vorstellung: locusForm.vorstellung,
     }
 
     if (editingLocus.isNew) {
@@ -774,35 +767,27 @@ export default function Editor() {
                               key={locus.id}
                               className="p-3 rounded-lg bg-[#0a0a1a] group"
                             >
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-sm">
-                                  <div>
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-start gap-3 flex-1 min-w-0">
+                                  <div className="shrink-0">
                                     <span className="text-slate-500 text-xs">Pos</span>
-                                    <div className="text-purple-300 font-bold">{locus.position}</div>
+                                    <div className="text-purple-300 font-bold text-lg leading-tight">{locus.position}</div>
                                   </div>
-                                  <div>
-                                    <span className="text-slate-500 text-xs">Person</span>
-                                    <div className="text-slate-200">{locus.person || '–'}</div>
-                                  </div>
-                                  <div>
-                                    <span className="text-slate-500 text-xs">Aktion</span>
-                                    <div className="text-slate-200">{locus.action || '–'}</div>
-                                  </div>
-                                  <div>
-                                    <span className="text-slate-500 text-xs">Objekt</span>
-                                    <div className="text-slate-200">{locus.object || '–'}</div>
-                                  </div>
-                                  <div>
-                                    <span className="text-slate-500 text-xs">Major 1</span>
-                                    <div className="text-blue-300 font-mono">{locus.major_zahl || '–'}</div>
-                                  </div>
-                                  <div>
-                                    <span className="text-slate-500 text-xs">Major 2</span>
-                                    <div className="text-blue-300 font-mono">{locus.major_zahl_2 || '–'}</div>
+                                  <div className="flex-1 min-w-0 space-y-1">
+                                    <div>
+                                      <span className="text-slate-500 text-xs">Was lernen</span>
+                                      <div className="text-slate-200 font-medium">{locus.lerninhalt || '–'}</div>
+                                    </div>
+                                    {locus.vorstellung && (
+                                      <div>
+                                        <span className="text-slate-500 text-xs">Vorstellung</span>
+                                        <div className="text-slate-400 text-sm whitespace-pre-wrap">{locus.vorstellung}</div>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                                 {editMode && (
-                                  <div className="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 transition">
+                                  <div className="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 transition shrink-0">
                                     <button
                                       onClick={() => startEditLocus(locus, room.id)}
                                       className="text-xs px-2 py-1 rounded text-blue-400 hover:bg-blue-500/10 transition cursor-pointer"
@@ -818,12 +803,6 @@ export default function Editor() {
                                   </div>
                                 )}
                               </div>
-                              {locus.notiz && (
-                                <div className="mt-2 pt-2 border-t border-[#1e1e3a]">
-                                  <span className="text-slate-500 text-xs">Notiz</span>
-                                  <div className="text-slate-400 text-sm whitespace-pre-wrap">{locus.notiz}</div>
-                                </div>
-                              )}
                             </div>
                           )
                         )}
@@ -897,58 +876,28 @@ function LocusFormComponent({ form, setForm, onSave, onCancel }) {
 
   return (
     <form onSubmit={onSave} className="p-3 rounded-lg bg-[#0a0a1a] border border-purple-500/20 space-y-3">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div className="grid grid-cols-[80px_1fr] gap-2">
         <input
           type="number"
-          placeholder="Position"
+          placeholder="Pos"
           value={form.position}
           onChange={(e) => setForm({ ...form, position: e.target.value })}
           className="px-3 py-2 rounded bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500 transition"
         />
         <input
           type="text"
-          placeholder="Person"
-          value={form.person}
-          onChange={(e) => setForm({ ...form, person: e.target.value })}
-          className="px-3 py-2 rounded bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500 transition"
-        />
-        <input
-          type="text"
-          placeholder="Aktion"
-          value={form.action}
-          onChange={(e) => setForm({ ...form, action: e.target.value })}
-          className="px-3 py-2 rounded bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500 transition"
-        />
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        <input
-          type="text"
-          placeholder="Objekt"
-          value={form.object}
-          onChange={(e) => setForm({ ...form, object: e.target.value })}
-          className="px-3 py-2 rounded bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500 transition"
-        />
-        <input
-          type="text"
-          placeholder="Major 1"
-          value={form.major_zahl}
-          onChange={(e) => setForm({ ...form, major_zahl: e.target.value })}
-          className="px-3 py-2 rounded bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500 transition"
-        />
-        <input
-          type="text"
-          placeholder="Major 2"
-          value={form.major_zahl_2}
-          onChange={(e) => setForm({ ...form, major_zahl_2: e.target.value })}
+          placeholder="Was will ich lernen?"
+          value={form.lerninhalt}
+          onChange={(e) => setForm({ ...form, lerninhalt: e.target.value })}
           className="px-3 py-2 rounded bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500 transition"
         />
       </div>
       <textarea
-        placeholder="Notiz"
-        value={form.notiz}
-        onChange={(e) => { setForm({ ...form, notiz: e.target.value }); autoResize(e) }}
+        placeholder="Wie stelle ich mir das vor?"
+        value={form.vorstellung}
+        onChange={(e) => { setForm({ ...form, vorstellung: e.target.value }); autoResize(e) }}
         onFocus={autoResize}
-        rows={2}
+        rows={3}
         className="w-full px-3 py-2 rounded bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500 transition resize-none"
       />
       <div className="flex gap-2 justify-end">
@@ -1088,7 +1037,7 @@ function RoomImagePanel({ room, roomLoci, markers, dragging, uploading, onUpload
   function getLocusName(marker) {
     const locus = roomLoci.find((l) => l.id === marker.locus_id)
     if (!locus) return null
-    return locus.person || locus.action || locus.object || `Locus ${locus.position}`
+    return locus.lerninhalt || locus.person || locus.action || locus.object || `Locus ${locus.position}`
   }
 
   const unassignedCount = Math.max(0, roomLoci.length - markers.length)

@@ -76,11 +76,9 @@ export default function PalaceTemplates() {
           const lociInserts = tLoci.map((l) => ({
             room_id: newRoom.id,
             position: l.position,
-            person: l.person || '',
-            action: l.aktion || '',
-            object: l.objekt || '',
-            major_zahl: l.major || '',
-            notiz: l.notiz || '',
+            // Bridge legacy template columns (person/aktion/objekt/major/notiz) into simplified fields.
+            lerninhalt: l.person || '',
+            vorstellung: [l.aktion, l.objekt, l.notiz].filter(Boolean).join('\n'),
           }))
           const { error: insertErr } = await supabase.from('loci').insert(lociInserts)
           if (insertErr) console.error('insert loci error:', insertErr)

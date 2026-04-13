@@ -136,29 +136,14 @@ export default function Practice() {
 
         {revealed ? (
           <div className="space-y-4 animate-fade-in">
-            <div className="grid grid-cols-3 gap-4 text-sm">
-              <div className="p-3 rounded-lg bg-[#0a0a1a]">
-                <div className="text-slate-500 mb-1">Person</div>
-                <div className="text-slate-200 font-medium">{currentLocus.person || '–'}</div>
-              </div>
-              <div className="p-3 rounded-lg bg-[#0a0a1a]">
-                <div className="text-slate-500 mb-1">Aktion</div>
-                <div className="text-slate-200 font-medium">{currentLocus.action || '–'}</div>
-              </div>
-              <div className="p-3 rounded-lg bg-[#0a0a1a]">
-                <div className="text-slate-500 mb-1">Objekt</div>
-                <div className="text-slate-200 font-medium">{currentLocus.object || '–'}</div>
-              </div>
+            <div className="p-4 rounded-lg bg-[#0a0a1a]">
+              <div className="text-slate-500 text-sm mb-1">Was lernen</div>
+              <div className="text-slate-100 text-xl font-semibold">{currentLocus.lerninhalt || '–'}</div>
             </div>
-            {currentLocus.major_zahl && (
-              <div className="p-3 rounded-lg bg-[#0a0a1a]">
-                <span className="text-slate-500">Major-Zahl: </span>
-                <span className="text-blue-300 font-mono font-bold">{currentLocus.major_zahl}</span>
-              </div>
-            )}
-            {currentLocus.notiz && (
-              <div className="p-3 rounded-lg bg-[#0a0a1a] text-slate-400 text-sm italic">
-                {currentLocus.notiz}
+            {currentLocus.vorstellung && (
+              <div className="p-4 rounded-lg bg-[#0a0a1a] text-left">
+                <div className="text-slate-500 text-sm mb-1">Vorstellung</div>
+                <div className="text-slate-300 whitespace-pre-wrap">{currentLocus.vorstellung}</div>
               </div>
             )}
           </div>

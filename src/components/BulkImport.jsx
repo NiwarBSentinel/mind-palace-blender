@@ -54,12 +54,8 @@ export default function BulkImport({ palaceId, existingRoomCount = 0, onDone }) 
           return {
             room_id: roomData.id,
             position: i + 1,
-            person: parts[0] || '',
-            action: parts[1] || '',
-            object: parts[2] || '',
-            major_zahl: parts[3] || '',
-            major_zahl_2: parts[4] || '',
-            notiz: parts[5] || '',
+            lerninhalt: parts[0] || '',
+            vorstellung: parts[1] || '',
           }
         })
         const { error: lociErr } = await supabase.from('loci').insert(rows)
@@ -134,7 +130,7 @@ export default function BulkImport({ palaceId, existingRoomCount = 0, onDone }) 
       {importTab === 'excel' && (
         <div className="space-y-3">
           <p className="text-xs text-slate-500">
-            Jedes <strong className="text-green-400">Tabellenblatt</strong> = ein Raum. Spalten = Person, Aktion, Objekt, Major1, Major2, Notiz.
+            Jedes <strong className="text-green-400">Tabellenblatt</strong> = ein Raum. Spalten: <strong>Was lernen</strong> | <strong>Vorstellung</strong>.
           </p>
           <label className="flex items-center justify-center gap-3 p-6 rounded-lg border-2 border-dashed border-[#2a2a4a] hover:border-green-500/40 cursor-pointer transition group">
             <span className="text-3xl opacity-50 group-hover:opacity-80 transition">📊</span>
@@ -151,19 +147,19 @@ export default function BulkImport({ palaceId, existingRoomCount = 0, onDone }) 
         <div className="space-y-3">
           <div className="p-3 rounded-lg bg-[#12122a] border border-[#2a2a4a]">
             <pre className="text-xs text-slate-500 font-mono leading-relaxed whitespace-pre-wrap">{`# Wohnzimmer
-Einstein | schreibt | Formel
-Mona Lisa | lächelt | Rahmen
+E=mc² | Einstein schreibt die Formel mit Kreide an die Wand
+Renaissance | Mona Lisa lächelt aus dem goldenen Rahmen
 
 # Küche
-Napoleon | kocht | Suppe`}</pre>
+Französische Revolution | Napoleon kocht Zwiebelsuppe am Herd`}</pre>
             <p className="text-xs text-slate-500 mt-2">
-              <code className="text-blue-400">#</code> = neuer Raum · Spalten: Person | Aktion | Objekt | Major1 | Major2 | Notiz
+              <code className="text-blue-400">#</code> = neuer Raum · Spalten: <strong>Was lernen</strong> | <strong>Vorstellung</strong>
             </p>
           </div>
           <textarea
             value={importText}
             onChange={(e) => setImportText(e.target.value)}
-            placeholder={"# Raumname\nPerson | Aktion | Objekt\n\n# Zweiter Raum\nPerson | Aktion | Objekt"}
+            placeholder={"# Raumname\nWas lernen | Wie stelle ich mir das vor\n\n# Zweiter Raum\nWas lernen | Wie stelle ich mir das vor"}
             rows={8}
             className="w-full px-4 py-3 rounded-lg bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-600 text-sm focus:outline-none focus:border-blue-500 transition resize-y font-mono"
           />
