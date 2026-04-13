@@ -4,6 +4,18 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import BulkImport from '../components/BulkImport'
 
+// Fallbacks: wenn die neuen Spalten (lerninhalt/vorstellung) in der DB noch
+// nicht angelegt sind, greifen wir auf die alten (person/action/object/notiz) zurueck,
+// damit bestehende Daten trotzdem angezeigt werden.
+function getLerninhalt(locus) {
+  return locus?.lerninhalt || locus?.person || ''
+}
+function getVorstellung(locus) {
+  if (locus?.vorstellung) return locus.vorstellung
+  const parts = [locus?.action, locus?.object, locus?.notiz].filter(Boolean)
+  return parts.join('\n')
+}
+
 export default function Editor() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -519,27 +531,43 @@ export default function Editor() {
     setEditingLocus({ id: locus.id, roomId, isNew: false })
     setLocusForm({
       position: String(locus.position || ''),
-      lerninhalt: locus.lerninhalt || '',
-      vorstellung: locus.vorstellung || '',
+      lerninhalt: getLerninhalt(locus),
+      vorstellung: getVorstellung(locus),
     })
   }
 
   async function saveLocus(e) {
     e.preventDefault()
-    const payload = {
-      position: parseInt(locusForm.position) || 0,
-      lerninhalt: locusForm.lerninhalt,
-      vorstellung: locusForm.vorstellung,
+    const position = parseInt(locusForm.position) || 0
+    const lerninhalt = locusForm.lerninhalt
+    const vorstellung = locusForm.vorstellung
+
+    // Primaerer Payload mit neuen Feldern.
+    const newPayload = { position, lerninhalt, vorstellung }
+    // Fallback-Payload fuer alte DB-Schemata (falls die Migration noch nicht lief).
+    const legacyPayload = { position, person: lerninhalt, notiz: vorstellung }
+
+    function isMissingColumn(err) {
+      if (!err) return false
+      const msg = `${err.message || ''} ${err.details || ''}`.toLowerCase()
+      return err.code === 'PGRST204' || err.code === '42703' || msg.includes('lerninhalt') || msg.includes('vorstellung')
     }
 
-    if (editingLocus.isNew) {
-      payload.room_id = editingLocus.roomId
-      const { error } = await supabase.from('loci').insert(payload)
-      if (error) console.error('insert locus error:', error)
-    } else {
-      const { error } = await supabase.from('loci').update(payload).eq('id', editingLocus.id)
-      if (error) console.error('update locus error:', error)
+    async function runInsert(payload) {
+      return supabase.from('loci').insert({ ...payload, room_id: editingLocus.roomId })
     }
+    async function runUpdate(payload) {
+      return supabase.from('loci').update(payload).eq('id', editingLocus.id)
+    }
+
+    const run = editingLocus.isNew ? runInsert : runUpdate
+    let { error } = await run(newPayload)
+    if (error && isMissingColumn(error)) {
+      console.warn('loci: neue Spalten fehlen, speichere in alte Spalten (person/notiz). Bitte Migration 009_loci_simplify.sql in Supabase ausfuehren.')
+      const retry = await run(legacyPayload)
+      error = retry.error
+    }
+    if (error) console.error('save locus error:', error)
 
     await fetchLoci(editingLocus.roomId)
     setEditingLocus(null)
@@ -776,12 +804,12 @@ export default function Editor() {
                                   <div className="flex-1 min-w-0 space-y-1">
                                     <div>
                                       <span className="text-slate-500 text-xs">Was lernen</span>
-                                      <div className="text-slate-200 font-medium">{locus.lerninhalt || '–'}</div>
+                                      <div className="text-slate-200 font-medium">{getLerninhalt(locus) || '–'}</div>
                                     </div>
-                                    {locus.vorstellung && (
+                                    {getVorstellung(locus) && (
                                       <div>
                                         <span className="text-slate-500 text-xs">Vorstellung</span>
-                                        <div className="text-slate-400 text-sm whitespace-pre-wrap">{locus.vorstellung}</div>
+                                        <div className="text-slate-400 text-sm whitespace-pre-wrap">{getVorstellung(locus)}</div>
                                       </div>
                                     )}
                                   </div>

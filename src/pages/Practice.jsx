@@ -2,6 +2,16 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
+// Fallback auf alte Spalten, falls die Migration noch nicht gelaufen ist.
+function getLerninhalt(locus) {
+  return locus?.lerninhalt || locus?.person || ''
+}
+function getVorstellung(locus) {
+  if (locus?.vorstellung) return locus.vorstellung
+  const parts = [locus?.action, locus?.object, locus?.notiz].filter(Boolean)
+  return parts.join('\n')
+}
+
 export default function Practice() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -138,12 +148,12 @@ export default function Practice() {
           <div className="space-y-4 animate-fade-in">
             <div className="p-4 rounded-lg bg-[#0a0a1a]">
               <div className="text-slate-500 text-sm mb-1">Was lernen</div>
-              <div className="text-slate-100 text-xl font-semibold">{currentLocus.lerninhalt || '–'}</div>
+              <div className="text-slate-100 text-xl font-semibold">{getLerninhalt(currentLocus) || '–'}</div>
             </div>
-            {currentLocus.vorstellung && (
+            {getVorstellung(currentLocus) && (
               <div className="p-4 rounded-lg bg-[#0a0a1a] text-left">
                 <div className="text-slate-500 text-sm mb-1">Vorstellung</div>
-                <div className="text-slate-300 whitespace-pre-wrap">{currentLocus.vorstellung}</div>
+                <div className="text-slate-300 whitespace-pre-wrap">{getVorstellung(currentLocus)}</div>
               </div>
             )}
           </div>
