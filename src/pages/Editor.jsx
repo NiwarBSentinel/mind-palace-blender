@@ -28,7 +28,7 @@ export default function Editor() {
   const [loading, setLoading] = useState(true)
   const [editingLocus, setEditingLocus] = useState(null)
   const [locusForm, setLocusForm] = useState({
-    position: '', lerninhalt: '', vorstellung: ''
+    position: '', lerninhalt: '', lernziel: '', vorstellung: ''
   })
   const [editingRoomId, setEditingRoomId] = useState(null)
   const [editingRoomName, setEditingRoomName] = useState('')
@@ -527,7 +527,7 @@ export default function Editor() {
       : 1
     setEditingLocus({ roomId, isNew: true })
     setLocusForm({
-      position: String(nextPos), lerninhalt: '', vorstellung: ''
+      position: String(nextPos), lerninhalt: '', lernziel: '', vorstellung: ''
     })
   }
 
@@ -536,6 +536,7 @@ export default function Editor() {
     setLocusForm({
       position: String(locus.position || ''),
       lerninhalt: getLerninhalt(locus),
+      lernziel: locus.lernziel || '',
       vorstellung: getVorstellung(locus),
     })
   }
@@ -544,10 +545,11 @@ export default function Editor() {
     e.preventDefault()
     const position = parseInt(locusForm.position) || 0
     const lerninhalt = locusForm.lerninhalt
+    const lernziel = locusForm.lernziel
     const vorstellung = locusForm.vorstellung
 
     // Primaerer Payload mit neuen Feldern.
-    const newPayload = { position, lerninhalt, vorstellung }
+    const newPayload = { position, lerninhalt, lernziel, vorstellung }
     // Fallback-Payload fuer alte DB-Schemata (falls die Migration noch nicht lief).
     const legacyPayload = { position, person: lerninhalt, notiz: vorstellung }
 
@@ -850,6 +852,12 @@ export default function Editor() {
                                       <span className="text-slate-500 text-xs">Was lernen</span>
                                       <div className="text-slate-200 font-medium">{getLerninhalt(locus) || '–'}</div>
                                     </div>
+                                    {locus.lernziel && (
+                                      <div>
+                                        <span className="text-slate-500 text-xs">Lernziel</span>
+                                        <div className="text-slate-400 text-sm whitespace-pre-wrap">{locus.lernziel}</div>
+                                      </div>
+                                    )}
                                     {getVorstellung(locus) && (
                                       <div>
                                         <span className="text-slate-500 text-xs">Vorstellung</span>
@@ -964,6 +972,14 @@ function LocusFormComponent({ form, setForm, onSave, onCancel }) {
           className="px-3 py-2 rounded bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500 transition"
         />
       </div>
+      <textarea
+        placeholder="Was genau willst du lernen? Details, Zusammenhänge, Kontext..."
+        value={form.lernziel}
+        onChange={(e) => { setForm({ ...form, lernziel: e.target.value }); autoResize(e) }}
+        onFocus={autoResize}
+        rows={3}
+        className="w-full px-3 py-2 rounded bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500 transition resize-none"
+      />
       <textarea
         placeholder="Wie stelle ich mir das vor?"
         value={form.vorstellung}
