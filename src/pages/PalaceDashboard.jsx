@@ -8,6 +8,7 @@ export default function PalaceDashboard() {
   const [loading, setLoading] = useState(true)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [lernziel, setLernziel] = useState('')
   const [creating, setCreating] = useState(false)
   const [showImport, setShowImport] = useState(false)
   const [importPalaceId, setImportPalaceId] = useState(null)
@@ -34,10 +35,11 @@ export default function PalaceDashboard() {
     setCreating(true)
     const { error } = await supabase
       .from('palaces')
-      .insert({ name: name.trim(), beschreibung: description.trim() })
+      .insert({ name: name.trim(), beschreibung: description.trim(), lernziel: lernziel.trim() })
     if (!error) {
       setName('')
       setDescription('')
+      setLernziel('')
       await fetchPalaces()
     }
     setCreating(false)
@@ -100,6 +102,13 @@ export default function PalaceDashboard() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="px-4 py-2.5 rounded-lg bg-[#0a0a1a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
+          />
+          <textarea
+            placeholder="Was genau willst du lernen? (z.B. Themen, Kapitel, Prüfungsstoff...)"
+            value={lernziel}
+            onChange={(e) => setLernziel(e.target.value)}
+            rows={3}
+            className="px-4 py-2.5 rounded-lg bg-[#0a0a1a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500 transition resize-none"
           />
           <div className="flex gap-2">
             <button
@@ -195,6 +204,9 @@ export default function PalaceDashboard() {
                   </h3>
                   {palace.beschreibung && (
                     <p className="text-slate-400 text-sm mt-1">{palace.beschreibung}</p>
+                  )}
+                  {palace.lernziel && (
+                    <p className="text-slate-500 text-xs mt-2 whitespace-pre-wrap border-l-2 border-purple-500/30 pl-3">{palace.lernziel}</p>
                   )}
                 </div>
                 <button

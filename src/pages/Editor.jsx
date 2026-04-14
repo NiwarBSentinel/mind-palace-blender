@@ -33,6 +33,10 @@ export default function Editor() {
   const [editingRoomId, setEditingRoomId] = useState(null)
   const [editingRoomName, setEditingRoomName] = useState('')
 
+  const [editingLernziel, setEditingLernziel] = useState(false)
+  const [lernzielDraft, setLernzielDraft] = useState('')
+  const lernzielTimer = useRef(null)
+
   // Palace image map state
   const [editMode, setEditMode] = useState(false)
   const [markers, setMarkers] = useState([])
@@ -606,6 +610,46 @@ export default function Editor() {
           </h1>
           {palace?.beschreibung && (
             <p className="text-slate-400 text-sm mt-1">{palace.beschreibung}</p>
+          )}
+          {editingLernziel ? (
+            <div className="mt-3">
+              <textarea
+                value={lernzielDraft}
+                onChange={(e) => {
+                  setLernzielDraft(e.target.value)
+                  if (lernzielTimer.current) clearTimeout(lernzielTimer.current)
+                  lernzielTimer.current = setTimeout(async () => {
+                    await supabase.from('palaces').update({ lernziel: e.target.value }).eq('id', id)
+                    setPalace((p) => ({ ...p, lernziel: e.target.value }))
+                  }, 1000)
+                }}
+                placeholder="Was genau willst du lernen? (z.B. Themen, Kapitel, Prüfungsstoff...)"
+                rows={4}
+                autoFocus
+                className="w-full px-3 py-2 rounded-lg bg-[#0a0a1a] border border-purple-500/50 text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500 transition resize-none"
+              />
+              <button
+                onClick={() => setEditingLernziel(false)}
+                className="mt-1 text-xs text-slate-400 hover:text-slate-200 transition cursor-pointer"
+              >
+                Fertig
+              </button>
+            </div>
+          ) : palace?.lernziel ? (
+            <div
+              onClick={() => { setEditingLernziel(true); setLernzielDraft(palace.lernziel || '') }}
+              className="mt-3 p-3 rounded-lg bg-[#0a0a1a] border border-[#1e1e3a] hover:border-purple-500/30 cursor-pointer transition"
+            >
+              <span className="text-slate-500 text-xs block mb-1">Lernziel</span>
+              <p className="text-slate-300 text-sm whitespace-pre-wrap">{palace.lernziel}</p>
+            </div>
+          ) : (
+            <button
+              onClick={() => { setEditingLernziel(true); setLernzielDraft('') }}
+              className="mt-2 text-xs text-slate-500 hover:text-purple-300 transition cursor-pointer"
+            >
+              + Lernziel hinzufügen
+            </button>
           )}
         </div>
         <div className="flex gap-2 shrink-0 flex-wrap">
