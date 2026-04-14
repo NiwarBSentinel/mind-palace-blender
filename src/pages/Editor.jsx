@@ -28,7 +28,7 @@ export default function Editor() {
   const [loading, setLoading] = useState(true)
   const [editingLocus, setEditingLocus] = useState(null)
   const [locusForm, setLocusForm] = useState({
-    position: '', lerninhalt: '', lernziel: '', vorstellung: ''
+    position: '', lerninhalt: '', lernziel: '', lernziel_bilder: [], vorstellung: ''
   })
   const [editingRoomId, setEditingRoomId] = useState(null)
   const [editingRoomName, setEditingRoomName] = useState('')
@@ -527,7 +527,7 @@ export default function Editor() {
       : 1
     setEditingLocus({ roomId, isNew: true })
     setLocusForm({
-      position: String(nextPos), lerninhalt: '', lernziel: '', vorstellung: ''
+      position: String(nextPos), lerninhalt: '', lernziel: '', lernziel_bilder: [], vorstellung: ''
     })
   }
 
@@ -537,6 +537,7 @@ export default function Editor() {
       position: String(locus.position || ''),
       lerninhalt: getLerninhalt(locus),
       lernziel: locus.lernziel || '',
+      lernziel_bilder: locus.lernziel_bilder || [],
       vorstellung: getVorstellung(locus),
     })
   }
@@ -546,10 +547,11 @@ export default function Editor() {
     const position = parseInt(locusForm.position) || 0
     const lerninhalt = locusForm.lerninhalt
     const lernziel = locusForm.lernziel
+    const lernziel_bilder = locusForm.lernziel_bilder || []
     const vorstellung = locusForm.vorstellung
 
     // Primaerer Payload mit neuen Feldern.
-    const newPayload = { position, lerninhalt, lernziel, vorstellung }
+    const newPayload = { position, lerninhalt, lernziel, lernziel_bilder, vorstellung }
     // Fallback-Payload fuer alte DB-Schemata (falls die Migration noch nicht lief).
     const legacyPayload = { position, person: lerninhalt, notiz: vorstellung }
 
@@ -852,10 +854,19 @@ export default function Editor() {
                                       <span className="text-slate-500 text-xs">Was lernen</span>
                                       <div className="text-slate-200 font-medium">{getLerninhalt(locus) || '–'}</div>
                                     </div>
-                                    {locus.lernziel && (
+                                    {(locus.lernziel || (locus.lernziel_bilder && locus.lernziel_bilder.length > 0)) && (
                                       <div>
                                         <span className="text-slate-500 text-xs">Lernziel</span>
-                                        <div className="text-slate-400 text-sm whitespace-pre-wrap">{locus.lernziel}</div>
+                                        {locus.lernziel && (
+                                          <div className="text-slate-400 text-sm whitespace-pre-wrap">{locus.lernziel}</div>
+                                        )}
+                                        {locus.lernziel_bilder && locus.lernziel_bilder.length > 0 && (
+                                          <div className="flex flex-wrap gap-2 mt-2">
+                                            {locus.lernziel_bilder.map((url, idx) => (
+                                              <img key={idx} src={url} alt="" className="rounded-lg border border-[#2a2a4a] max-h-32 object-contain cursor-pointer hover:border-purple-500/50 transition" onClick={() => window.open(url, '_blank')} />
+                                            ))}
+                                          </div>
+                                        )}
                                       </div>
                                     )}
                                     {getVorstellung(locus) && (
@@ -949,10 +960,43 @@ export default function Editor() {
 }
 
 function LocusFormComponent({ form, setForm, onSave, onCancel }) {
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef(null)
+
   function autoResize(e) {
     e.target.style.height = 'auto'
     e.target.style.height = e.target.scrollHeight + 'px'
   }
+
+  async function handleImageUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    setUploading(true)
+    const ext = file.name.split('.').pop() || 'jpg'
+    const path = `locus_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`
+    const { error: upErr } = await supabase.storage
+      .from('loci-images')
+      .upload(path, file, { contentType: file.type })
+    if (upErr) {
+      console.error('loci image upload error:', upErr)
+      setUploading(false)
+      return
+    }
+    const { data: urlData } = supabase.storage.from('loci-images').getPublicUrl(path)
+    const url = urlData.publicUrl
+    setForm((prev) => ({ ...prev, lernziel_bilder: [...(prev.lernziel_bilder || []), url] }))
+    setUploading(false)
+  }
+
+  function removeImage(idx) {
+    setForm((prev) => ({
+      ...prev,
+      lernziel_bilder: (prev.lernziel_bilder || []).filter((_, i) => i !== idx)
+    }))
+  }
+
+  const bilder = form.lernziel_bilder || []
 
   return (
     <form onSubmit={onSave} className="p-3 rounded-lg bg-[#0a0a1a] border border-purple-500/20 space-y-3">
@@ -972,14 +1016,49 @@ function LocusFormComponent({ form, setForm, onSave, onCancel }) {
           className="px-3 py-2 rounded bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500 transition"
         />
       </div>
-      <textarea
-        placeholder="Was genau willst du lernen? Details, Zusammenhänge, Kontext..."
-        value={form.lernziel}
-        onChange={(e) => { setForm({ ...form, lernziel: e.target.value }); autoResize(e) }}
-        onFocus={autoResize}
-        rows={3}
-        className="w-full px-3 py-2 rounded bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500 transition resize-none"
-      />
+      <div>
+        <textarea
+          placeholder="Was genau willst du lernen? Details, Zusammenhänge, Kontext..."
+          value={form.lernziel}
+          onChange={(e) => { setForm({ ...form, lernziel: e.target.value }); autoResize(e) }}
+          onFocus={autoResize}
+          rows={3}
+          className="w-full px-3 py-2 rounded bg-[#12122a] border border-[#2a2a4a] text-slate-200 placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500 transition resize-none"
+        />
+        {bilder.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {bilder.map((url, idx) => (
+              <div key={idx} className="relative group/img">
+                <img src={url} alt="" className="rounded-lg border border-[#2a2a4a] max-h-28 object-contain" />
+                <button
+                  type="button"
+                  onClick={() => removeImage(idx)}
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-600 text-white text-xs flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition cursor-pointer"
+                >
+                  x
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="mt-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="text-xs px-3 py-1.5 rounded bg-[#12122a] border border-[#2a2a4a] text-slate-400 hover:text-purple-300 hover:border-purple-500/30 transition cursor-pointer disabled:opacity-40"
+          >
+            {uploading ? 'Lade hoch...' : '+ Bild hinzufügen'}
+          </button>
+        </div>
+      </div>
       <textarea
         placeholder="Wie stelle ich mir das vor?"
         value={form.vorstellung}
