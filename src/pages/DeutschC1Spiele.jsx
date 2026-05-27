@@ -12,6 +12,7 @@ export default function DeutschC1Spiele() {
     { emoji: '🧠', title: 'Memory', desc: 'Wort-Definition-Paare finden', path: `/sprachen/deutsch/${lv}/memory`, color: 'cyan' },
     { emoji: '⚡', title: 'Zeitdruck', desc: 'Synonyme finden in 60 Sekunden', path: `/sprachen/deutsch/${lv}/zeitdruck`, color: 'yellow' },
     { emoji: '🧩', title: 'Artikel-Trainer', desc: 'der, die oder das?', path: '/sprachen/deutsch/artikel', color: 'green' },
+    { emoji: '🐍', title: 'Snake', desc: 'Klassisches Snake — jag den Highscore', path: `/sprachen/deutsch/${lv}/snake`, color: 'lime' },
   ]
 
   return (
@@ -41,12 +42,13 @@ export default function DeutschC1Spiele() {
                 cyan: 'border-b-cyan-500 hover:border-cyan-500/50 hover:shadow-cyan-500/10',
                 yellow: 'border-b-yellow-500 hover:border-yellow-500/50 hover:shadow-yellow-500/10',
                 green: 'border-b-green-500 hover:border-green-500/50 hover:shadow-green-500/10',
+                lime: 'border-b-lime-500 hover:border-lime-500/50 hover:shadow-lime-500/10',
               }[g.color]
             } cursor-pointer transition-all duration-300 group hover:scale-[1.02] hover:shadow-xl hover:bg-[#13132e]`}
           >
             <div className="text-4xl mb-3 transition-transform duration-300 group-hover:scale-110">{g.emoji}</div>
             <div className={`text-lg font-bold text-slate-200 transition ${
-              { rose: 'group-hover:text-rose-300', amber: 'group-hover:text-amber-300', cyan: 'group-hover:text-cyan-300', yellow: 'group-hover:text-yellow-300', green: 'group-hover:text-green-300' }[g.color]
+              { rose: 'group-hover:text-rose-300', amber: 'group-hover:text-amber-300', cyan: 'group-hover:text-cyan-300', yellow: 'group-hover:text-yellow-300', green: 'group-hover:text-green-300', lime: 'group-hover:text-lime-300' }[g.color]
             }`}>{g.title}</div>
             <div className="text-slate-500 text-sm mt-1">{g.desc}</div>
           </div>
