@@ -185,6 +185,35 @@ export const LESEN_C1 = [
         },
       ],
     },
+
+    teil5: {
+      anleitung:
+        'Lesen Sie den literarischen Text und beantworten Sie die Fragen zu Inhalt, Stimmung und Stil.',
+      text:
+        'Die Dämmerung senkte sich über die stille Landschaft, und mit ihr kam jene wehmütige Gewissheit, dass auch dieser Tag nun unwiederbringlich verloren war. Die Bäume, die am Morgen noch in vollem Saft gestanden hatten, verschwammen zu bloßen Schatten ihrer selbst. Ein letzter Vogel erhob seine Stimme, als wollte er gegen das nahende Schweigen aufbegehren, doch verklang sein Lied ungehört im weiten Rund. Der alte Mann am Fenster sah dem Verlöschen des Lichts entgegen, ohne Bitterkeit, ja beinahe mit Dankbarkeit – denn wer das Vergehen zu lieben gelernt hat, den schreckt kein Abend mehr.',
+      fragen: [
+        {
+          frage: 'Welche Stimmung prägt den Text vor allem?',
+          optionen: ['Ausgelassene Heiterkeit', 'Wehmütige Gelassenheit', 'Panische Angst'],
+          richtig: 1,
+        },
+        {
+          frage: 'Wofür steht die Dämmerung im Text sinnbildlich?',
+          optionen: ['Für den Beginn von etwas Neuem', 'Für das Vergehen und das Ende', 'Für unbeschwerte Lebensfreude'],
+          richtig: 1,
+        },
+        {
+          frage: 'Was bedeutet die Wendung „gegen das nahende Schweigen aufbegehren“?',
+          optionen: ['Sich gegen das Verstummen aufzulehnen', 'Endlich Ruhe zu finden', 'Aus Freude laut zu singen'],
+          richtig: 0,
+        },
+        {
+          frage: 'Wie ist die Haltung des alten Mannes gegenüber dem Vergehen zu verstehen?',
+          optionen: ['Er fürchtet sich und wehrt sich dagegen.', 'Er nimmt es versöhnt, fast dankbar an.', 'Es lässt ihn völlig gleichgültig.'],
+          richtig: 1,
+        },
+      ],
+    },
   },
 
   {
@@ -348,6 +377,35 @@ export const LESEN_C1 = [
           text:
             'Ein kostenloser Nahverkehr klingt verlockend, doch ich fürchte überfüllte Bahnen und einen Verfall der Infrastruktur. Lieber zahle ich einen fairen Preis und bekomme dafür einen verlässlichen Service.',
           optionen: ['positiv', 'negativ', 'neutral'],
+          richtig: 1,
+        },
+      ],
+    },
+
+    teil5: {
+      anleitung:
+        'Lesen Sie den literarischen Text und beantworten Sie die Fragen zu Inhalt, Stimmung und Stil.',
+      text:
+        'Wer die Stadt nur bei Tage kennt, der kennt sie nicht. Erst wenn die Lichter der Geschäfte erloschen sind und der Lärm sich gelegt hat, tritt ihr wahres Gesicht hervor. Dann hallen die Schritte des einsamen Wanderers von den Fassaden wider, und die Häuser, tagsüber gleichgültige Zeugen des Treibens, scheinen sich herabzuneigen, als wollten sie ihm ihre Geheimnisse anvertrauen. In solchen Stunden gehört die Stadt niemandem – und gerade darum jedem, der bereit ist, ihr zuzuhören.',
+      fragen: [
+        {
+          frage: 'Was behauptet der Erzähler über die Stadt?',
+          optionen: ['Man kenne sie erst wirklich bei Nacht.', 'Sie sei tagsüber am schönsten.', 'Sie sei nachts vor allem gefährlich.'],
+          richtig: 0,
+        },
+        {
+          frage: 'Welches Stilmittel kennzeichnet „die Häuser … scheinen sich herabzuneigen, als wollten sie ihm ihre Geheimnisse anvertrauen“?',
+          optionen: ['Ironie', 'Personifikation', 'Untertreibung'],
+          richtig: 1,
+        },
+        {
+          frage: 'Wie ist der Schluss „gehört die Stadt niemandem – und gerade darum jedem“ zu verstehen?',
+          optionen: ['Die Stadt gehört nur den Reichen.', 'Wer sich auf sie einlässt, dem öffnet sie sich.', 'Nachts bleibt die Stadt verschlossen.'],
+          richtig: 1,
+        },
+        {
+          frage: 'Welche Haltung nimmt der Erzähler gegenüber der nächtlichen Stadt ein?',
+          optionen: ['Eine distanziert-ablehnende.', 'Eine ehrfürchtig-zugewandte.', 'Eine spöttisch-belustigte.'],
           richtig: 1,
         },
       ],
@@ -528,6 +586,35 @@ export const LESEN_C1 = [
         },
       ],
     },
+
+    teil5: {
+      anleitung:
+        'Lesen Sie den literarischen Text und beantworten Sie die Fragen zu Inhalt, Stimmung und Stil.',
+      text:
+        'Es gab eine Zeit, da musste der Mensch warten lernen. Der Brief, einmal abgeschickt, reiste Tage, und in diesen Tagen wuchs die Erwartung zu einer eigenen, kostbaren Empfindung heran. Heute ist die Antwort da, ehe die Frage recht verklungen ist, und mit der Geschwindigkeit ist uns etwas abhandengekommen, das wir lange für selbstverständlich hielten: die Fähigkeit, uns zu sehnen. Wer alles sogleich erhält, verlernt das Verlangen – und mit ihm vielleicht auch ein Stück jener leisen Poesie, die nur dem Wartenden sich offenbart.',
+      fragen: [
+        {
+          frage: 'Was beklagt der Erzähler an der Gegenwart?',
+          optionen: ['Dass Briefe zu teuer geworden sind.', 'Dass mit dem Tempo die Fähigkeit zur Sehnsucht verloren geht.', 'Dass niemand mehr Fragen stellt.'],
+          richtig: 1,
+        },
+        {
+          frage: 'Welche Bedeutung hatte das Warten in früherer Zeit laut Text?',
+          optionen: ['Es war eine lästige Pflicht.', 'Es ließ die Erwartung zu einer kostbaren Empfindung werden.', 'Es war vor allem gefährlich.'],
+          richtig: 1,
+        },
+        {
+          frage: 'Was meint „jene leise Poesie, die nur dem Wartenden sich offenbart“?',
+          optionen: ['Gedichte, die vom Warten handeln.', 'Eine feine Schönheit, die sich erst durch Geduld erschließt.', 'Die Langeweile des Alltags.'],
+          richtig: 1,
+        },
+        {
+          frage: 'Welcher Grundgedanke trägt den Text?',
+          optionen: ['Fortschritt bringt ausschließlich Gewinn.', 'Mit jedem Gewinn an Tempo geht auch etwas verloren.', 'Die Vergangenheit war in allem besser.'],
+          richtig: 1,
+        },
+      ],
+    },
   },
 
   {
@@ -700,6 +787,35 @@ export const LESEN_C1 = [
         },
       ],
     },
+
+    teil5: {
+      anleitung:
+        'Lesen Sie den literarischen Text und beantworten Sie die Fragen zu Inhalt, Stimmung und Stil.',
+      text:
+        'In den Büchern seiner Kindheit hatte er Welten betreten, die wirklicher waren als die Straße vor seinem Fenster. Jede zerlesene Seite trug den Geruch jener Nachmittage, an denen die Zeit stillzustehen schien. Später, als die Pflichten ihn einholten, blieben die Bücher ungelesen im Regal – stumme Vorwürfe und geduldige Freunde zugleich. Und doch wusste er: Sie würden warten. Denn ein wahres Buch verliert nie die Geduld mit seinem Leser; es altert mit ihm und schenkt ihm bei jeder Wiederkehr einen anderen Sinn.',
+      fragen: [
+        {
+          frage: 'Welche Rolle spielten Bücher in der Kindheit des Mannes?',
+          optionen: ['Sie langweilten ihn meist.', 'Sie eröffneten ihm Welten, die ihm wirklicher schienen als die Realität.', 'Er las sie nur auf Druck.'],
+          richtig: 1,
+        },
+        {
+          frage: 'Was bedeutet die Wendung „stumme Vorwürfe und geduldige Freunde zugleich“?',
+          optionen: ['Die Bücher mahnen ihn und bleiben ihm doch treu.', 'Die Bücher sind längst zerstört.', 'Die Bücher sprechen wirklich mit ihm.'],
+          richtig: 0,
+        },
+        {
+          frage: 'Welche Aussage über „ein wahres Buch“ trifft der Text?',
+          optionen: ['Es ist nach einmaligem Lesen wertlos.', 'Es schenkt bei jedem Wiederlesen einen neuen Sinn.', 'Es eignet sich nur für Kinder.'],
+          richtig: 1,
+        },
+        {
+          frage: 'Welches Lebensgefühl spricht aus dem Text?',
+          optionen: ['Verachtung für die Vergangenheit.', 'Eine nachdenkliche Verbundenheit mit dem Lesen.', 'Gleichgültigkeit gegenüber Büchern.'],
+          richtig: 1,
+        },
+      ],
+    },
   },
 
   {
@@ -869,6 +985,35 @@ export const LESEN_C1 = [
             'Seit ich weiß, unter welchen Bedingungen viele Tiere gehalten werden, bringe ich kaum noch Fleisch über die Lippen. Für mich ist der Verzicht eine Frage des Anstands.',
           optionen: ['positiv', 'negativ', 'neutral'],
           richtig: 0,
+        },
+      ],
+    },
+
+    teil5: {
+      anleitung:
+        'Lesen Sie den literarischen Text und beantworten Sie die Fragen zu Inhalt, Stimmung und Stil.',
+      text:
+        'Das Meer kennt keine Eile. Welle um Welle trägt es an den Strand, gleichmütig, seit Anbeginn, und nimmt zurück, was es gegeben hat. Wer lange genug am Ufer steht, dem teilt sich etwas von dieser Ruhe mit; die kleinen Sorgen des Tages lösen sich auf wie Schaum im Sand. Vielleicht ist es dies, was den Menschen immer wieder ans Wasser zieht: nicht die Weite allein, sondern die stille Lehre, dass auch das Unruhigste einem verborgenen Maß gehorcht.',
+      fragen: [
+        {
+          frage: 'Welche Eigenschaft des Meeres hebt der Text hervor?',
+          optionen: ['Seine Gefährlichkeit.', 'Seine gleichmütige Ruhe.', 'Seine Lautstärke.'],
+          richtig: 1,
+        },
+        {
+          frage: 'Was geschieht laut Text mit den „kleinen Sorgen des Tages“?',
+          optionen: ['Sie verstärken sich.', 'Sie lösen sich auf wie Schaum im Sand.', 'Sie bleiben unverändert.'],
+          richtig: 1,
+        },
+        {
+          frage: 'Welches Stilmittel ist „die kleinen Sorgen … lösen sich auf wie Schaum im Sand“?',
+          optionen: ['Ein Vergleich.', 'Eine rhetorische Frage.', 'Eine Übertreibung.'],
+          richtig: 0,
+        },
+        {
+          frage: 'Worin besteht die „stille Lehre“ des Meeres?',
+          optionen: ['Dass alles dem Zufall überlassen ist.', 'Dass selbst das Unruhigste einem verborgenen Maß folgt.', 'Dass man das Meer fürchten soll.'],
+          richtig: 1,
         },
       ],
     },

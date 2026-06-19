@@ -13,6 +13,7 @@ const TEIL_INFO = [
   { key: 'teil2', label: 'Teil 2', kurz: 'Leseverstehen', emoji: '📄', erklaerung: 'Lies den Text und beantworte Fragen dazu.' },
   { key: 'teil3', label: 'Teil 3', kurz: 'Zuordnung', emoji: '🔀', erklaerung: 'Ordne jeder Person das passende Angebot zu.' },
   { key: 'teil4', label: 'Teil 4', kurz: 'Meinungen', emoji: '💬', erklaerung: 'Erkenne, ob eine Aussage positiv, negativ oder neutral ist.' },
+  { key: 'teil5', label: 'Teil 5', kurz: 'Literatur & Stil', emoji: '📜', erklaerung: 'Deute einen anspruchsvollen literarischen Text — Inhalt, Stimmung und Stil.' },
 ]
 
 const POS_LABEL = { positiv: '👍 positiv', negativ: '👎 negativ', neutral: '😐 neutral' }
@@ -20,7 +21,7 @@ const POS_LABEL = { positiv: '👍 positiv', negativ: '👎 negativ', neutral: '
 const CARD = 'rounded-2xl bg-[#12122a] border border-[#1e1e3a]'
 
 function countFragen(s) {
-  return s.teil1.luecken.length + s.teil2.fragen.length + s.teil3.personen.length + s.teil4.aussagen.length
+  return s.teil1.luecken.length + s.teil2.fragen.length + s.teil3.personen.length + s.teil4.aussagen.length + s.teil5.fragen.length
 }
 function schaetzMinuten(s) {
   return Math.max(5, Math.round(countFragen(s) * 0.7))
@@ -68,13 +69,16 @@ export default function DeutschC1Lesen() {
     const t3c = t3.filter((p) => answers.teil3?.[p.id] === satz.teil3.loesung[p.id]).length
     const t4 = satz.teil4.aussagen
     const t4c = t4.filter((a, i) => answers.teil4?.[i] === a.richtig).length
-    const total = t1.length + t2.length + t3.length + t4.length
-    const correct = t1c + t2c + t3c + t4c
+    const t5 = satz.teil5.fragen
+    const t5c = t5.filter((f, i) => answers.teil5?.[i] === f.richtig).length
+    const total = t1.length + t2.length + t3.length + t4.length + t5.length
+    const correct = t1c + t2c + t3c + t4c + t5c
     return {
       teil1: { correct: t1c, total: t1.length },
       teil2: { correct: t2c, total: t2.length },
       teil3: { correct: t3c, total: t3.length },
       teil4: { correct: t4c, total: t4.length },
+      teil5: { correct: t5c, total: t5.length },
       total: { correct, total },
     }
   }, [satz, answers])
@@ -148,7 +152,7 @@ export default function DeutschC1Lesen() {
 
         {/* Was dich erwartet */}
         <div className={`p-5 ${CARD} mb-8`}>
-          <p className="text-slate-300 text-sm font-semibold mb-3">Diese Übung hat 4 Teile:</p>
+          <p className="text-slate-300 text-sm font-semibold mb-3">Diese Übung hat {TEIL_INFO.length} Teile:</p>
           <div className="space-y-2.5">
             {TEIL_INFO.map((t) => (
               <div key={t.key} className="flex items-start gap-3">
@@ -266,6 +270,7 @@ export default function DeutschC1Lesen() {
     if (key === 'teil2') return satz.teil2.fragen.every((_, i) => a[i] !== undefined)
     if (key === 'teil3') return satz.teil3.personen.every((p) => a[p.id] !== undefined)
     if (key === 'teil4') return satz.teil4.aussagen.every((_, i) => a[i] !== undefined)
+    if (key === 'teil5') return satz.teil5.fragen.every((_, i) => a[i] !== undefined)
     return false
   }
   function teilCount(idx) {
@@ -274,7 +279,8 @@ export default function DeutschC1Lesen() {
     if (key === 'teil1') return { done: satz.teil1.luecken.filter((l) => a[l.nr] !== undefined).length, total: satz.teil1.luecken.length }
     if (key === 'teil2') return { done: satz.teil2.fragen.filter((_, i) => a[i] !== undefined).length, total: satz.teil2.fragen.length }
     if (key === 'teil3') return { done: satz.teil3.personen.filter((p) => a[p.id] !== undefined).length, total: satz.teil3.personen.length }
-    return { done: satz.teil4.aussagen.filter((_, i) => a[i] !== undefined).length, total: satz.teil4.aussagen.length }
+    if (key === 'teil4') return { done: satz.teil4.aussagen.filter((_, i) => a[i] !== undefined).length, total: satz.teil4.aussagen.length }
+    return { done: satz.teil5.fragen.filter((_, i) => a[i] !== undefined).length, total: satz.teil5.fragen.length }
   }
 
   const count = teilCount(teilIdx)
@@ -353,6 +359,7 @@ export default function DeutschC1Lesen() {
       {teilKey === 'teil2' && <Teil2 data={satz.teil2} answers={answers.teil2 || {}} onAnswer={(i, v) => setAnswer('teil2', i, v)} practice={practice} />}
       {teilKey === 'teil3' && <Teil3 data={satz.teil3} answers={answers.teil3 || {}} onAnswer={(id, v) => setAnswer('teil3', id, v)} practice={practice} />}
       {teilKey === 'teil4' && <Teil4 data={satz.teil4} answers={answers.teil4 || {}} onAnswer={(i, v) => setAnswer('teil4', i, v)} practice={practice} />}
+      {teilKey === 'teil5' && <Teil5 data={satz.teil5} answers={answers.teil5 || {}} onAnswer={(i, v) => setAnswer('teil5', i, v)} practice={practice} />}
 
       {/* Navigation */}
       <div className="flex gap-3 justify-between mt-8">
@@ -461,52 +468,75 @@ function Teil1({ data, answers, onAnswer, practice }) {
   )
 }
 
-// ---------- Teil 2: Multiple Choice ----------
+// ---------- Gemeinsame Multiple-Choice-Fragen ----------
+function MCQuestions({ fragen, answers, onAnswer, practice, name }) {
+  return (
+    <div className="space-y-5">
+      {fragen.map((f, i) => {
+        const answered = answers[i] !== undefined
+        const locked = practice && answered
+        return (
+          <div key={i} className={`p-5 ${CARD}`}>
+            <p className="text-slate-100 font-medium mb-3 flex gap-2">
+              <span className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-emerald-500/15 text-emerald-300 text-xs font-bold">{i + 1}</span>
+              <span>{f.frage}</span>
+            </p>
+            <div className="space-y-2">
+              {f.optionen.map((opt, oi) => {
+                const sel = answers[i] === oi
+                const isCorrect = oi === f.richtig
+                let cls = 'bg-[#0a0a1a] border-[#2a2a4a] text-slate-300 hover:border-emerald-500/40 hover:bg-[#0d0d20]'
+                let badge = 'border-slate-600 text-slate-500'
+                if (practice && answered) {
+                  if (isCorrect) { cls = 'bg-emerald-500/15 border-emerald-500 text-emerald-100'; badge = 'border-emerald-400 bg-emerald-500 text-white' }
+                  else if (sel) { cls = 'bg-red-500/15 border-red-500 text-red-100'; badge = 'border-red-400 bg-red-500 text-white' }
+                  else { cls = 'bg-[#0a0a1a] border-[#2a2a4a] text-slate-500 opacity-60' }
+                } else if (sel) {
+                  cls = 'bg-emerald-500/15 border-emerald-500 text-emerald-100'; badge = 'border-emerald-400 bg-emerald-500 text-white'
+                }
+                return (
+                  <label key={oi} className={`flex items-start gap-3 p-3 rounded-xl border transition ${locked ? 'cursor-default' : 'cursor-pointer'} ${cls}`}>
+                    <span className={`mt-0.5 shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-[10px] font-bold ${badge}`}>
+                      {practice && answered && isCorrect ? '✓' : practice && answered && sel ? '✗' : String.fromCharCode(97 + oi)}
+                    </span>
+                    <input type="radio" name={`${name}${i}`} checked={sel} disabled={locked} onChange={() => onAnswer(i, oi)} className="sr-only" />
+                    <span className="text-sm">{opt}</span>
+                  </label>
+                )
+              })}
+            </div>
+            {practice && answered && <Feedback correct={answers[i] === f.richtig} loesung={f.optionen[f.richtig]} />}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ---------- Teil 2: Leseverstehen ----------
 function Teil2({ data, answers, onAnswer, practice }) {
   return (
     <div>
       <div className={`p-6 ${CARD} mb-5 text-slate-200 whitespace-pre-line leading-relaxed text-[15px]`}>
         {data.text}
       </div>
-      <div className="space-y-5">
-        {data.fragen.map((f, i) => {
-          const answered = answers[i] !== undefined
-          const locked = practice && answered
-          return (
-            <div key={i} className={`p-5 ${CARD}`}>
-              <p className="text-slate-100 font-medium mb-3 flex gap-2">
-                <span className="shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-emerald-500/15 text-emerald-300 text-xs font-bold">{i + 1}</span>
-                <span>{f.frage}</span>
-              </p>
-              <div className="space-y-2">
-                {f.optionen.map((opt, oi) => {
-                  const sel = answers[i] === oi
-                  const isCorrect = oi === f.richtig
-                  let cls = 'bg-[#0a0a1a] border-[#2a2a4a] text-slate-300 hover:border-emerald-500/40 hover:bg-[#0d0d20]'
-                  let badge = 'border-slate-600 text-slate-500'
-                  if (practice && answered) {
-                    if (isCorrect) { cls = 'bg-emerald-500/15 border-emerald-500 text-emerald-100'; badge = 'border-emerald-400 bg-emerald-500 text-white' }
-                    else if (sel) { cls = 'bg-red-500/15 border-red-500 text-red-100'; badge = 'border-red-400 bg-red-500 text-white' }
-                    else { cls = 'bg-[#0a0a1a] border-[#2a2a4a] text-slate-500 opacity-60' }
-                  } else if (sel) {
-                    cls = 'bg-emerald-500/15 border-emerald-500 text-emerald-100'; badge = 'border-emerald-400 bg-emerald-500 text-white'
-                  }
-                  return (
-                    <label key={oi} className={`flex items-start gap-3 p-3 rounded-xl border transition ${locked ? 'cursor-default' : 'cursor-pointer'} ${cls}`}>
-                      <span className={`mt-0.5 shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-[10px] font-bold ${badge}`}>
-                        {practice && answered && isCorrect ? '✓' : practice && answered && sel ? '✗' : String.fromCharCode(97 + oi)}
-                      </span>
-                      <input type="radio" name={`f${i}`} checked={sel} disabled={locked} onChange={() => onAnswer(i, oi)} className="sr-only" />
-                      <span className="text-sm">{opt}</span>
-                    </label>
-                  )
-                })}
-              </div>
-              {practice && answered && <Feedback correct={answers[i] === f.richtig} loesung={f.optionen[f.richtig]} />}
-            </div>
-          )
-        })}
+      <MCQuestions fragen={data.fragen} answers={answers} onAnswer={onAnswer} practice={practice} name="t2q" />
+    </div>
+  )
+}
+
+// ---------- Teil 5: Literatur & Stil (gehoben) ----------
+function Teil5({ data, answers, onAnswer, practice }) {
+  return (
+    <div>
+      <div className="relative mb-6 rounded-2xl bg-gradient-to-b from-[#15152f] to-[#101024] border border-amber-500/20 border-l-2 border-l-amber-500/60 p-7 sm:p-8 shadow-lg shadow-amber-500/5">
+        <span aria-hidden className="absolute -top-2 left-4 text-6xl font-serif text-amber-500/20 leading-none select-none">“</span>
+        <span className="block text-[10px] uppercase tracking-[0.2em] text-amber-500/70 mb-3">Literarischer Text</span>
+        <p className="font-serif text-[17px] sm:text-[18px] leading-[2] text-slate-100/90 first-letter:text-5xl first-letter:font-bold first-letter:text-amber-300/80 first-letter:mr-2 first-letter:float-left first-letter:leading-[0.8]">
+          {data.text}
+        </p>
       </div>
+      <MCQuestions fragen={data.fragen} answers={answers} onAnswer={onAnswer} practice={practice} name="t5q" />
     </div>
   )
 }
@@ -660,6 +690,13 @@ function SolutionReview({ satz, answers }) {
         {satz.teil4.aussagen.map((a, i) => {
           const your = answers.teil4?.[i]
           return <SolRow key={i} ok={your === a.richtig} label={a.person} your={your === undefined ? '—' : (POS_LABEL[a.optionen[your]] || a.optionen[your])} correct={POS_LABEL[a.optionen[a.richtig]] || a.optionen[a.richtig]} />
+        })}
+      </SolSection>
+
+      <SolSection emoji="📜" title="Teil 5 — Literatur & Stil">
+        {satz.teil5.fragen.map((f, i) => {
+          const your = answers.teil5?.[i]
+          return <SolRow key={i} ok={your === f.richtig} label={`${i + 1}. ${f.frage}`} your={your === undefined ? '—' : f.optionen[your]} correct={f.optionen[f.richtig]} />
         })}
       </SolSection>
     </div>
