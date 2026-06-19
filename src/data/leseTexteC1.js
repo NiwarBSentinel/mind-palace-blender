@@ -353,4 +353,524 @@ export const LESEN_C1 = [
       ],
     },
   },
+
+  {
+    id: 'set3',
+    titel: 'Übungssatz 3',
+    thema: 'Künstliche Intelligenz & Digitalisierung',
+
+    teil1: {
+      anleitung:
+        'Lesen Sie den Text und entscheiden Sie, welches Wort (a, b oder c) in jede Lücke passt.',
+      text:
+        'Künstliche Intelligenz ist längst Teil unseres Alltags, auch wenn wir es nicht immer {1}. Ob bei der Suche im Internet oder bei Empfehlungen im Online-Shop – Algorithmen treffen {2} Entscheidungen, die uns Zeit ersparen. {3} aller Vorteile wächst jedoch die Sorge, dass der Mensch die Kontrolle verliert. Fachleute fordern deshalb klare Regeln, {4} der Einsatz solcher Systeme transparent bleibt. Besonders heikel ist die Frage, wer {5}, wenn eine Maschine einen Fehler macht. Solange das ungeklärt ist, {6} viele Menschen der Technik mit Misstrauen. Dennoch lässt sich der Fortschritt kaum {7}. Entscheidend wird sein, ob es gelingt, die Chancen zu nutzen, {8} die Risiken aus den Augen zu verlieren.',
+      luecken: [
+        { nr: 1, optionen: ['bemerken', 'vergessen', 'verlieren'], richtig: 0 },
+        { nr: 2, optionen: ['eigenständig', 'niemals', 'widerwillig'], richtig: 0 },
+        { nr: 3, optionen: ['Wegen', 'Trotz', 'Dank'], richtig: 1 },
+        { nr: 4, optionen: ['damit', 'weil', 'obwohl'], richtig: 0 },
+        { nr: 5, optionen: ['haftet', 'profitiert', 'gewinnt'], richtig: 0 },
+        { nr: 6, optionen: ['begegnen', 'begegnet', 'begegnete'], richtig: 0 },
+        { nr: 7, optionen: ['aufhalten', 'beschleunigen', 'fördern'], richtig: 0 },
+        { nr: 8, optionen: ['ohne', 'statt', 'um'], richtig: 0 },
+      ],
+    },
+
+    teil2: {
+      anleitung:
+        'Lesen Sie den Text und beantworten Sie die Fragen. Wählen Sie jeweils die richtige Antwort (a, b oder c).',
+      text:
+        'Die Telemedizin – also die ärztliche Behandlung über digitale Kanäle – hat in den vergangenen Jahren einen enormen Aufschwung erlebt. Patientinnen und Patienten können heute per Videosprechstunde mit ihrem Arzt sprechen, ohne das Haus zu verlassen. Gerade für Menschen in ländlichen Regionen, wo der nächste Facharzt oft weit entfernt ist, bedeutet das eine spürbare Erleichterung.\n\nAuch das Gesundheitssystem profitiert. Wartezimmer leeren sich, Ansteckungen werden vermieden, und Ärzte können ihre Zeit effizienter einteilen. Bei chronisch Kranken, die regelmäßig betreut werden müssen, ersetzt die digitale Sprechstunde manchen unnötigen Weg in die Praxis.\n\nDoch es gibt auch Grenzen. Eine körperliche Untersuchung lässt sich nun einmal nicht über den Bildschirm durchführen, und nicht jede Diagnose kann aus der Ferne gestellt werden. Hinzu kommt, dass ältere Menschen mit der Technik mitunter überfordert sind. Datenschützer wiederum mahnen, dass sensible Gesundheitsdaten besonders sorgfältig geschützt werden müssen. Die Telemedizin, so der Tenor der Fachleute, sei eine wertvolle Ergänzung – ein vollständiger Ersatz für den persönlichen Arztbesuch werde sie jedoch nie sein.',
+      fragen: [
+        {
+          frage: 'Für wen ist die Telemedizin laut Text besonders hilfreich?',
+          optionen: [
+            'Für Menschen in ländlichen Regionen mit weiten Wegen zum Arzt.',
+            'Für junge, technikbegeisterte Großstädter.',
+            'Für Ärzte, die weniger arbeiten möchten.',
+          ],
+          richtig: 0,
+        },
+        {
+          frage: 'Wie profitiert das Gesundheitssystem?',
+          optionen: [
+            'Die Behandlung wird grundsätzlich teurer.',
+            'Wartezimmer leeren sich und Ansteckungen werden vermieden.',
+            'Ärzte tragen weniger Verantwortung.',
+          ],
+          richtig: 1,
+        },
+        {
+          frage: 'Welche Grenze der Telemedizin nennt der Text?',
+          optionen: [
+            'Videosprechstunden sind technisch unmöglich.',
+            'Eine körperliche Untersuchung ist über den Bildschirm nicht möglich.',
+            'Chronisch Kranke dürfen nicht teilnehmen.',
+          ],
+          richtig: 1,
+        },
+        {
+          frage: 'Was mahnen Datenschützer an?',
+          optionen: [
+            'Gesundheitsdaten müssten besonders sorgfältig geschützt werden.',
+            'Die Technik sei viel zu billig.',
+            'Ärzte sollten mehr Daten sammeln.',
+          ],
+          richtig: 0,
+        },
+        {
+          frage: 'Wie bewerten Fachleute die Telemedizin insgesamt?',
+          optionen: [
+            'Als vollständigen Ersatz für den Arztbesuch.',
+            'Als wertvolle Ergänzung, aber keinen vollständigen Ersatz.',
+            'Als überflüssig und gefährlich.',
+          ],
+          richtig: 1,
+        },
+      ],
+    },
+
+    teil3: {
+      anleitung:
+        'Vier Personen suchen eine passende Kultur- oder Freizeitveranstaltung. Ordnen Sie jeder Person die am besten passende Anzeige zu. Eine Anzeige bleibt übrig.',
+      personen: [
+        {
+          id: 'a',
+          name: 'Person A',
+          beschreibung:
+            'Eine Mutter sucht eine Veranstaltung, bei der ihre kleinen Kinder am Wochenende kreativ werden und basteln können.',
+        },
+        {
+          id: 'b',
+          name: 'Person B',
+          beschreibung:
+            'Ein Filmliebhaber möchte anspruchsvolle europäische Filme sehen und sich anschließend mit anderen darüber austauschen.',
+        },
+        {
+          id: 'c',
+          name: 'Person C',
+          beschreibung:
+            'Ein Hobbykoch will seine Fähigkeiten verbessern und exotische Küchen aus aller Welt kennenlernen.',
+        },
+        {
+          id: 'd',
+          name: 'Person D',
+          beschreibung:
+            'Eine Seniorin interessiert sich für Literatur und sucht einen geselligen Austausch über Bücher am Nachmittag.',
+        },
+      ],
+      anzeigen: [
+        {
+          id: 0,
+          titel: 'Familien-Kreativwerkstatt',
+          text:
+            'Samstags basteln, malen und gestalten Kinder ab vier Jahren nach Herzenslust – Material und Betreuung inklusive.',
+        },
+        {
+          id: 1,
+          titel: 'Filmclub Europa',
+          text:
+            'Wir zeigen preisgekrönte Filme aus ganz Europa und diskutieren anschließend gemeinsam bei einem Glas Wein.',
+        },
+        {
+          id: 2,
+          titel: 'Kochkurs „Aromen der Welt“',
+          text:
+            'Lernen Sie Gerichte aus Asien, Afrika und Lateinamerika kennen und erweitern Sie Ihr Repertoire am Herd.',
+        },
+        {
+          id: 3,
+          titel: 'Lesekreis am Nachmittag',
+          text:
+            'Bei Kaffee und Kuchen besprechen wir gemeinsam aktuelle Romane – in geselliger, offener Runde.',
+        },
+        {
+          id: 4,
+          titel: 'Marathon-Trainingsgruppe',
+          text:
+            'Ambitioniertes Lauftraining zur Vorbereitung auf den nächsten Stadtmarathon. Nur für Geübte.',
+        },
+      ],
+      loesung: { a: 0, b: 1, c: 2, d: 3 },
+    },
+
+    teil4: {
+      anleitung:
+        'Lesen Sie die Leserkommentare zum Thema „Soziale Medien“. Äußert sich die Person eher positiv, negativ oder neutral?',
+      aussagen: [
+        {
+          person: 'Tobias, 28',
+          text:
+            'Ohne soziale Medien wüsste ich gar nicht, was in der Welt passiert. Ich bleibe mit Freunden in Kontakt und finde Gleichgesinnte – ich möchte sie nicht mehr missen.',
+          optionen: ['positiv', 'negativ', 'neutral'],
+          richtig: 0,
+        },
+        {
+          person: 'Renate, 55',
+          text:
+            'Dieser ständige Vergleich mit anderen, die Flut an Falschnachrichten, die verlorene Zeit – ich habe meine Konten gelöscht und fühle mich seitdem deutlich freier.',
+          optionen: ['positiv', 'negativ', 'neutral'],
+          richtig: 1,
+        },
+        {
+          person: 'Karim, 34',
+          text:
+            'Soziale Medien sind weder gut noch schlecht – es kommt darauf an, wie man sie nutzt. Wer bewusst damit umgeht, zieht Nutzen daraus, andere verlieren sich darin.',
+          optionen: ['positiv', 'negativ', 'neutral'],
+          richtig: 2,
+        },
+        {
+          person: 'Nina, 39',
+          text:
+            'Für mein kleines Unternehmen sind die sozialen Netzwerke ein Segen. Ohne sie hätte ich nie so viele Kunden erreicht – die Werbung kostet fast nichts und wirkt.',
+          optionen: ['positiv', 'negativ', 'neutral'],
+          richtig: 0,
+        },
+      ],
+    },
+  },
+
+  {
+    id: 'set4',
+    titel: 'Übungssatz 4',
+    thema: 'Bildung & lebenslanges Lernen',
+
+    teil1: {
+      anleitung:
+        'Lesen Sie den Text und entscheiden Sie, welches Wort (a, b oder c) in jede Lücke passt.',
+      text:
+        'Lebenslanges Lernen ist in einer sich rasch wandelnden Arbeitswelt {1} geworden. Wer heute einen Beruf erlernt, kann nicht {2} davon ausgehen, dieses Wissen ein Leben lang anwenden zu können. Technologien veralten, ganze Branchen verändern sich. {3} ist die Bereitschaft, sich immer wieder Neues anzueignen, zu einer Schlüsselkompetenz geworden. Viele Unternehmen {4} ihren Mitarbeitenden inzwischen regelmäßige Weiterbildungen an, {5} sie wissen, dass gut geschultes Personal ihr wertvollstes Kapital ist. Wer aus eigenem Antrieb dazulernt, erhöht nicht nur seine Chancen auf dem Arbeitsmarkt, {6} bleibt auch geistig beweglich. Kritiker warnen allerdings {7} einem zu großen Druck. Entscheidend sei, dass das Lernen Freude {8} und nicht zur bloßen Pflicht verkommt.',
+      luecken: [
+        { nr: 1, optionen: ['unverzichtbar', 'überflüssig', 'freiwillig'], richtig: 0 },
+        { nr: 2, optionen: ['mehr', 'immer', 'länger'], richtig: 0 },
+        { nr: 3, optionen: ['Trotzdem', 'Deshalb', 'Dennoch'], richtig: 1 },
+        { nr: 4, optionen: ['bieten', 'bietet', 'boten'], richtig: 0 },
+        { nr: 5, optionen: ['weil', 'obwohl', 'damit'], richtig: 0 },
+        { nr: 6, optionen: ['sondern', 'aber', 'denn'], richtig: 0 },
+        { nr: 7, optionen: ['vor', 'über', 'an'], richtig: 0 },
+        { nr: 8, optionen: ['bereitet', 'bereiten', 'bereitete'], richtig: 0 },
+      ],
+    },
+
+    teil2: {
+      anleitung:
+        'Lesen Sie den Text und beantworten Sie die Fragen. Wählen Sie jeweils die richtige Antwort (a, b oder c).',
+      text:
+        'Kinder, die mit zwei oder mehr Sprachen aufwachsen, galten lange als benachteiligt. Man fürchtete, sie würden keine der Sprachen richtig beherrschen und in der Schule den Anschluss verlieren. Die moderne Forschung zeichnet ein ganz anderes Bild.\n\nTatsächlich entwickeln mehrsprachige Kinder oft besondere geistige Fähigkeiten. Weil sie ständig zwischen den Sprachen wechseln, trainieren sie unbewusst ihre Konzentration und lernen, Wichtiges von Unwichtigem zu unterscheiden. Manche Studien deuten sogar darauf hin, dass diese Fähigkeiten im Alter vor dem geistigen Abbau schützen können.\n\nAllerdings stellt sich der Erfolg nicht von allein ein. Damit ein Kind eine Sprache wirklich verinnerlicht, muss es ihr regelmäßig und in vielfältigen Situationen begegnen. Gelegentliche Berührung genügt nicht. Fachleute raten Eltern daher, konsequent zu bleiben und jede Sprache mit festen Bezugspersonen oder Anlässen zu verbinden. Wird die Mehrsprachigkeit so gefördert, ist sie kein Hindernis, sondern ein Geschenk fürs ganze Leben.',
+      fragen: [
+        {
+          frage: 'Wie wurden mehrsprachige Kinder früher häufig eingeschätzt?',
+          optionen: ['Als benachteiligt.', 'Als besonders begabt.', 'Als völlig unauffällig.'],
+          richtig: 0,
+        },
+        {
+          frage: 'Welchen geistigen Vorteil nennt der Text?',
+          optionen: [
+            'Sie brauchen weniger Schlaf.',
+            'Sie trainieren Konzentration und das Unterscheiden von Wichtigem und Unwichtigem.',
+            'Sie lernen automatisch schneller rechnen.',
+          ],
+          richtig: 1,
+        },
+        {
+          frage: 'Was können mehrsprachige Fähigkeiten im Alter bewirken?',
+          optionen: [
+            'Sie beschleunigen den geistigen Abbau.',
+            'Sie haben keinerlei Wirkung.',
+            'Sie können vor dem geistigen Abbau schützen.',
+          ],
+          richtig: 2,
+        },
+        {
+          frage: 'Was ist nötig, damit ein Kind eine Sprache verinnerlicht?',
+          optionen: [
+            'Gelegentlicher Kontakt reicht aus.',
+            'Regelmäßige Begegnung in vielfältigen Situationen.',
+            'Ein einmaliger, teurer Sprachkurs.',
+          ],
+          richtig: 1,
+        },
+        {
+          frage: 'Zu welchem Schluss kommt der Text?',
+          optionen: [
+            'Mehrsprachigkeit ist ein Hindernis.',
+            'Bei guter Förderung ist Mehrsprachigkeit ein Geschenk fürs Leben.',
+            'Eltern sollten mit dem Kind nur eine Sprache sprechen.',
+          ],
+          richtig: 1,
+        },
+      ],
+    },
+
+    teil3: {
+      anleitung:
+        'Vier Personen suchen ein passendes Lern- oder Bildungsangebot. Ordnen Sie jeder Person die am besten passende Anzeige zu. Eine Anzeige bleibt übrig.',
+      personen: [
+        {
+          id: 'a',
+          name: 'Person A',
+          beschreibung:
+            'Eine Schülerin hat Schwierigkeiten in Mathematik und sucht geduldige Einzelnachhilfe am Nachmittag.',
+        },
+        {
+          id: 'b',
+          name: 'Person B',
+          beschreibung:
+            'Ein Berufstätiger möchte berufsbegleitend einen Hochschulabschluss nachholen, und zwar ortsunabhängig.',
+        },
+        {
+          id: 'c',
+          name: 'Person C',
+          beschreibung:
+            'Ein Vater will mit seinem Kind spielerisch das Lesen üben und sucht passende Materialien.',
+        },
+        {
+          id: 'd',
+          name: 'Person D',
+          beschreibung:
+            'Eine Studentin sucht eine ruhige Umgebung zum konzentrierten Lernen außerhalb ihrer Wohnung.',
+        },
+      ],
+      anzeigen: [
+        {
+          id: 0,
+          titel: 'Mathe-Nachhilfe individuell',
+          text:
+            'Geduldige Einzelbetreuung am Nachmittag, ganz abgestimmt auf das Tempo Ihres Kindes.',
+        },
+        {
+          id: 1,
+          titel: 'Fernstudium Bachelor',
+          text:
+            'Studieren Sie berufsbegleitend und vollständig online – im eigenen Tempo und von überall aus.',
+        },
+        {
+          id: 2,
+          titel: 'Lesespaß für Kinder',
+          text:
+            'Bunte Übungshefte und Spiele, mit denen das Lesenlernen zum Vergnügen für die ganze Familie wird.',
+        },
+        {
+          id: 3,
+          titel: 'Lernort Bibliothek',
+          text:
+            'Ruhige Arbeitsplätze, schnelles WLAN und lange Öffnungszeiten zum konzentrierten Studieren.',
+        },
+        {
+          id: 4,
+          titel: 'Tanzkurs für Anfänger',
+          text:
+            'Lernen Sie die Grundschritte von Walzer bis Salsa – Schwung und gute Laune garantiert.',
+        },
+      ],
+      loesung: { a: 0, b: 1, c: 2, d: 3 },
+    },
+
+    teil4: {
+      anleitung:
+        'Lesen Sie die Leserkommentare zum Thema „Hausaufgaben abschaffen?“. Äußert sich die Person eher positiv, negativ oder neutral gegenüber Hausaufgaben?',
+      aussagen: [
+        {
+          person: 'Frau Berger, Lehrerin',
+          text:
+            'Ohne Hausaufgaben fehlt den Kindern die nötige Übung. Was im Unterricht beginnt, muss zu Hause vertieft werden – anders festigt sich kein Wissen.',
+          optionen: ['positiv', 'negativ', 'neutral'],
+          richtig: 0,
+        },
+        {
+          person: 'Jan, Vater',
+          text:
+            'Jeden Nachmittag Streit, Tränen, kein Feierabend für die ganze Familie. Hausaufgaben rauben den Kindern die Kindheit – ich wäre froh, wenn sie endlich abgeschafft würden.',
+          optionen: ['positiv', 'negativ', 'neutral'],
+          richtig: 1,
+        },
+        {
+          person: 'Frau Dr. Klein',
+          text:
+            'Ob Hausaufgaben sinnvoll sind, hängt von ihrer Gestaltung ab. Sinnlose Wiederholung schadet, durchdachte Aufgaben können nützen. Pauschale Antworten gibt es nicht.',
+          optionen: ['positiv', 'negativ', 'neutral'],
+          richtig: 2,
+        },
+        {
+          person: 'Murat, Schüler',
+          text:
+            'Ehrlich? Ich finde Hausaufgaben gut. Wenn ich sie allein schaffe, weiß ich, dass ich den Stoff verstanden habe – das gibt mir Sicherheit für die Prüfung.',
+          optionen: ['positiv', 'negativ', 'neutral'],
+          richtig: 0,
+        },
+      ],
+    },
+  },
+
+  {
+    id: 'set5',
+    titel: 'Übungssatz 5',
+    thema: 'Gesundheit & Ernährung',
+
+    teil1: {
+      anleitung:
+        'Lesen Sie den Text und entscheiden Sie, welches Wort (a, b oder c) in jede Lücke passt.',
+      text:
+        'Gesunde Ernährung ist in aller Munde – im wörtlichen wie im übertragenen Sinne. Kaum ein Tag vergeht, {1} nicht eine neue Diät oder ein angebliches Superfood beworben wird. Verbraucher sind dadurch oft mehr verwirrt {2} informiert. Was gestern noch als gesund galt, wird heute verteufelt. Ernährungsfachleute raten {3}, sich von solchen Moden nicht verunsichern zu lassen. Statt einzelner Wundermittel komme es {4} eine ausgewogene Mischung an. Wer sich {5} an diese einfachen Grundsätze hält, tut bereits viel für seine Gesundheit. {6} sollte man nicht vergessen, dass auch der Genuss seinen Platz hat. Eine Ernährung, die nur aus Verboten besteht, lässt sich auf Dauer kaum {7}. Entscheidend ist das richtige Maß – und die Freude {8} Essen.',
+      luecken: [
+        { nr: 1, optionen: ['an dem', 'wenn', 'dass'], richtig: 0 },
+        { nr: 2, optionen: ['als', 'wie', 'denn'], richtig: 0 },
+        { nr: 3, optionen: ['deshalb', 'dennoch', 'trotzdem'], richtig: 0 },
+        { nr: 4, optionen: ['auf', 'an', 'über'], richtig: 0 },
+        { nr: 5, optionen: ['bereits', 'kaum', 'niemals'], richtig: 0 },
+        { nr: 6, optionen: ['Allerdings', 'Deswegen', 'Folglich'], richtig: 0 },
+        { nr: 7, optionen: ['durchhalten', 'aufgeben', 'vergessen'], richtig: 0 },
+        { nr: 8, optionen: ['am', 'auf', 'beim'], richtig: 0 },
+      ],
+    },
+
+    teil2: {
+      anleitung:
+        'Lesen Sie den Text und beantworten Sie die Fragen. Wählen Sie jeweils die richtige Antwort (a, b oder c).',
+      text:
+        'Schlaf gilt vielen als verlorene Zeit – Stunden, in denen man scheinbar nichts leistet. Die Wissenschaft sieht das völlig anders. Während wir schlafen, laufen im Körper und im Gehirn lebenswichtige Prozesse ab, die sich durch nichts ersetzen lassen.\n\nSo verarbeitet das Gehirn nachts die Eindrücke des Tages. Was wir gelernt haben, wird sortiert und im Langzeitgedächtnis verankert. Wer vor einer Prüfung die Nacht durchmacht, schadet sich daher meist mehr, als er nützt. Auch das Immunsystem arbeitet im Schlaf auf Hochtouren und wehrt Krankheitserreger ab.\n\nDauerhafter Schlafmangel bleibt nicht ohne Folgen. Die Konzentration lässt nach, die Stimmung leidet, und das Risiko für ernsthafte Erkrankungen steigt. Dennoch betrachten viele Menschen ausreichenden Schlaf noch immer als Luxus statt als Notwendigkeit. Fachleute appellieren, dem Schlaf denselben Stellenwert einzuräumen wie gesunder Ernährung und Bewegung. Wer gut schläft, lebe nicht nur länger, sondern auch zufriedener.',
+      fragen: [
+        {
+          frage: 'Wie betrachten viele Menschen den Schlaf?',
+          optionen: ['Als verlorene Zeit.', 'Als die wichtigste Tätigkeit überhaupt.', 'Als reines Vergnügen.'],
+          richtig: 0,
+        },
+        {
+          frage: 'Was geschieht laut Text nachts im Gehirn?',
+          optionen: [
+            'Es schaltet vollständig ab.',
+            'Es verarbeitet die Eindrücke des Tages und verankert Gelerntes.',
+            'Es vergisst alles zuvor Gelernte.',
+          ],
+          richtig: 1,
+        },
+        {
+          frage: 'Warum schadet das Durchmachen der Nacht vor einer Prüfung?',
+          optionen: [
+            'Weil man dann zu früh aufwacht.',
+            'Weil das Gehirn das Gelernte nicht im Gedächtnis verankern kann.',
+            'Weil man davon sofort krank wird.',
+          ],
+          richtig: 1,
+        },
+        {
+          frage: 'Welche Folge hat dauerhafter Schlafmangel?',
+          optionen: [
+            'Die Konzentration verbessert sich.',
+            'Das Risiko für ernsthafte Erkrankungen steigt.',
+            'Die Stimmung wird dauerhaft besser.',
+          ],
+          richtig: 1,
+        },
+        {
+          frage: 'Wozu appellieren die Fachleute?',
+          optionen: [
+            'Schlaf als Luxus zu betrachten.',
+            'Dem Schlaf denselben Stellenwert wie Ernährung und Bewegung zu geben.',
+            'Weniger zu schlafen, um mehr zu leisten.',
+          ],
+          richtig: 1,
+        },
+      ],
+    },
+
+    teil3: {
+      anleitung:
+        'Vier Personen suchen ein passendes Gesundheits- oder Bewegungsangebot. Ordnen Sie jeder Person die am besten passende Anzeige zu. Eine Anzeige bleibt übrig.',
+      personen: [
+        {
+          id: 'a',
+          name: 'Person A',
+          beschreibung:
+            'Ein gestresster Manager sucht eine Methode, um abzuschalten und im Alltag zur Ruhe zu kommen.',
+        },
+        {
+          id: 'b',
+          name: 'Person B',
+          beschreibung:
+            'Eine junge Frau möchte ihre Ausdauer verbessern und sucht ein Training an der frischen Luft.',
+        },
+        {
+          id: 'c',
+          name: 'Person C',
+          beschreibung:
+            'Ein älterer Herr hat Rückenschmerzen und sucht ein schonendes, gelenkfreundliches Bewegungsangebot.',
+        },
+        {
+          id: 'd',
+          name: 'Person D',
+          beschreibung:
+            'Eine Berufstätige will sich gesünder ernähren, weiß aber nicht recht, wie sie anfangen soll.',
+        },
+      ],
+      anzeigen: [
+        {
+          id: 0,
+          titel: 'Achtsamkeit & Meditation',
+          text:
+            'Lernen Sie, im Alltag innezuhalten und dem Stress gelassen zu begegnen – in ruhiger Atmosphäre.',
+        },
+        {
+          id: 1,
+          titel: 'Lauftreff im Park',
+          text:
+            'Gemeinsam die Ausdauer steigern – an der frischen Luft und für jedes Niveau geeignet.',
+        },
+        {
+          id: 2,
+          titel: 'Wassergymnastik',
+          text:
+            'Schonendes Training im warmen Becken, ideal bei Rücken- und Gelenkbeschwerden.',
+        },
+        {
+          id: 3,
+          titel: 'Ernährungsberatung',
+          text:
+            'Individuelle Beratung und alltagstaugliche Pläne für einen gesunden, machbaren Start.',
+        },
+        {
+          id: 4,
+          titel: 'Krafttraining für Profis',
+          text:
+            'Intensives Muskelaufbauprogramm an modernen Geräten – für erfahrene Sportler.',
+        },
+      ],
+      loesung: { a: 0, b: 1, c: 2, d: 3 },
+    },
+
+    teil4: {
+      anleitung:
+        'Lesen Sie die Leserkommentare zum Thema „Weniger Fleisch essen?“. Äußert sich die Person eher positiv, negativ oder neutral gegenüber dem Verzicht auf Fleisch?',
+      aussagen: [
+        {
+          person: 'Stefan, 40',
+          text:
+            'Weniger Fleisch zu essen war die beste Entscheidung. Ich fühle mich fitter, mein Gewissen ist ruhiger, und die pflanzliche Küche ist überraschend vielfältig.',
+          optionen: ['positiv', 'negativ', 'neutral'],
+          richtig: 0,
+        },
+        {
+          person: 'Gerda, 63',
+          text:
+            'Mir soll niemand vorschreiben, was auf meinen Teller kommt. Ein gutes Stück Fleisch gehört für mich dazu, und diese ewige Bevormundung geht mir gehörig auf die Nerven.',
+          optionen: ['positiv', 'negativ', 'neutral'],
+          richtig: 1,
+        },
+        {
+          person: 'Yusuf, 31',
+          text:
+            'Ich sehe beide Seiten. Der Umwelt zuliebe weniger Fleisch zu essen ist vernünftig, doch ein generelles Verbot halte ich für übertrieben. Jeder sollte selbst entscheiden.',
+          optionen: ['positiv', 'negativ', 'neutral'],
+          richtig: 2,
+        },
+        {
+          person: 'Lara, 26',
+          text:
+            'Seit ich weiß, unter welchen Bedingungen viele Tiere gehalten werden, bringe ich kaum noch Fleisch über die Lippen. Für mich ist der Verzicht eine Frage des Anstands.',
+          optionen: ['positiv', 'negativ', 'neutral'],
+          richtig: 0,
+        },
+      ],
+    },
+  },
 ]
