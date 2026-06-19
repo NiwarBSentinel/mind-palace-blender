@@ -22,6 +22,7 @@ import DeutschC1Quiz from './pages/DeutschC1Quiz'
 import GoetheLevel from './pages/GoetheLevel'
 import HangmanGame from './pages/HangmanGame'
 import DeutschC1Spiele from './pages/DeutschC1Spiele'
+import DeutschC1Lesen from './pages/DeutschC1Lesen'
 import LueckentextGame from './pages/LueckentextGame'
 import MemoryGame from './pages/MemoryGame'
 import ZeitdruckQuiz from './pages/ZeitdruckQuiz'
@@ -88,6 +89,7 @@ export default function App() {
           <Route path="/sprachen/deutsch/:level/memory" element={<MemoryGame />} />
           <Route path="/sprachen/deutsch/:level/zeitdruck" element={<ZeitdruckQuiz />} />
           <Route path="/sprachen/deutsch/:level/snake" element={<SnakeGame />} />
+          <Route path="/sprachen/deutsch/:level/lesen" element={<DeutschC1Lesen />} />
           <Route path="/sprachen/deutsch/:level" element={<GoetheLevel />} />
         </Routes>
         </div>

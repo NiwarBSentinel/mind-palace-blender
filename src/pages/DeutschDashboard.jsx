@@ -10,7 +10,7 @@ const levels = [
   { level: 'A2', name: 'Grundlegende Kenntnisse', color: 'teal', active: true, ...makePaths('a2') },
   { level: 'B1', name: 'Mittelstufe', color: 'blue', active: true, ...makePaths('b1') },
   { level: 'B2', name: 'Obere Mittelstufe', color: 'indigo', active: true, ...makePaths('b2') },
-  { level: 'C1', name: 'Fortgeschritten', color: 'purple', active: true, ...makePaths('c1'), cardPath: '/sprachen/deutsch/lernkarten' },
+  { level: 'C1', name: 'Fortgeschritten', color: 'purple', active: true, ...makePaths('c1'), cardPath: '/sprachen/deutsch/lernkarten', lesePath: '/sprachen/deutsch/c1/lesen' },
   { level: 'C2', name: 'Experte', color: 'red', active: true, ...makePaths('c2') },
 ]
 
@@ -80,6 +80,9 @@ export default function DeutschDashboard() {
                         <button onClick={() => navigate(l.spielePath)} className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-300 hover:bg-[#2a2a4a] text-xs font-medium transition cursor-pointer">🎮 Spiele</button>
                       ) : (
                         <div className="px-3 py-2 rounded-lg bg-[#1e1e3a] text-slate-600 text-xs font-medium text-center">🎮 Spiele</div>
+                      )}
+                      {l.lesePath && (
+                        <button onClick={() => navigate(l.lesePath)} className="col-span-2 px-3 py-2 rounded-lg bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-600/30 text-xs font-medium transition cursor-pointer">📚 Leseverstehen (Goethe-Prüfung)</button>
                       )}
                     </>
                   ) : (
